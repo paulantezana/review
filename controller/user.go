@@ -1,0 +1,525 @@
+package controller
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"fmt"
+	"github.com/labstack/echo"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/utilities"
+	"html/template"
+	"io"
+	"math/rand"
+	"net/http"
+	"os"
+	"path/filepath"
+)
+
+type loginDataResponse struct {
+	User  interface{} `json:"user"`
+	Token interface{} `json:"token"`
+}
+
+func Login(c echo.Context) error {
+	// Get data request
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return err
+	}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Hash password
+	cc := sha256.Sum256([]byte(user.Password))
+	pwd := fmt.Sprintf("%x", cc)
+
+	// Validate user and email
+	if db.Where("user_name = ? and password = ?", user.UserName, pwd).First(&user).RecordNotFound() {
+		if db.Where("email = ? and password = ?", user.UserName, pwd).First(&user).RecordNotFound() {
+			return c.JSON(http.StatusOK, utilities.Response{
+				Success: false,
+				Message: "El nombre de usuario o contraseña es incorecta",
+			})
+		}
+	}
+
+	// Check state user
+	if !user.State {
+		return c.NoContent(http.StatusForbidden)
+	}
+
+	// Prepare response data
+	user.Password = ""
+
+	// get token key
+	token := utilities.GenerateJWT(user)
+
+	// Login success
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: fmt.Sprintf("Bienvenido al sistema %s", user.UserName),
+		Data: loginDataResponse{
+			User:  user,
+			Token: token,
+		},
+	})
+}
+
+func ForgotSearch(c echo.Context) error {
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return err
+	}
+
+	// Get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Validations
+	if err := db.Where("email = ?", user.Email).First(&user).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: "Tu búsqueda no arrojó ningún resultado. Vuelve a intentarlo con otros datos.",
+			Success: false,
+		})
+	}
+
+	// Generate key validation
+	key := (int)(rand.Float32() * 10000000)
+	user.Key = fmt.Sprint(key)
+
+	// Update database
+	if err := db.Model(&user).Update(user).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: false,
+			Message: fmt.Sprintf("%s", err),
+		})
+	}
+
+	// SEND EMAIL get html template
+	t, err := template.ParseFiles("utilities/email.html")
+	if err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	// SEND EMAIL new buffer
+	buf := new(bytes.Buffer)
+	err = t.Execute(buf, user)
+	if err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	// SEND EMAIL
+	err = config.SendEmail(user.Email, fmt.Sprint(key)+" es el código de recuperación de tu cuenta en REVIEW", buf.String())
+	if err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	// Response success api service
+	user.Key = ""
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    user.ID,
+	})
+}
+
+func ForgotValidate(c echo.Context) error {
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return err
+	}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Validations
+	if err := db.Where("id = ? AND key = ?", user.ID, user.Key).First(&user).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: "El número que ingresaste no coincide con tu código. Vuelve a intentarlo",
+			Success: false,
+		})
+	}
+
+	user.Password = ""
+
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    user.ID,
+	})
+}
+
+func ForgotChange(c echo.Context) error {
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return err
+	}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Validate if exist
+	aux := models.User{ID: user.ID}
+	if err := db.Where("id = ?", aux.ID).First(&aux).Error; err != nil {
+		return err
+	}
+
+	// Encrypted old password
+	tt := sha256.Sum256([]byte(user.Password))
+	ttt := fmt.Sprintf("%x", tt)
+
+	// Update
+	user.Password = ttt
+	user.Key = ""
+	if err := db.Model(&user).Update(user).Error; err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    user.ID,
+		Message: fmt.Sprintf("La contraseña del usuario %s se cambio exitosamente", user.UserName),
+	})
+}
+
+func GetUsers(c echo.Context) error {
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
+
+	// Get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Pagination calculate
+	if request.CurrentPage == 0 {
+		request.CurrentPage = 1
+	}
+	offset := request.Limit*request.CurrentPage - request.Limit
+
+	// Check the number of matches
+	var total uint
+	users := make([]models.User, 0)
+
+	// Find users
+	if err := db.Where("user_name LIKE ?", "%"+request.Search+"%").
+		Order("id asc").
+		Offset(offset).Limit(request.Limit).Find(&users).
+		Offset(-1).Limit(-1).Count(&total).
+		Error; err != nil {
+		return err
+	}
+
+	// Type response
+	// 0 = all data
+	// 1 = minimal data
+	if request.Type == 1 {
+		customUsers := make([]models.User, 0)
+		for _, user := range users {
+			customUsers = append(customUsers, models.User{
+				ID:       user.ID,
+				UserName: user.UserName,
+			})
+		}
+		return c.JSON(http.StatusCreated, utilities.Response{
+			Success:     true,
+			Data:        customUsers,
+			Total:       total,
+			CurrentPage: request.CurrentPage,
+		})
+	}
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success:     true,
+		Data:        users,
+		Total:       total,
+		CurrentPage: request.CurrentPage,
+	})
+}
+
+func GetUserByID(c echo.Context) error {
+	// Get data request
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return err
+	}
+
+	// Get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Execute instructions
+	if err := db.First(&user, user.ID).Error; err != nil {
+		return err
+	}
+
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    user,
+	})
+}
+
+func CreateUser(c echo.Context) error {
+	// Get data request
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return err
+	}
+
+	// Default empty values
+	if len(user.Profile) == 0 {
+		user.Profile = "user"
+	}
+	user.Avatar = "static/logo.png"
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Hash password
+	cc := sha256.Sum256([]byte(user.Password))
+	pwd := fmt.Sprintf("%x", cc)
+	user.Password = pwd
+
+	// Insert user in database
+	if err := db.Create(&user).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: false,
+			Message: fmt.Sprintf("%s", err),
+		})
+	}
+
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    user.ID,
+		Message: fmt.Sprintf("El usuario %s se registro exitosamente", user.UserName),
+	})
+}
+
+func UpdateUser(c echo.Context) error {
+	// Get data request
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return err
+	}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Validation user exist
+	uv := models.User{ID: user.ID}
+	if db.First(&uv).RecordNotFound() {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: false,
+			Message: fmt.Sprintf("No se encontró el registro con id %d", user.ID),
+		})
+	}
+
+	// Update user in database
+	if err := db.Model(&user).Update(user).Error; err != nil {
+		return err
+	}
+	if !user.State {
+		if err := db.Model(user).UpdateColumn("state", false).Error; err != nil {
+			return err
+		}
+	}
+
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    user.ID,
+	})
+}
+
+func DeleteUser(c echo.Context) error {
+	// Get data request
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return err
+	}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Validation user exist
+	if db.First(&user).RecordNotFound() {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: false,
+			Message: fmt.Sprintf("No se encontró el registro con id %d", user.ID),
+		})
+	}
+
+	// Delete user in database
+	if err := db.Delete(&user).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: false,
+			Message: fmt.Sprintf("%s", err),
+		})
+	}
+
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    user.ID,
+	})
+}
+
+func UploadAvatarUser(c echo.Context) error {
+	// Read form fields
+	idUser := c.FormValue("id")
+	user := models.User{}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Validation user exist
+	if db.First(&user, "id = ?", idUser).RecordNotFound() {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: false,
+			Message: fmt.Sprintf("No se encontró el registro con id %d", user.ID),
+		})
+	}
+
+	// Source
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	// Destination
+	ccc := sha256.Sum256([]byte(string(user.ID)))
+	name := fmt.Sprintf("%x%s", ccc, filepath.Ext(file.Filename))
+	avatarSRC := "static/profiles/" + name
+	dst, err := os.Create(avatarSRC)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+	user.Avatar = avatarSRC
+
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
+
+	// Update database user
+	if err := db.Model(&user).Update(user).Error; err != nil {
+		return err
+	}
+
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    user.ID,
+	})
+}
+
+func ResetPasswordUser(c echo.Context) error {
+	// Get data request
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return err
+	}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Validation user exist
+	if db.First(&user, "id = ?", user.ID).RecordNotFound() {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: false,
+			Message: fmt.Sprintf("No se encontró el registro con id %d", user.ID),
+		})
+	}
+
+	// Set new password
+	cc := sha256.Sum256([]byte(string(user.ID) + user.UserName))
+	pwd := fmt.Sprintf("%x", cc)
+	user.Password = pwd
+
+	// Update user in database
+	if err := db.Model(&user).Update(user).Error; err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: fmt.Sprintf("La contraseña del usuario se cambio exitosamente. ahora su numevacontraseña es %d%s", user.ID, user.UserName),
+	})
+}
+
+func ChangePasswordUser(c echo.Context) error {
+	// Get data request
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return err
+	}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Validation user exist
+	aux := models.User{ID: user.ID}
+	if db.First(&aux, "id = ?", aux.ID).RecordNotFound() {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: false,
+			Message: fmt.Sprintf("No se encontró el registro con id %d", aux.ID),
+		})
+	}
+
+	// Change password
+	if len(user.Password) > 0 {
+		// Validate empty length old password
+		if len(user.OldPassword) == 0 {
+			return c.JSON(http.StatusOK, utilities.Response{
+				Success: false,
+				Message: "Ingrese la contraseña antigua",
+			})
+		}
+
+		// Hash old password
+		ccc := sha256.Sum256([]byte(user.OldPassword))
+		old := fmt.Sprintf("%x", ccc)
+
+		// validate old password
+		if db.Where("password = ?", old).First(&aux).RecordNotFound() {
+			return c.JSON(http.StatusOK, utilities.Response{
+				Success: false,
+				Message: "La contraseña antigua es incorrecta",
+			})
+		}
+
+		// Set and hash new password
+		cc := sha256.Sum256([]byte(user.Password))
+		pwd := fmt.Sprintf("%x", cc)
+		user.Password = pwd
+	}
+
+	// Update user in database
+	if err := db.Model(&user).Update(user).Error; err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: fmt.Sprintf("La contraseña del usuario %s se cambio exitosamente", aux.UserName),
+	})
+}
