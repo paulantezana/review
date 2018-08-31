@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+    "strings"
 )
 
 func GetStudents(c echo.Context) error {
@@ -298,10 +299,10 @@ func SetTempUploadStudent(c echo.Context) error {
 	for k, row := range rows {
 		if k >= ignoreCols {
 			students = append(students, models.Student{
-				DNI:      row[0],
-				FullName: row[1],
-				Email:    row[2],
-				Phone:    row[3],
+				DNI:      strings.TrimSpace(row[0]),
+				FullName: strings.TrimSpace(row[0]),
+				Email:    strings.TrimSpace(row[0]),
+				Phone:    strings.TrimSpace(row[0]),
 				State:    true,
 			})
 		}
