@@ -81,8 +81,7 @@ func ForgotSearch(c echo.Context) error {
 	// Validations
 	if err := db.Where("email = ?", user.Email).First(&user).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Message: "Tu búsqueda no arrojó ningún resultado. Vuelve a intentarlo con otros datos.",
-			Success: false,
+			Message: fmt.Sprintf("Tu búsqueda no arrojó ningún resultado. Vuelve a intentarlo con otros datos."),
 		})
 	}
 
@@ -93,7 +92,6 @@ func ForgotSearch(c echo.Context) error {
 	// Update database
 	if err := db.Model(&user).Update(user).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("%s", err),
 		})
 	}
@@ -118,7 +116,6 @@ func ForgotSearch(c echo.Context) error {
 	}
 
 	// Response success api service
-	user.Key = ""
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    user.ID,
@@ -138,13 +135,11 @@ func ForgotValidate(c echo.Context) error {
 	// Validations
 	if err := db.Where("id = ? AND key = ?", user.ID, user.Key).First(&user).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Message: "El número que ingresaste no coincide con tu código. Vuelve a intentarlo",
-			Success: false,
+			Message: fmt.Sprintf("El número %s que ingresaste no coincide con tu código de seguridad. Vuelve a intentarlo", user.Key),
 		})
 	}
 
-	user.Password = ""
-
+	// Response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    user.ID,
@@ -161,27 +156,34 @@ func ForgotChange(c echo.Context) error {
 	db := config.GetConnection()
 	defer db.Close()
 
-	// Validate if exist
-	aux := models.User{ID: user.ID}
-	if err := db.Where("id = ?", aux.ID).First(&aux).Error; err != nil {
-		return err
+	// Validate
+	currentUser := models.User{}
+	if err := db.Where("id = ?", user.ID).First(&currentUser).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("No se encontro ningun registro con el id %d", user.ID),
+		})
 	}
 
 	// Encrypted old password
-	tt := sha256.Sum256([]byte(user.Password))
-	ttt := fmt.Sprintf("%x", tt)
+	cc := sha256.Sum256([]byte(user.Password))
+	pwd := fmt.Sprintf("%x", cc)
+	user.Password = pwd
 
 	// Update
-	user.Password = ttt
-	user.Key = ""
 	if err := db.Model(&user).Update(user).Error; err != nil {
 		return err
 	}
 
+	// Update key
+	if err := db.Model(&user).UpdateColumn("key", "").Error; err != nil {
+		return err
+	}
+
+	// Response data
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    user.ID,
-		Message: fmt.Sprintf("La contraseña del usuario %s se cambio exitosamente", user.UserName),
+		Message: fmt.Sprintf("La contraseña del usuario %s se cambio exitosamente", currentUser.UserName),
 	})
 }
 
@@ -226,7 +228,7 @@ func GetUsers(c echo.Context) error {
 				UserName: user.UserName,
 			})
 		}
-		return c.JSON(http.StatusCreated, utilities.Response{
+		return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
 			Success:     true,
 			Data:        customUsers,
 			Total:       total,
@@ -234,7 +236,7 @@ func GetUsers(c echo.Context) error {
 		})
 	}
 	// Return response
-	return c.JSON(http.StatusCreated, utilities.Response{
+	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
 		Success:     true,
 		Data:        users,
 		Total:       total,
@@ -276,7 +278,6 @@ func CreateUser(c echo.Context) error {
 	if len(user.Profile) == 0 {
 		user.Profile = "user"
 	}
-	user.Avatar = "static/logo.png"
 
 	// get connection
 	db := config.GetConnection()
@@ -315,8 +316,8 @@ func UpdateUser(c echo.Context) error {
 	defer db.Close()
 
 	// Validation user exist
-	uv := models.User{ID: user.ID}
-	if db.First(&uv).RecordNotFound() {
+	aux := models.User{ID: user.ID}
+	if db.First(&aux).RecordNotFound() {
 		return c.JSON(http.StatusOK, utilities.Response{
 			Success: false,
 			Message: fmt.Sprintf("No se encontró el registro con id %d", user.ID),
@@ -354,7 +355,6 @@ func DeleteUser(c echo.Context) error {
 	// Validation user exist
 	if db.First(&user).RecordNotFound() {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se encontró el registro con id %d", user.ID),
 		})
 	}
@@ -362,7 +362,6 @@ func DeleteUser(c echo.Context) error {
 	// Delete user in database
 	if err := db.Delete(&user).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("%s", err),
 		})
 	}
@@ -371,6 +370,7 @@ func DeleteUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    user.ID,
+		Message: fmt.Sprintf("El usuario %s, se elimino correctamente", user.UserName),
 	})
 }
 
@@ -427,6 +427,7 @@ func UploadAvatarUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    user.ID,
+		Message: fmt.Sprintf("El avatar del usuario %s, se subió correctamente", user.UserName),
 	})
 }
 

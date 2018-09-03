@@ -1,14 +1,14 @@
 package main
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/paulantezana/review/api"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"os"
-    "crypto/sha256"
-    "fmt"
 )
 
 func main() {
@@ -54,9 +54,11 @@ func migration() {
 		&models.Representative{},
 		&models.Review{},
 		&models.ReviewDetail{},
-		&models.Setting{},
+		&models.Program{},
 		&models.Student{},
+		&models.Teacher{},
 		&models.Company{},
+		&models.Setting{},
 	)
 	db.Model(&models.Review{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.Review{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
@@ -65,31 +67,43 @@ func migration() {
 	db.Model(&models.ReviewDetail{}).AddForeignKey("company_id", "companies(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.ReviewDetail{}).AddForeignKey("review_id", "reviews(id)", "RESTRICT", "RESTRICT")
 
-    // -------------------------------------------------------------
+    db.Model(&models.Student{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+    db.Model(&models.Module{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+    db.Model(&models.Teacher{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+    //db.Model(&models.User{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+
+	// -------------------------------------------------------------
 	// INSERT FIST DATA --------------------------------------------
 	// -------------------------------------------------------------
 	usr := models.User{}
 	db.First(&usr)
 	// hash password
-    cc := sha256.Sum256([]byte("admin"))
-    pwd := fmt.Sprintf("%x", cc)
-    // create model
-	user := models.User{
-	    UserName: "admin",
-	    Password: pwd,
-	    Email: "yoel.antezana@gmail.com",
-    }
-    // insert database
-    if usr.ID == 0 {
-        db.Create(&user)
-    }
+	cc := sha256.Sum256([]byte("FyYkbJo2W1T1"))
+	pwd := fmt.Sprintf("%x", cc)
 
-    // First Setting
-    cg := models.Setting{}
-    db.First(&cg)
-    co := models.Setting{ ItemTable: 10 }
-    // Insert database
-    if cg.ID == 0 {
-        db.Create(&co)
-    }
+	// create model
+	user := models.User{
+		UserName: "sa",
+		Password: pwd,
+		Email: "yoel.antezana@gmail.com",
+		Profile:  "sa",
+	}
+	// insert database
+	if usr.ID == 0 {
+		db.Create(&user)
+	}
+
+	// First Setting
+	prm := models.Setting{}
+	db.First(&prm)
+	co := models.Setting{
+		ItemTable: 10,
+		Institute:    "INSTITUTE",
+		Logo:      "static/logo.png",
+	}
+
+	// Insert database
+	if prm.ID == 0 {
+		db.Create(&co)
+	}
 }

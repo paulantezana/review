@@ -2,7 +2,8 @@ package controller
 
 import (
 	"fmt"
-	"github.com/labstack/echo"
+    "github.com/dgrijalva/jwt-go"
+    "github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
@@ -10,6 +11,11 @@ import (
 )
 
 func GetModules(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
@@ -24,9 +30,9 @@ func GetModules(c echo.Context) error {
 	modules := make([]models.Module, 0)
 
 	// Query in database
-	if err := db.Order("sequence asc").Find(&modules).Error; err != nil {
-		return err
-	}
+    if err := db.Where("program_id = ?", currentUser.ProgramID).Find(&modules).Error; err != nil {
+        return err
+    }
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -36,6 +42,11 @@ func GetModules(c echo.Context) error {
 }
 
 func GetModuleSearch(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
@@ -48,7 +59,7 @@ func GetModuleSearch(c echo.Context) error {
 
 	// Execute instructions
 	modules := make([]models.Module, 0)
-	if err := db.Where("name LIKE ?", "%"+request.Search+"%").
+	if err := db.Where("name LIKE ? AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
 		Limit(5).Find(&modules).Error; err != nil {
 		return err
 	}
@@ -61,18 +72,24 @@ func GetModuleSearch(c echo.Context) error {
 }
 
 func CreateModule(c echo.Context) error {
-	// Get data request
-	modules := models.Module{}
-	if err := c.Bind(&modules); err != nil {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
+    // Get data request
+	module := models.Module{}
+	if err := c.Bind(&module); err != nil {
 		return err
 	}
+    module.ProgramID = currentUser.ProgramID
 
 	// get connection
 	db := config.GetConnection()
 	defer db.Close()
 
 	// Insert modules in database
-	if err := db.Create(&modules).Error; err != nil {
+	if err := db.Create(&module).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{
 			Success: false,
 			Message: fmt.Sprintf("%s", err),
@@ -82,8 +99,8 @@ func CreateModule(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    modules.ID,
-		Message: fmt.Sprintf("El modulo %s se registro correctamente", modules.Name),
+		Data:    module.ID,
+		Message: fmt.Sprintf("El modulo %s se registro correctamente", module.Name),
 	})
 }
 

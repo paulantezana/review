@@ -9,5 +9,7 @@ type Module struct {
 	Hours       uint   `json:"hours"`
 	Semester    string `json:"semester"`
 
+	ProgramID uint `json:"program_id"`
+	
 	Reviews []Review `json:"reviews"`
 }

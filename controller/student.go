@@ -1,21 +1,27 @@
 package controller
 
 import (
-	"fmt"
-	"github.com/360EntSecGroup-Skylar/excelize"
-	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/utilities"
-	"io"
-	"net/http"
-	"os"
-	"time"
+    "fmt"
+    "github.com/360EntSecGroup-Skylar/excelize"
+    "github.com/dgrijalva/jwt-go"
+    "github.com/labstack/echo"
+    "github.com/paulantezana/review/config"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
+    "io"
+    "net/http"
+    "os"
     "strings"
+    "time"
 )
 
 func GetStudents(c echo.Context) error {
-	// Get data request
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
+  	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
 		return err
@@ -36,8 +42,8 @@ func GetStudents(c echo.Context) error {
 	students := make([]models.Student, 0)
 
 	// Query in database
-	if err := db.Where("lower(full_name) LIKE lower(?)", "%"+request.Search+"%").
-		Or("dni LIKE ?", "%"+request.Search+"%").
+	if err := db.Debug().Where("lower(full_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
+		Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
 		Order("id asc").
 		Offset(offset).Limit(request.Limit).Find(&students).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
@@ -55,7 +61,7 @@ func GetStudents(c echo.Context) error {
 				FullName: student.FullName,
 			})
 		}
-		return c.JSON(http.StatusCreated, utilities.Response{
+		return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
 			Success:     true,
 			Data:        customStudent,
 			Total:       total,
@@ -63,7 +69,7 @@ func GetStudents(c echo.Context) error {
 		})
 	}
 	// Return response
-	return c.JSON(http.StatusCreated, utilities.Response{
+	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
 		Success:     true,
 		Data:        students,
 		Total:       total,
@@ -83,7 +89,7 @@ type StudentDetail struct {
 
 type StudentDetailResponse struct {
 	StudentDetail []StudentDetail `json:"student_detail"`
-	Student models.Student `json:"student"`
+	Student       models.Student  `json:"student"`
 }
 
 func GetStudentDetailByID(c echo.Context) error {
@@ -103,25 +109,22 @@ func GetStudentDetailByID(c echo.Context) error {
 	}
 
 	// Find quotations in database by RequirementID  ========== Quotations, Providers, Users
-	StudentDetails := make([]StudentDetail, 0)
-	if err := db.Table("reviews").
-		Select("companies.nombre_o_razon_social as company_name, modules.name as module_name, modules.sequence as module_sequence, review_details.start_date, review_details.end_date, review_details.note, review_details.hours").
-		Joins("INNER JOIN review_details on reviews.id = review_details.review_id").
-		Joins("INNER JOIN companies on review_details.company_id = companies.id").
-		Joins("INNER JOIN modules on reviews.module_id = modules.id").
-		Order("modules.sequence asc").
-		Where("reviews.student_id = ?", student.ID).
-		Scan(&StudentDetails).Error; err != nil {
-			return c.NoContent(http.StatusInternalServerError)
-	}
+	//StudentDetails := make([]StudentDetail, 0)
+	//if err := db.Table("reviews").
+	//	Select("companies.nombre_o_razon_social as company_name, modules.name as module_name, modules.sequence as module_sequence, review_details.start_date, review_details.end_date, review_details.note, review_details.hours").
+	//	Joins("INNER JOIN review_details on reviews.id = review_details.review_id").
+	//	Joins("INNER JOIN companies on review_details.company_id = companies.id").
+	//	Joins("INNER JOIN modules on reviews.module_id = modules.id").
+	//	Order("modules.sequence asc").
+	//	Where("reviews.student_id = ?", student.ID).
+	//	Scan(&StudentDetails).Error; err != nil {
+	//		return c.NoContent(http.StatusInternalServerError)
+	//}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    StudentDetailResponse{
-			Student: student,
-			StudentDetail: StudentDetails,
-		},
+		Data:    student,
 	})
 }
 
@@ -161,11 +164,17 @@ func GetStudentSearch(c echo.Context) error {
 }
 
 func CreateStudent(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
 	// Get data request
 	students := models.Student{}
 	if err := c.Bind(&students); err != nil {
 		return err
 	}
+	students.ProgramID = currentUser.ProgramID
 
 	// get connection
 	db := config.GetConnection()
@@ -258,6 +267,11 @@ func GetTempUploadStudent(c echo.Context) error {
 }
 
 func SetTempUploadStudent(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
 	// Source
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -300,10 +314,10 @@ func SetTempUploadStudent(c echo.Context) error {
 		if k >= ignoreCols {
 			students = append(students, models.Student{
 				DNI:      strings.TrimSpace(row[0]),
-				FullName: strings.TrimSpace(row[0]),
-				Email:    strings.TrimSpace(row[0]),
-				Phone:    strings.TrimSpace(row[0]),
+				FullName: strings.TrimSpace(row[1]),
+				Phone:    strings.TrimSpace(row[3]),
 				State:    true,
+				ProgramID: currentUser.ProgramID,
 			})
 		}
 	}

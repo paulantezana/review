@@ -39,7 +39,7 @@ func GetCompanies(c echo.Context) error {
 	}
 
 	// Return response
-	return c.JSON(http.StatusCreated, utilities.Response{
+	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
 		Success:     true,
 		Data:        companies,
 		Total:       total,
