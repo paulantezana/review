@@ -36,7 +36,6 @@ func ProtectedApi(e *echo.Echo) {
     ar.POST("/program/all", controller.GetPrograms)
     ar.POST("/program/create", controller.CreateProgram)
     ar.PUT("/program/update", controller.UpdateProgram)
-    ar.DELETE("/program/delete", controller.DeleteProgram)
 
 	// Student
 	ar.POST("/student/all", controller.GetStudents)

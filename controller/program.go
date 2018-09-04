@@ -56,7 +56,7 @@ func GetProgramByID(c echo.Context) error {
 }
 
 type createProgramRequest struct {
-    Program string `json:"program"`
+    Name string `json:"name"`
     DNI string `json:"dni"`
     FirstName string `json:"first_name"`
     Email string `json:"email"`
@@ -80,7 +80,7 @@ func CreateProgram(c echo.Context) error {
     // ------------------------------------
     tr := db.Begin()
     program := models.Program{
-        Name: request.Program,
+        Name: request.Name,
     }
     // Create new program
     if err := db.Create(&program).Error; err != nil {
@@ -154,38 +154,5 @@ func UpdateProgram(c echo.Context) error {
         Success: true,
         Data:    program.ID,
         Message: fmt.Sprintf("Los datos del programa de estudios %s se actualizaron correctamente",program.Name),
-    })
-}
-
-func DeleteProgram(c echo.Context) error {
-    // Get data request
-    program := models.Program{}
-    if err := c.Bind(&program); err != nil {
-        return err
-    }
-
-    // get connection
-    db := config.GetConnection()
-    defer db.Close()
-
-    // Validation program exist
-    if db.First(&program).RecordNotFound() {
-        return c.JSON(http.StatusCreated, utilities.Response{
-            Message: fmt.Sprintf("No se encontró el registro con id %d", program.ID),
-        })
-    }
-
-    // Delete program in database
-    if err := db.Delete(&program).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("%s", err),
-        })
-    }
-
-    // Return response
-    return c.JSON(http.StatusCreated, utilities.Response{
-        Success: true,
-        Data:    program.ID,
-        Message: fmt.Sprintf("El programa de estudios %s se elimino exitosamente",program.Name),
     })
 }
