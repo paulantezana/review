@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/paulantezana/review/utilities"
 )
 
+// GetStudents function get all students
 func GetStudents(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
@@ -89,6 +91,7 @@ func GetStudents(c echo.Context) error {
 	})
 }
 
+// StudentDetail struct
 type StudentDetail struct {
 	CompanyName    string    `json:"company_name"`
 	ModuleName     string    `json:"module_name"`
@@ -99,11 +102,13 @@ type StudentDetail struct {
 	Note           uint      `json:"note"`
 }
 
+// StudentDetailResponse response struct
 type StudentDetailResponse struct {
 	StudentDetail []StudentDetail `json:"student_detail"`
 	Student       models.Student  `json:"student"`
 }
 
+// GetStudentDetailByID get student detail
 func GetStudentDetailByID(c echo.Context) error {
 	// Get data request
 	student := models.Student{}
@@ -278,10 +283,27 @@ func DeleteStudent(c echo.Context) error {
 	})
 }
 
+// GetTempUploadStudent dowloand template
 func GetTempUploadStudent(c echo.Context) error {
-	return c.File("templates/uploadTeacherTemplate.xlsx")
+	fileDir := "templates/templateStudent.xlsx"
+	xlsx, err := excelize.OpenFile(fileDir)
+	if err != nil {
+		fmt.Println(err)
+	}
+	index := xlsx.NewSheet("ProgramIDS")
+	xlsx.SetCellValue("ProgramIDS", "A1", "Hello world.")
+	xlsx.SetActiveSheet(index)
+
+	// Save xlsx file by the given path.
+	err = xlsx.SaveAs(fileDir)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return c.File(fileDir)
 }
 
+// SetTempUploadStudent set upload student
 func SetTempUploadStudent(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
@@ -324,16 +346,25 @@ func SetTempUploadStudent(c echo.Context) error {
 	students := make([]models.Student, 0)
 	ignoreCols := 1
 
-	// Get all the rows in the Sheet1.
-	rows := xlsx.GetRows("Sheet1")
+	// Get all the rows in the student.
+	rows := xlsx.GetRows("student")
 	for k, row := range rows {
+		var currentProgram uint
+
+		u, _ := strconv.ParseUint(strings.TrimSpace(row[4]), 0, 32)
+		currentProgram = uint(u)
+
+		if currentProgram == 0 {
+			currentProgram = currentUser.ProgramID
+		}
+
 		if k >= ignoreCols {
 			students = append(students, models.Student{
 				DNI:       strings.TrimSpace(row[0]),
 				FullName:  strings.TrimSpace(row[1]),
 				Phone:     strings.TrimSpace(row[3]),
 				State:     true,
-				ProgramID: currentUser.ProgramID,
+				ProgramID: currentProgram,
 			})
 		}
 	}
