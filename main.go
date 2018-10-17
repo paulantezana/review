@@ -3,12 +3,13 @@ package main
 import (
 	"crypto/sha256"
 	"fmt"
+	"os"
+
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/paulantezana/review/api"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
-	"os"
 )
 
 func main() {
@@ -67,10 +68,10 @@ func migration() {
 	db.Model(&models.ReviewDetail{}).AddForeignKey("company_id", "companies(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.ReviewDetail{}).AddForeignKey("review_id", "reviews(id)", "RESTRICT", "RESTRICT")
 
-    db.Model(&models.Student{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-    db.Model(&models.Module{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-    db.Model(&models.Teacher{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-    //db.Model(&models.User{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Student{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Module{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Teacher{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&models.User{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 
 	// -------------------------------------------------------------
 	// INSERT FIST DATA --------------------------------------------
@@ -85,9 +86,10 @@ func migration() {
 	user := models.User{
 		UserName: "sa",
 		Password: pwd,
-		Email: "yoel.antezana@gmail.com",
+		Email:    "yoel.antezana@gmail.com",
 		Profile:  "sa",
 	}
+
 	// insert database
 	if usr.ID == 0 {
 		db.Create(&user)
@@ -98,7 +100,7 @@ func migration() {
 	db.First(&prm)
 	co := models.Setting{
 		ItemTable: 10,
-		Institute:    "INSTITUTE",
+		Institute: "INSTITUTE",
 		Logo:      "static/logo.png",
 	}
 

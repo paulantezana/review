@@ -1,27 +1,28 @@
 package controller
 
 import (
-    "fmt"
-    "github.com/360EntSecGroup-Skylar/excelize"
-    "github.com/dgrijalva/jwt-go"
-    "github.com/labstack/echo"
-    "github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/models"
-    "github.com/paulantezana/review/utilities"
-    "io"
-    "net/http"
-    "os"
-    "strings"
-    "time"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/360EntSecGroup-Skylar/excelize"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/utilities"
 )
 
 func GetStudents(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
-  	// Get data request
+	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
 		return err
@@ -41,13 +42,24 @@ func GetStudents(c echo.Context) error {
 	var total uint
 	students := make([]models.Student, 0)
 
-	// Query in database
-	if err := db.Debug().Where("lower(full_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
-		Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
-		Order("id asc").
-		Offset(offset).Limit(request.Limit).Find(&students).
-		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-		return err
+	if currentUser.Profile == "sa" {
+		// Query in database
+		if err := db.Debug().Where("lower(full_name) LIKE lower(?)", "%"+request.Search+"%").
+			Or("dni LIKE ?", "%"+request.Search+"%").
+			Order("id asc").
+			Offset(offset).Limit(request.Limit).Find(&students).
+			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+			return err
+		}
+	} else {
+		// Query in database
+		if err := db.Debug().Where("lower(full_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
+			Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
+			Order("id asc").
+			Offset(offset).Limit(request.Limit).Find(&students).
+			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+			return err
+		}
 	}
 
 	// Type response
@@ -164,24 +176,28 @@ func GetStudentSearch(c echo.Context) error {
 }
 
 func CreateStudent(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
 	// Get data request
-	students := models.Student{}
-	if err := c.Bind(&students); err != nil {
+	student := models.Student{}
+	if err := c.Bind(&student); err != nil {
 		return err
 	}
-	students.ProgramID = currentUser.ProgramID
+
+	// Set program ID
+	if student.ProgramID == 0 {
+		student.ProgramID = currentUser.ProgramID
+	}
 
 	// get connection
 	db := config.GetConnection()
 	defer db.Close()
 
-	// Insert students in database
-	if err := db.Create(&students).Error; err != nil {
+	// Insert student in database
+	if err := db.Create(&student).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{
 			Success: false,
 			Message: fmt.Sprintf("%s", err),
@@ -191,8 +207,8 @@ func CreateStudent(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    students.ID,
-		Message: fmt.Sprintf("El estudiante %s se registro correctamente", students.FullName),
+		Data:    student.ID,
+		Message: fmt.Sprintf("El estudiante %s se registro correctamente", student.FullName),
 	})
 }
 
@@ -263,14 +279,14 @@ func DeleteStudent(c echo.Context) error {
 }
 
 func GetTempUploadStudent(c echo.Context) error {
-	return c.File("templates/uploadStudentTemplate.xlsx")
+	return c.File("templates/uploadTeacherTemplate.xlsx")
 }
 
 func SetTempUploadStudent(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
 	// Source
 	file, err := c.FormFile("file")
@@ -313,10 +329,10 @@ func SetTempUploadStudent(c echo.Context) error {
 	for k, row := range rows {
 		if k >= ignoreCols {
 			students = append(students, models.Student{
-				DNI:      strings.TrimSpace(row[0]),
-				FullName: strings.TrimSpace(row[1]),
-				Phone:    strings.TrimSpace(row[3]),
-				State:    true,
+				DNI:       strings.TrimSpace(row[0]),
+				FullName:  strings.TrimSpace(row[1]),
+				Phone:     strings.TrimSpace(row[3]),
+				State:     true,
 				ProgramID: currentUser.ProgramID,
 			})
 		}
