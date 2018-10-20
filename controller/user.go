@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
-	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/utilities"
 	"html/template"
 	"io"
 	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/labstack/echo"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/utilities"
 )
 
 type loginDataResponse struct {
@@ -451,7 +452,7 @@ func ResetPasswordUser(c echo.Context) error {
 	}
 
 	// Set new password
-	cc := sha256.Sum256([]byte(string(user.ID) + user.UserName))
+	cc := sha256.Sum256([]byte(fmt.Sprintf("%d%s", user.ID, user.UserName)))
 	pwd := fmt.Sprintf("%x", cc)
 	user.Password = pwd
 

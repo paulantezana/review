@@ -40,14 +40,26 @@ func GetTeachers(c echo.Context) error {
     var total uint
     teachers := make([]models.Teacher, 0)
 
-    // Query in database
-    if err := db.Where("lower(first_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%",currentUser.ProgramID).
-        Or("lower(last_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
-        Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
-        Order("id asc").
-        Offset(offset).Limit(request.Limit).Find(&teachers).
-        Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-            return err
+    if currentUser.Profile == "sa" {
+        // Query in database
+        if err := db.Where("lower(first_name) LIKE lower(?)", "%"+request.Search+"%").
+            Or("lower(last_name) LIKE lower(?)", "%"+request.Search+"%").
+            Or("dni LIKE ?", "%"+request.Search+"%").
+            Order("id asc").
+            Offset(offset).Limit(request.Limit).Find(&teachers).
+            Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+                return err
+        }
+    } else {
+        // Query in database
+        if err := db.Where("lower(first_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%",currentUser.ProgramID).
+            Or("lower(last_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
+            Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
+            Order("id asc").
+            Offset(offset).Limit(request.Limit).Find(&teachers).
+            Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+                return err
+        }
     }
 
     // Type response
@@ -129,7 +141,11 @@ func CreateTeacher(c echo.Context) error {
     if err := c.Bind(&teacher); err != nil {
         return err
     }
-    teacher.ProgramID = currentUser.ProgramID
+
+    // Set program ID
+    if teacher.ProgramID == 0 {
+        teacher.ProgramID = currentUser.ProgramID
+    }
 
     // get connection
     db := config.GetConnection()

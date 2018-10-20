@@ -1,5 +1,6 @@
 package models
 
+// Company struct
 type Company struct {
 	ID                     uint   `json:"id" gorm:"primary_key"`
 	RUC                    string `json:"ruc"  gorm:"type:varchar(11); unique; not null"`
