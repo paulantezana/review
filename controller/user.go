@@ -22,6 +22,7 @@ type loginDataResponse struct {
 	Token interface{} `json:"token"`
 }
 
+// Login login app
 func Login(c echo.Context) error {
 	// Get data request
 	user := models.User{}
@@ -69,6 +70,7 @@ func Login(c echo.Context) error {
 	})
 }
 
+// ForgotSearch function forgot user search
 func ForgotSearch(c echo.Context) error {
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
@@ -123,6 +125,7 @@ func ForgotSearch(c echo.Context) error {
 	})
 }
 
+// ForgotValidate function forgot user validate
 func ForgotValidate(c echo.Context) error {
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
@@ -147,6 +150,7 @@ func ForgotValidate(c echo.Context) error {
 	})
 }
 
+// ForgotChange function forgot password change
 func ForgotChange(c echo.Context) error {
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
@@ -188,6 +192,7 @@ func ForgotChange(c echo.Context) error {
 	})
 }
 
+// GetUsers function get all users
 func GetUsers(c echo.Context) error {
 	// Get data request
 	request := utilities.Request{}
@@ -245,6 +250,7 @@ func GetUsers(c echo.Context) error {
 	})
 }
 
+// GetUserByID function get user by id
 func GetUserByID(c echo.Context) error {
 	// Get data request
 	user := models.User{}
@@ -268,6 +274,7 @@ func GetUserByID(c echo.Context) error {
 	})
 }
 
+// CreateUser function create new user
 func CreateUser(c echo.Context) error {
 	// Get data request
 	user := models.User{}
@@ -305,6 +312,7 @@ func CreateUser(c echo.Context) error {
 	})
 }
 
+// UpdateUser function update current user
 func UpdateUser(c echo.Context) error {
 	// Get data request
 	user := models.User{}
@@ -342,6 +350,7 @@ func UpdateUser(c echo.Context) error {
 	})
 }
 
+// DeleteUser function delete user by id
 func DeleteUser(c echo.Context) error {
 	// Get data request
 	user := models.User{}
@@ -375,6 +384,7 @@ func DeleteUser(c echo.Context) error {
 	})
 }
 
+// UploadAvatarUser function upload avatar user
 func UploadAvatarUser(c echo.Context) error {
 	// Read form fields
 	idUser := c.FormValue("id")
@@ -432,6 +442,7 @@ func UploadAvatarUser(c echo.Context) error {
 	})
 }
 
+// ResetPasswordUser function reset password
 func ResetPasswordUser(c echo.Context) error {
 	// Get data request
 	user := models.User{}
@@ -467,6 +478,7 @@ func ResetPasswordUser(c echo.Context) error {
 	})
 }
 
+// ChangePasswordUser function change password user
 func ChangePasswordUser(c echo.Context) error {
 	// Get data request
 	user := models.User{}
