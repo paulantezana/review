@@ -2,18 +2,20 @@ package controller
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
-	"net/http"
 )
 
+// GetReviews funstions get reviews by student_id
 func GetReviews(c echo.Context) error {
 	// Get data request
-	request := utilities.Request{}
-	if err := c.Bind(&request); err != nil {
+	student := models.Student{}
+	if err := c.Bind(&student); err != nil {
 		return err
 	}
 
@@ -21,33 +23,23 @@ func GetReviews(c echo.Context) error {
 	db := config.GetConnection()
 	defer db.Close()
 
-	// Pagination calculate
-	if request.CurrentPage == 0 {
-		request.CurrentPage = 1
-	}
-	offset := request.Limit*request.CurrentPage - request.Limit
-
 	// Execute instructions
-	var total uint
 	reviews := make([]models.Review, 0)
 
 	// Query in database
-	if err := db.Where("module LIKE ?", "%"+request.Search+"%").
-		Order("id asc").
-		Offset(offset).Limit(request.Limit).Find(&reviews).
-		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+	if err := db.Where("student_id = ?", student.ID).
+		Order("id asc").Find(&reviews).Error; err != nil {
 		return err
 	}
 
 	// Return response
-	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
-		Success:     true,
-		Data:        reviews,
-		Total:       total,
-		CurrentPage: request.CurrentPage,
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    reviews,
 	})
 }
 
+// CreateReview function create new review
 func CreateReview(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
@@ -91,6 +83,7 @@ func CreateReview(c echo.Context) error {
 	})
 }
 
+// UpdateReview function update review
 func UpdateReview(c echo.Context) error {
 	// Get data request
 	review := models.Review{}
@@ -119,6 +112,7 @@ func UpdateReview(c echo.Context) error {
 	})
 }
 
+// DeleteReview function delete review
 func DeleteReview(c echo.Context) error {
 	// Get data request
 	review := models.Review{}
