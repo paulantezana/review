@@ -2,6 +2,7 @@ package models
 
 import "time"
 
+// Review struct
 type Review struct {
 	ID              uint      `json:"id" gorm:"primary_key"`
 	Module          string    `json:"module"`

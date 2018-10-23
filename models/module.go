@@ -1,5 +1,6 @@
 package models
 
+// Module struct
 type Module struct {
 	ID          uint   `json:"id" gorm:"primary_key"`
 	Sequence    uint   `json:"sequence"`
@@ -10,6 +11,6 @@ type Module struct {
 	Semester    string `json:"semester"`
 
 	ProgramID uint `json:"program_id"`
-	
+
 	Reviews []Review `json:"reviews"`
 }

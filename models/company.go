@@ -28,6 +28,7 @@ type Company struct {
 	ReviewDetails []ReviewDetail `json:"review_details"`
 }
 
+// TableName functiton table rename
 func (Company) TableName() string {
 	return "companies"
 }

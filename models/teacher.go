@@ -2,6 +2,7 @@ package models
 
 import "time"
 
+// Teacher struct
 type Teacher struct {
 	ID        uint   `json:"id" gorm:"primary_key"`
 	DNI       string `json:"dni" gorm:"type:varchar(15); not null; unique"`
@@ -24,5 +25,5 @@ type Teacher struct {
 	//TeachingMonths uint `json:"teaching_months"`
 	Specialty string `json:"specialty"`
 
-    ProgramID uint `json:"program_id"`
+	ProgramID uint `json:"program_id"`
 }

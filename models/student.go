@@ -2,6 +2,7 @@ package models
 
 import "time"
 
+// Student struct
 type Student struct {
 	ID       uint   `json:"id" gorm:"primary_key"`
 	DNI      string `json:"dni" gorm:" type:varchar(15); unique; not null"`
@@ -13,8 +14,8 @@ type Student struct {
 	AdmissionDate time.Time `json:"admission_date"`
 	PromotionDate time.Time `json:"promotion_date"`
 
-    ProgramID uint `json:"program_id"`
+	ProgramID uint `json:"program_id"`
 
 	Reviews []Review `json:"reviews"`
-	User User `json:"user"`
+	User    User     `json:"user"`
 }
