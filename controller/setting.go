@@ -2,16 +2,18 @@ package controller
 
 import (
 	"fmt"
-	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/utilities"
 	"io"
 	"net/http"
 	"os"
 	"path"
+
+	"github.com/labstack/echo"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/utilities"
 )
 
+// GlobalSettings struct
 type GlobalSettings struct {
 	Message string         `json:"message"`
 	Success bool           `json:"success"`
@@ -19,6 +21,7 @@ type GlobalSettings struct {
 	User    models.User    `json:"user"`
 }
 
+// GetGlobalSettings function
 func GetGlobalSettings(c echo.Context) error {
 	// Get data request
 	con := models.Setting{}
@@ -49,6 +52,7 @@ func GetGlobalSettings(c echo.Context) error {
 	})
 }
 
+// UpdateSetting function update settings
 func UpdateSetting(c echo.Context) error {
 	// Get data request
 	con := models.Setting{}
@@ -83,6 +87,7 @@ func UpdateSetting(c echo.Context) error {
 	})
 }
 
+// UploadLogoSetting function upload logo settings
 func UploadLogoSetting(c echo.Context) error {
 	// Read form fields
 	idSetting := c.FormValue("id")
@@ -138,6 +143,7 @@ func UploadLogoSetting(c echo.Context) error {
 	})
 }
 
+// DownloadLogoSetting function dowloand logo settings
 func DownloadLogoSetting(c echo.Context) error {
 	// get connection
 	db := config.GetConnection()
@@ -152,4 +158,77 @@ func DownloadLogoSetting(c echo.Context) error {
 		})
 	}
 	return c.File(setting.Logo)
+}
+
+// UploadMinistrySetting function upload logo settings
+func UploadMinistrySetting(c echo.Context) error {
+	// Read form fields
+	idSetting := c.FormValue("id")
+	setting := models.Setting{}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Validation user exist
+	if db.First(&setting, "id = ?", idSetting).RecordNotFound() {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: false,
+			Message: fmt.Sprintf("No se encontró el registro con id %d", setting.ID),
+		})
+	}
+
+	// Source
+	file, err := c.FormFile("ministry")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	// Destination
+	ministrySRC := fmt.Sprintf("static/ministry%s", path.Ext(file.Filename))
+	dst, err := os.Create(ministrySRC)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+	setting.Ministry = ministrySRC
+
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
+
+	// Update database user
+	if err := db.Model(&setting).Update(setting).Error; err != nil {
+		return err
+	}
+
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    setting.ID,
+		Message: "OK",
+	})
+}
+
+// DownloadMinistrySetting function dowloand logo settings
+func DownloadMinistrySetting(c echo.Context) error {
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Validation user exist
+	setting := models.Setting{}
+	if db.First(&setting).RecordNotFound() {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: false,
+			Message: fmt.Sprintf("No se encontró el registro con id %d", setting.ID),
+		})
+	}
+	return c.File(setting.Ministry)
 }

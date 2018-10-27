@@ -45,6 +45,7 @@ func main() {
 	e.Logger.Fatal(e.Start(":" + port))
 }
 
+// migration function
 func migration() {
 	db := config.GetConnection()
 	defer db.Close()
@@ -99,9 +100,12 @@ func migration() {
 	prm := models.Setting{}
 	db.First(&prm)
 	co := models.Setting{
-		ItemTable: 10,
-		Institute: "INSTITUTE",
-		Logo:      "static/logo.png",
+		ItemTable:       10,
+		Prefix:          "INSTITUTO DE EDUCACIÓN SUPERIOR TECNOLÓGICO PÚBLICO",
+		PrefixShortName: "I.E.S.T.P.",
+		Institute:       "SEDNA",
+		Logo:            "static/logo.png",
+		Ministry:        "static/ministerio.png",
 	}
 
 	// Insert database

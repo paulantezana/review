@@ -8,6 +8,7 @@ import (
 	"github.com/paulantezana/review/utilities"
 )
 
+// PublicApi function public urls
 func PublicApi(e *echo.Echo) {
 	pb := e.Group("/api/v1/public")
 	pb.POST("/user/login", controller.Login)
@@ -16,6 +17,7 @@ func PublicApi(e *echo.Echo) {
 	pb.POST("/user/forgot/change", controller.ForgotChange)
 }
 
+// ProtectedApi function protected urls
 func ProtectedApi(e *echo.Echo) {
 	ar := e.Group("/api/v1")
 
@@ -31,6 +33,8 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/setting/update", controller.UpdateSetting)
 	ar.POST("/setting/upload/logo", controller.UploadLogoSetting)
 	ar.GET("/setting/download/logo", controller.DownloadLogoSetting)
+	ar.POST("/setting/upload/ministry", controller.UploadMinistrySetting)
+	ar.GET("/setting/download/ministry", controller.DownloadMinistrySetting)
 
 	// Program
 	ar.POST("/program/all", controller.GetPrograms)
@@ -76,6 +80,8 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/review/create", controller.CreateReview)
 	ar.PUT("/review/update", controller.UpdateReview)
 	ar.DELETE("/review/delete", controller.DeleteReview)
+	ar.POST("/review/acta", controller.GetActaReview)
+	ar.POST("/review/cons", controller.GetConstReview)
 
 	// User
 	ar.POST("/user/all", controller.GetUsers)

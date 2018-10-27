@@ -147,3 +147,19 @@ func DeleteReview(c echo.Context) error {
 		Message: fmt.Sprintf("El revision con el modulo %s se elimino correctamente", review.Module),
 	})
 }
+
+// GetActaReview function get data acta
+func GetActaReview(c echo.Context) error {
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: "Last",
+	})
+}
+
+// GetConstReview function get data constancy
+func GetConstReview(c echo.Context) error {
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: "Hello",
+	})
+}
