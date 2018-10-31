@@ -79,7 +79,7 @@ func CreateReview(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    review.ID,
-		Message: fmt.Sprintf("El revision del modulo %s se registro correctamente", review.Module),
+		Message: fmt.Sprintf("El revision del modulo se registro correctamente"),
 	})
 }
 
@@ -108,7 +108,7 @@ func UpdateReview(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    review.ID,
-		Message: fmt.Sprintf("Los datos del la revison con el modulo %s se actualizaron correctamente", review.Module),
+		Message: fmt.Sprintf("Los datos del la revison con el modulo se actualizaron correctamente"),
 	})
 }
 
@@ -144,22 +144,69 @@ func DeleteReview(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    review.ID,
-		Message: fmt.Sprintf("El revision con el modulo %s se elimino correctamente", review.Module),
+		Message: fmt.Sprintf("El revision con el modulo se elimino correctamente"),
 	})
 }
 
 // GetActaReview function get data acta
 func GetActaReview(c echo.Context) error {
+	// Get data request
+	review := models.Review{}
+	if err := c.Bind(&review); err != nil {
+		return err
+	}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Find quotations in database by RequirementID  ========== Quotations, Providers, Users
+	modules := make([]models.Module, 0)
+	if err := db.Table("reviews").
+		Select("modules.id, modules.name, modules.sequence, modules.points, modules.hours, modules.semester").
+		Joins("INNER JOIN modules on reviews.module_id = modules.id").
+		Order("modules.sequence asc").
+		Where("WHERE reviews.id = ?", review.ID).
+		Scan(&modules).Error; err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Message: "Last",
+		Data:    "Hola",
 	})
+}
+
+// consResponse struct
+type consResponse struct {
+	Module  models.Module `json:"module"`
+	Success bool          `json:"success"`
 }
 
 // GetConstReview function get data constancy
 func GetConstReview(c echo.Context) error {
-	return c.JSON(http.StatusOK, utilities.Response{
+	// Get data request
+	review := models.Review{}
+	if err := c.Bind(&review); err != nil {
+		return err
+	}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Find quotations in database by RequirementID  ========== Quotations, Providers, Users
+	modules := make([]models.Module, 0)
+	if err := db.Table("reviews").
+		Select("modules.id, modules.name, modules.sequence, modules.points, modules.hours, modules.semester").
+		Joins("INNER JOIN modules on reviews.module_id = modules.id").
+		Where("reviews.id = ?", review.ID).
+		Scan(&modules).Error; err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	return c.JSON(http.StatusOK, consResponse{
 		Success: true,
-		Message: "Hello",
+		Module:  modules[0],
 	})
 }

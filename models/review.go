@@ -5,8 +5,6 @@ import "time"
 // Review struct
 type Review struct {
 	ID              uint      `json:"id" gorm:"primary_key"`
-	Module          string    `json:"module"`
-	Semester        string    `json:"semester"`
 	Supervisor      string    `json:"supervisor"`
 	ApprobationDate time.Time `json:"approbation_date"`
 

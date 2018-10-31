@@ -285,50 +285,50 @@ func DeleteStudent(c echo.Context) error {
 
 // GetTempUploadStudent dowloand template
 func GetTempUploadStudent(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
-    // Return file sa
-    if currentUser.Profile == "sa" {
-        fileDir := "templates/templateStudentSA.xlsx"
-        xlsx, err := excelize.OpenFile(fileDir)
-        if err != nil {
-            fmt.Println(err)
-        }
-        xlsx.NewSheet("ProgramIDS")
+	// Return file sa
+	if currentUser.Profile == "sa" {
+		fileDir := "templates/templateStudentSA.xlsx"
+		xlsx, err := excelize.OpenFile(fileDir)
+		if err != nil {
+			fmt.Println(err)
+		}
+		xlsx.NewSheet("ProgramIDS")
 
-        // get connection
-        db := config.GetConnection()
-        defer db.Close()
+		// get connection
+		db := config.GetConnection()
+		defer db.Close()
 
-        // Execute instructions
-        programs := make([]models.Program, 0)
-        if err := db.Find(&programs).Order("id desc").Error; err != nil {
-            return err
-        }
+		// Execute instructions
+		programs := make([]models.Program, 0)
+		if err := db.Find(&programs).Order("id desc").Error; err != nil {
+			return err
+		}
 
-        xlsx.SetCellValue("ProgramIDS", "A1", "ID")
-        xlsx.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
+		xlsx.SetCellValue("ProgramIDS", "A1", "ID")
+		xlsx.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
 
-        for i := 0; i < len(programs); i++ {
-            xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i + 2), programs[i].ID)
-            xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i + 2), programs[i].Name)
-        }
-        xlsx.SetActiveSheet(1)
+		for i := 0; i < len(programs); i++ {
+			xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
+			xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)
+		}
+		xlsx.SetActiveSheet(1)
 
-        // Save xlsx file by the given path.
-        err = xlsx.SaveAs(fileDir)
-        if err != nil {
-            fmt.Println(err)
-        }
+		// Save xlsx file by the given path.
+		err = xlsx.SaveAs(fileDir)
+		if err != nil {
+			fmt.Println(err)
+		}
 
-        return c.File(fileDir)
-    }
+		return c.File(fileDir)
+	}
 
-    // Return file admin
-    return c.File("templates/templateStudent.xlsx")
+	// Return file admin
+	return c.File("templates/templateStudent.xlsx")
 }
 
 // SetTempUploadStudent set upload student
@@ -379,14 +379,13 @@ func SetTempUploadStudent(c echo.Context) error {
 	for k, row := range rows {
 
 		if k >= ignoreCols {
-            var currentProgram uint
+			var currentProgram uint
+			currentProgram = currentUser.ProgramID
 
-            u, _ := strconv.ParseUint(strings.TrimSpace(row[3]), 0, 32)
-            currentProgram = uint(u)
-
-            if currentProgram == 0 {
-                currentProgram = currentUser.ProgramID
-            }
+			if currentProgram == 0 {
+				u, _ := strconv.ParseUint(strings.TrimSpace(row[3]), 0, 32)
+				currentProgram = uint(u)
+			}
 
 			students = append(students, models.Student{
 				DNI:       strings.TrimSpace(row[0]),
