@@ -19,6 +19,7 @@ type GlobalSettings struct {
 	Success bool           `json:"success"`
 	Setting models.Setting `json:"setting"`
 	User    models.User    `json:"user"`
+	Program models.Program `json:"program"`
 }
 
 // GetGlobalSettings function
@@ -41,12 +42,22 @@ func GetGlobalSettings(c echo.Context) error {
 	user.Password = ""
 	user.Key = ""
 
-	db.First(&con) // Find settings
+	// Find settings
+	db.First(&con)
+
+	// Find program
+	var program models.Program
+	if user.ProgramID > 0 {
+		if err := db.First(&program, user.ProgramID).Error; err != nil {
+			return err
+		}
+	}
 
 	// Set object response
 	return c.JSON(http.StatusOK, GlobalSettings{
 		User:    user,
 		Setting: con,
+		Program: program,
 		Success: true,
 		Message: "OK",
 	})

@@ -2,8 +2,8 @@ package controller
 
 import (
 	"fmt"
-    "github.com/dgrijalva/jwt-go"
-    "github.com/labstack/echo"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
@@ -11,10 +11,10 @@ import (
 )
 
 func GetModules(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
 	// Get data request
 	request := utilities.Request{}
@@ -30,9 +30,9 @@ func GetModules(c echo.Context) error {
 	modules := make([]models.Module, 0)
 
 	// Query in database
-    if err := db.Where("program_id = ?", currentUser.ProgramID).Find(&modules).Error; err != nil {
-        return err
-    }
+	if err := db.Where("program_id = ?", currentUser.ProgramID).Find(&modules).Error; err != nil {
+		return err
+	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -42,10 +42,10 @@ func GetModules(c echo.Context) error {
 }
 
 func GetModuleSearch(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
 	// Get data request
 	request := utilities.Request{}
@@ -72,17 +72,17 @@ func GetModuleSearch(c echo.Context) error {
 }
 
 func CreateModule(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
-    // Get data request
+	// Get data request
 	module := models.Module{}
 	if err := c.Bind(&module); err != nil {
 		return err
 	}
-    module.ProgramID = currentUser.ProgramID
+	module.ProgramID = currentUser.ProgramID
 
 	// get connection
 	db := config.GetConnection()

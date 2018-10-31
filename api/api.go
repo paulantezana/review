@@ -76,7 +76,6 @@ func ProtectedApi(e *echo.Echo) {
 
 	// Review
 	ar.POST("/review/all", controller.GetReviews)
-
 	ar.POST("/review/create", controller.CreateReview)
 	ar.PUT("/review/update", controller.UpdateReview)
 	ar.DELETE("/review/delete", controller.DeleteReview)
