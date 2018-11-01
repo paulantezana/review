@@ -9,4 +9,5 @@ type Setting struct {
 	PrefixShortName string `json:"prefix_short_name"`
 	Institute       string `json:"institute"`
 	ItemTable       uint   `json:"item_table"`
+    MinHoursPracticePercentage uint `json:"min_hours_practice_percentage"`
 }
