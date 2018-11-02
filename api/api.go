@@ -75,6 +75,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/company/search", controller.GetCompanySearch)
 	ar.GET("/company/download/template", controller.GetTempUploadCompany)
 	ar.POST("/company/upload/template", controller.SetTempUploadCompany)
+	ar.GET("/company/export/all", controller.ExportAllCompanies)
 
 	// Review
 	ar.POST("/review/all", controller.GetReviews)

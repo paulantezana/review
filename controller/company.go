@@ -257,3 +257,49 @@ func SetTempUploadCompany(c echo.Context) error {
 		Message: fmt.Sprintf("Se guardo %d registros den la base de datos", len(companies)),
 	})
 }
+
+func ExportAllCompanies(c echo.Context) error {
+	// Get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Execute instructions
+	companies := make([]models.Company, 0)
+
+	// Query in database
+	if err := db.Order("id asc").Find(&companies).Error; err != nil {
+		return err
+	}
+
+	// Create excel file
+	xlsx := excelize.NewFile()
+
+	// Create a new sheet.
+	index := xlsx.NewSheet("Sheet1")
+
+	// Set value of a cell.
+	xlsx.SetCellValue("Sheet1", "A1", "RUC")
+	xlsx.SetCellValue("Sheet1", "B1", "Nombre o razón social")
+	xlsx.SetCellValue("Sheet1", "C1", "Dirección")
+	xlsx.SetCellValue("Sheet1", "D1", "Gerente")
+
+	currentRow := 2
+	for k, company := range companies {
+		xlsx.SetCellValue("Sheet1", fmt.Sprintf("A%d", currentRow+k), company.RUC)
+		xlsx.SetCellValue("Sheet1", fmt.Sprintf("B%d", currentRow+k), company.NameSocialReason)
+		xlsx.SetCellValue("Sheet1", fmt.Sprintf("C%d", currentRow+k), company.Address)
+		xlsx.SetCellValue("Sheet1", fmt.Sprintf("D%d", currentRow+k), company.Manager)
+	}
+
+	// Set active sheet of the workbook.
+	xlsx.SetActiveSheet(index)
+
+	// Save xlsx file by the given path.
+	err := xlsx.SaveAs("temp/allCompanies.xlsx")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Response file excel
+	return c.File("temp/allCompanies.xlsx")
+}

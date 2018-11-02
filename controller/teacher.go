@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -162,7 +163,7 @@ func CreateTeacher(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    teacher.ID,
-		Message: fmt.Sprintf("El estudiante %s se registro correctamente", teacher.FirstName),
+		Message: fmt.Sprintf("El profesor %s se registro correctamente", teacher.FirstName),
 	})
 }
 
@@ -230,10 +231,58 @@ func DeleteTeacher(c echo.Context) error {
 }
 
 func GetTempUploadTeacher(c echo.Context) error {
-	return c.File("templates/uploadTeacherTemplate.xlsx")
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
+
+	// Return file sa
+	if currentUser.Profile == "sa" {
+		fileDir := "templates/templateTeacherSA.xlsx"
+		xlsx, err := excelize.OpenFile(fileDir)
+		if err != nil {
+			fmt.Println(err)
+		}
+		xlsx.NewSheet("ProgramIDS")
+
+		// get connection
+		db := config.GetConnection()
+		defer db.Close()
+
+		// Execute instructions
+		programs := make([]models.Program, 0)
+		if err := db.Find(&programs).Order("id desc").Error; err != nil {
+			return err
+		}
+
+		xlsx.SetCellValue("ProgramIDS", "A1", "ID")
+		xlsx.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
+
+		for i := 0; i < len(programs); i++ {
+			xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
+			xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)
+		}
+		xlsx.SetActiveSheet(1)
+
+		// Save xlsx file by the given path.
+		err = xlsx.SaveAs(fileDir)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		return c.File(fileDir)
+	}
+
+	// Return file admin
+	return c.File("templates/templateTeacher.xlsx")
 }
 
 func SetTempUploadTeacher(c echo.Context) error {
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
+
 	// Source
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -271,14 +320,28 @@ func SetTempUploadTeacher(c echo.Context) error {
 	ignoreCols := 1
 
 	// Get all the rows in the Sheet1.
-	rows := xlsx.GetRows("Sheet1")
+	rows := xlsx.GetRows("teacher")
 	for k, row := range rows {
 		if k >= ignoreCols {
+			var currentProgram uint
+			currentProgram = currentUser.ProgramID
+
+			if currentProgram == 0 {
+				u, _ := strconv.ParseUint(strings.TrimSpace(row[12]), 0, 32)
+				currentProgram = uint(u)
+			}
+
 			teachers = append(teachers, models.Teacher{
-				DNI:       strings.TrimSpace(row[0]),
-				FirstName: strings.TrimSpace(row[1]),
-				Phone:     strings.TrimSpace(row[3]),
-				//State:    true,
+				DNI:            strings.TrimSpace(row[0]),
+				LastName:       strings.TrimSpace(row[1]),
+				FirstName:      strings.TrimSpace(row[2]),
+				Gender:         strings.TrimSpace(row[4]),
+				Address:        strings.TrimSpace(row[5]),
+				Phone:          strings.TrimSpace(row[6]),
+				WorkConditions: strings.TrimSpace(row[7]),
+				EducationLevel: strings.TrimSpace(row[8]),
+				Specialty:      strings.TrimSpace(row[11]),
+				ProgramID:      currentProgram,
 			})
 		}
 	}
@@ -294,8 +357,8 @@ func SetTempUploadTeacher(c echo.Context) error {
 			tr.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{
 				Success: false,
-				Message: fmt.Sprintf("Ocurrió un error al insertar el alumno %s con "+
-					"DNI: %s es posible que este alumno ya este en la base de datos o los datos son incorrectos, "+
+				Message: fmt.Sprintf("Ocurrió un error al insertar el profesor %s con "+
+					"DNI: %s es posible que este profesor ya este en la base de datos o los datos son incorrectos, "+
 					"Error: %s, no se realizo ninguna cambio en la base de datos", teacher.FirstName, teacher.DNI, err),
 			})
 		}
