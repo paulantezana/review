@@ -73,6 +73,8 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/company/update", controller.UpdateCompany)
 	ar.DELETE("/company/delete", controller.DeleteCompany)
 	ar.POST("/company/search", controller.GetCompanySearch)
+	ar.GET("/company/download/template", controller.GetTempUploadCompany)
+	ar.POST("/company/upload/template", controller.SetTempUploadCompany)
 
 	// Review
 	ar.POST("/review/all", controller.GetReviews)
@@ -96,5 +98,5 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/statistic/top/users", controller.TopUsers)
 
 	// Review Detail
-	ar.POST("/reviewdetail/all", controller.GetReviewsDetail)
+	ar.POST("/reviewDetail/by/review", controller.GetReviewsDetailByReview)
 }

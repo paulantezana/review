@@ -14,15 +14,15 @@ import (
 
 // GetReviews functions get reviews by student_id
 type reviewsResponse struct {
-    ID              uint      `json:"id"`
-    ApprobationDate time.Time `json:"approbation_date"`
-    ModuleId  uint `json:"module_id"`
-    Name        string `json:"name"`
-    Sequence    uint   `json:"sequence"`
-    Semester    string `json:"semester"`
-    TeacherID uint `json:"teacher_id"`
-    TeacherFirstName string `json:"teacher_first_name"`
-    TeacherLastName  string `json:"teacher_last_name"`
+	ID               uint      `json:"id"`
+	ApprobationDate  time.Time `json:"approbation_date"`
+	ModuleId         uint      `json:"module_id"`
+	Name             string    `json:"name"`
+	Sequence         uint      `json:"sequence"`
+	Semester         string    `json:"semester"`
+	TeacherID        uint      `json:"teacher_id"`
+	TeacherFirstName string    `json:"teacher_first_name"`
+	TeacherLastName  string    `json:"teacher_last_name"`
 }
 
 // GetReviews functions get all reviews
@@ -38,16 +38,16 @@ func GetReviews(c echo.Context) error {
 	defer db.Close()
 
 	// Query in database
-    reviewsResponses := make([]reviewsResponse, 0)
-    if err := db.Table("reviews").
-        Select("reviews.id, reviews.supervisor, reviews.approbation_date, modules.id as module_id, modules.name, modules.semester, modules.sequence, teachers.id as teacher_id, teachers.first_name as teacher_first_name, teachers.last_name as teacher_last_name").
-        Joins("INNER JOIN modules on reviews.module_id = modules.id").
-        Joins("INNER JOIN teachers on reviews.teacher_id = teachers.id").
-        Order("reviews.id asc").
-        Where("reviews.student_id = ?", student.ID).
-        Scan(&reviewsResponses).Error; err != nil {
-        return c.NoContent(http.StatusInternalServerError)
-    }
+	reviewsResponses := make([]reviewsResponse, 0)
+	if err := db.Table("reviews").
+		Select("reviews.id, reviews.supervisor, reviews.approbation_date, modules.id as module_id, modules.name, modules.semester, modules.sequence, teachers.id as teacher_id, teachers.first_name as teacher_first_name, teachers.last_name as teacher_last_name").
+		Joins("INNER JOIN modules on reviews.module_id = modules.id").
+		Joins("INNER JOIN teachers on reviews.teacher_id = teachers.id").
+		Order("reviews.id asc").
+		Where("reviews.student_id = ?", student.ID).
+		Scan(&reviewsResponses).Error; err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -218,7 +218,7 @@ type detailResponse struct {
 	EndDate            time.Time `json:"end_date"`
 	RUC                string    `json:"ruc"`
 	NombreORazonSocial string    `json:"nombre_o_razon_social"`
-    Direccion              string `json:"direccion"`
+	Direccion          string    `json:"direccion"`
 }
 
 // consResponse struct

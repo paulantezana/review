@@ -2,11 +2,15 @@ package controller
 
 import (
 	"fmt"
+	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
+	"io"
 	"net/http"
+	"os"
+	"strings"
 )
 
 func GetCompanies(c echo.Context) error {
@@ -31,7 +35,7 @@ func GetCompanies(c echo.Context) error {
 	companies := make([]models.Company, 0)
 
 	// Query in database
-	if err := db.Where("nombre_o_razon_social LIKE ?", "%"+request.Search+"%").
+	if err := db.Where("lower(name_social_reason) LIKE lower(?)", "%"+request.Search+"%").
 		Order("id asc").
 		Offset(offset).Limit(request.Limit).Find(&companies).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
@@ -60,7 +64,7 @@ func GetCompanySearch(c echo.Context) error {
 
 	// Execute instructions
 	companies := make([]models.Company, 0)
-	if err := db.Where("lower(nombre_o_razon_social) LIKE lower(?)", "%"+request.Search+"%").
+	if err := db.Where("lower(name_social_reason) LIKE lower(?)", "%"+request.Search+"%").
 		Limit(10).Find(&companies).Error; err != nil {
 		return err
 	}
@@ -68,9 +72,9 @@ func GetCompanySearch(c echo.Context) error {
 	customCompanies := make([]models.Company, 0)
 	for _, student := range companies {
 		customCompanies = append(customCompanies, models.Company{
-			ID:                 student.ID,
-			NombreORazonSocial: student.NombreORazonSocial,
-			RUC:                student.RUC,
+			ID:               student.ID,
+			NameSocialReason: student.NameSocialReason,
+			RUC:              student.RUC,
 		})
 	}
 
@@ -104,7 +108,7 @@ func CreateCompany(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    company.ID,
-		Message: fmt.Sprintf("La empresa %s se registro correctamente", company.NombreORazonSocial),
+		Message: fmt.Sprintf("La empresa %s se registro correctamente", company.NameSocialReason),
 	})
 }
 
@@ -132,7 +136,7 @@ func UpdateCompany(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    company.ID,
-		Message: fmt.Sprintf("Los datos del la empresa %s se actualizaron correctamente", company.NombreORazonSocial),
+		Message: fmt.Sprintf("Los datos del la empresa %s se actualizaron correctamente", company.NameSocialReason),
 	})
 }
 
@@ -167,6 +171,89 @@ func DeleteCompany(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    company.ID,
-		Message: fmt.Sprintf("La empresa %s se elimino correctamente", company.NombreORazonSocial),
+		Message: fmt.Sprintf("La empresa %s se elimino correctamente", company.NameSocialReason),
+	})
+}
+
+// GetTempUploadStudent dowloand template
+func GetTempUploadCompany(c echo.Context) error {
+	// Return file admin
+	return c.File("templates/templateCompany.xlsx")
+}
+
+// SetTempUploadStudent set upload student
+func SetTempUploadCompany(c echo.Context) error {
+	// Source
+	file, err := c.FormFile("file")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	// Destination
+	auxDir := "temp/" + file.Filename
+	dst, err := os.Create(auxDir)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
+
+	// ---------------------
+	// Read File whit Excel
+	// ---------------------
+	xlsx, err := excelize.OpenFile(auxDir)
+	if err != nil {
+		return err
+	}
+
+	// Prepare
+	companies := make([]models.Company, 0)
+	ignoreCols := 1
+
+	// Get all the rows in the student.
+	rows := xlsx.GetRows("empresa")
+	for k, row := range rows {
+		if k >= ignoreCols {
+			companies = append(companies, models.Company{
+				RUC:              strings.TrimSpace(row[0]),
+				NameSocialReason: strings.TrimSpace(row[1]),
+				Address:          strings.TrimSpace(row[2]),
+				Manager:          strings.TrimSpace(row[3]),
+			})
+		}
+	}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Insert students in database
+	tr := db.Begin()
+	for _, company := range companies {
+		if err := tr.Create(&company).Error; err != nil {
+			tr.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{
+				Success: false,
+				Message: fmt.Sprintf("Ocurrió un error al insertar al empresa %s con "+
+					"RUC: %s es posible que este alumno ya este en la base de datos o los datos son incorrectos, "+
+					"Error: %s, no se realizo ninguna cambio en la base de datos", company.NameSocialReason, company.RUC, err),
+			})
+		}
+	}
+	tr.Commit()
+
+	// Response success
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: fmt.Sprintf("Se guardo %d registros den la base de datos", len(companies)),
 	})
 }
