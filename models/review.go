@@ -11,6 +11,7 @@ type Review struct {
 	ModuleId  uint `json:"module_id"`
 	StudentID uint `json:"student_id"`
 	UserID    uint `json:"user_id"`
+	TeacherID uint `json:"teacher_id"`
 
 	ReviewDetails []ReviewDetail `json:"review_details"`
 }

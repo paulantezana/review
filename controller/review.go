@@ -12,7 +12,20 @@ import (
 	"github.com/paulantezana/review/utilities"
 )
 
-// GetReviews funstions get reviews by student_id
+// GetReviews functions get reviews by student_id
+type reviewsResponse struct {
+    ID              uint      `json:"id"`
+    ApprobationDate time.Time `json:"approbation_date"`
+    ModuleId  uint `json:"module_id"`
+    Name        string `json:"name"`
+    Sequence    uint   `json:"sequence"`
+    Semester    string `json:"semester"`
+    TeacherID uint `json:"teacher_id"`
+    TeacherFirstName string `json:"teacher_first_name"`
+    TeacherLastName  string `json:"teacher_last_name"`
+}
+
+// GetReviews functions get all reviews
 func GetReviews(c echo.Context) error {
 	// Get data request
 	student := models.Student{}
@@ -24,19 +37,22 @@ func GetReviews(c echo.Context) error {
 	db := config.GetConnection()
 	defer db.Close()
 
-	// Execute instructions
-	reviews := make([]models.Review, 0)
-
 	// Query in database
-	if err := db.Where("student_id = ?", student.ID).
-		Order("id asc").Find(&reviews).Error; err != nil {
-		return err
-	}
+    reviewsResponses := make([]reviewsResponse, 0)
+    if err := db.Table("reviews").
+        Select("reviews.id, reviews.supervisor, reviews.approbation_date, modules.id as module_id, modules.name, modules.semester, modules.sequence, teachers.id as teacher_id, teachers.first_name as teacher_first_name, teachers.last_name as teacher_last_name").
+        Joins("INNER JOIN modules on reviews.module_id = modules.id").
+        Joins("INNER JOIN teachers on reviews.teacher_id = teachers.id").
+        Order("reviews.id asc").
+        Where("reviews.student_id = ?", student.ID).
+        Scan(&reviewsResponses).Error; err != nil {
+        return c.NoContent(http.StatusInternalServerError)
+    }
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    reviews,
+		Data:    reviewsResponses,
 	})
 }
 
@@ -167,7 +183,7 @@ func GetActaReview(c echo.Context) error {
 		Select("modules.id, modules.name, modules.sequence, modules.points, modules.hours, modules.semester").
 		Joins("INNER JOIN modules on reviews.module_id = modules.id").
 		Order("modules.sequence asc").
-		Where("WHERE reviews.id = ?", review.ID).
+		Where("reviews.id = ?", review.ID).
 		Scan(&modules).Error; err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	}

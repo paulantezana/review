@@ -107,8 +107,8 @@ func GetTeacherSearch(c echo.Context) error {
 
 	// Execute instructions
 	teachers := make([]models.Teacher, 0)
-	if err := db.Where("lower(full_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
-		Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
+	if err := db.Where("lower(last_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
+		Or("lower(first_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
 		Limit(10).Find(&teachers).Error; err != nil {
 		return err
 	}

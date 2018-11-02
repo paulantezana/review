@@ -30,7 +30,7 @@ func GetModules(c echo.Context) error {
 	modules := make([]models.Module, 0)
 
 	// Query in database
-	if err := db.Where("program_id = ?", currentUser.ProgramID).Find(&modules).Error; err != nil {
+	if err := db.Where("program_id = ?", currentUser.ProgramID).Order("sequence asc") .Find(&modules).Error; err != nil {
 		return err
 	}
 
