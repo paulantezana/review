@@ -389,11 +389,9 @@ func ExportAllTeachers(c echo.Context) error {
     db := config.GetConnection()
     defer db.Close()
 
-    // Execute instructions
-    teachers := make([]models.Teacher, 0)
-
     // Query in database
-    if err := db.Where("program_id = ?",currentUser.ID).Order("id asc").Find(&teachers).Error; err != nil {
+    teachers := make([]models.Teacher, 0)
+    if err := db.Where("program_id = ?",currentUser.ProgramID).Order("id asc").Find(&teachers).Error; err != nil {
         return err
     }
 
@@ -418,19 +416,19 @@ func ExportAllTeachers(c echo.Context) error {
     xlsx.SetCellValue("Sheet1", "L1", "Especialidad")
 
     currentRow := 2
-    for k, company := range teachers {
-        xlsx.SetCellValue("Sheet1", fmt.Sprintf("A%d", currentRow+k), company.DNI)
-        xlsx.SetCellValue("Sheet1", fmt.Sprintf("B%d", currentRow+k), company.LastName)
-        xlsx.SetCellValue("Sheet1", fmt.Sprintf("C%d", currentRow+k), company.FirstName)
-        xlsx.SetCellValue("Sheet1", fmt.Sprintf("D%d", currentRow+k), company.BirthDate)
-        xlsx.SetCellValue("Sheet1", fmt.Sprintf("E%d", currentRow+k), company.Gender)
-        xlsx.SetCellValue("Sheet1", fmt.Sprintf("F%d", currentRow+k), company.Address)
-        xlsx.SetCellValue("Sheet1", fmt.Sprintf("G%d", currentRow+k), company.Phone)
-        xlsx.SetCellValue("Sheet1", fmt.Sprintf("H%d", currentRow+k), company.WorkConditions)
-        xlsx.SetCellValue("Sheet1", fmt.Sprintf("I%d", currentRow+k), company.EducationLevel)
-        xlsx.SetCellValue("Sheet1", fmt.Sprintf("J%d", currentRow+k), company.AdmissionDate)
-        xlsx.SetCellValue("Sheet1", fmt.Sprintf("K%d", currentRow+k), company.RetirementDate)
-        xlsx.SetCellValue("Sheet1", fmt.Sprintf("L%d", currentRow+k), company.Specialty)
+    for k, teacher := range teachers {
+        xlsx.SetCellValue("Sheet1", fmt.Sprintf("A%d", currentRow+k), teacher.DNI)
+        xlsx.SetCellValue("Sheet1", fmt.Sprintf("B%d", currentRow+k), teacher.LastName)
+        xlsx.SetCellValue("Sheet1", fmt.Sprintf("C%d", currentRow+k), teacher.FirstName)
+        xlsx.SetCellValue("Sheet1", fmt.Sprintf("D%d", currentRow+k), teacher.BirthDate.Format("01/02/2006"))
+        xlsx.SetCellValue("Sheet1", fmt.Sprintf("E%d", currentRow+k), teacher.Gender)
+        xlsx.SetCellValue("Sheet1", fmt.Sprintf("F%d", currentRow+k), teacher.Address)
+        xlsx.SetCellValue("Sheet1", fmt.Sprintf("G%d", currentRow+k), teacher.Phone)
+        xlsx.SetCellValue("Sheet1", fmt.Sprintf("H%d", currentRow+k), teacher.WorkConditions)
+        xlsx.SetCellValue("Sheet1", fmt.Sprintf("I%d", currentRow+k), teacher.EducationLevel)
+        xlsx.SetCellValue("Sheet1", fmt.Sprintf("J%d", currentRow+k), teacher.AdmissionDate.Format("01/02/2006"))
+        xlsx.SetCellValue("Sheet1", fmt.Sprintf("K%d", currentRow+k), teacher.RetirementDate.Format("01/02/2006"))
+        xlsx.SetCellValue("Sheet1", fmt.Sprintf("L%d", currentRow+k), teacher.Specialty)
     }
 
     // Set active sheet of the workbook.

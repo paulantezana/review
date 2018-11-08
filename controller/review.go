@@ -217,8 +217,8 @@ type detailResponse struct {
 	StartDate          time.Time `json:"start_date"`
 	EndDate            time.Time `json:"end_date"`
 	RUC                string    `json:"ruc"`
-	NombreORazonSocial string    `json:"nombre_o_razon_social"`
-	Direccion          string    `json:"direccion"`
+    NameSocialReason string         `json:"name_social_reason"`
+    Address          string         `json:"address"`
 }
 
 // consResponse struct
@@ -254,7 +254,7 @@ func GetConstReview(c echo.Context) error {
 	// Find detailResponse
 	detailResponses := make([]detailResponse, 0)
 	if err := db.Table("review_details").
-		Select("review_details.hours, review_details.note, review_details.note_appreciation,review_details.start_date, review_details.end_date, companies.ruc, companies.nombre_o_razon_social, companies.direccion").
+		Select("review_details.hours, review_details.note, review_details.note_appreciation,review_details.start_date, review_details.end_date, companies.ruc, companies.name_social_reason, companies.address").
 		Joins("INNER JOIN companies on review_details.company_id = companies.id").
 		Where("review_details.review_id = ?", review.ID).
 		Scan(&detailResponses).Error; err != nil {
