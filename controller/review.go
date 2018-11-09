@@ -165,35 +165,6 @@ func DeleteReview(c echo.Context) error {
 	})
 }
 
-// GetActaReview function get data acta
-func GetActaReview(c echo.Context) error {
-	// Get data request
-	review := models.Review{}
-	if err := c.Bind(&review); err != nil {
-		return err
-	}
-
-	// get connection
-	db := config.GetConnection()
-	defer db.Close()
-
-	// Find quotations in database by RequirementID  ========== Quotations, Providers, Users
-	modules := make([]models.Module, 0)
-	if err := db.Table("reviews").
-		Select("modules.id, modules.name, modules.sequence, modules.points, modules.hours, modules.semester").
-		Joins("INNER JOIN modules on reviews.module_id = modules.id").
-		Order("modules.sequence asc").
-		Where("reviews.id = ?", review.ID).
-		Scan(&modules).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	return c.JSON(http.StatusOK, utilities.Response{
-		Success: true,
-		Data:    "Hola",
-	})
-}
-
 // moduleResponse struct
 type moduleResponse struct {
 	ID              uint   `json:"id"`
@@ -210,21 +181,90 @@ type moduleResponse struct {
 
 // detailResponse struct
 type detailResponse struct {
-	ID                 uint      `json:"id" gorm:"primary_key"`
-	Hours              uint      `json:"hours"`
-	Note               uint      `json:"note"`
-	NoteAppreciation   uint      `json:"note_appreciation"`
-	StartDate          time.Time `json:"start_date"`
-	EndDate            time.Time `json:"end_date"`
-	RUC                string    `json:"ruc"`
-    NameSocialReason string         `json:"name_social_reason"`
-    Address          string         `json:"address"`
+	ID               uint      `json:"id" gorm:"primary_key"`
+	Hours            uint      `json:"hours"`
+	Note             uint      `json:"note"`
+	NoteAppreciation uint      `json:"note_appreciation"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	RUC              string    `json:"ruc"`
+	NameSocialReason string    `json:"name_social_reason"`
+	Address          string    `json:"address"`
+}
+
+type reviewResponse struct {
+    ID              uint      `json:"id" gorm:"primary_key"`
+    TeacherLastName  string `json:"teacher_last_name"`
+    TeacherFirstName string `json:"teacher_first_name"`
+    ApprobationDate time.Time `json:"approbation_date"`
+    TeacherID uint `json:"teacher_id"`
+}
+
+// consResponse struct
+type actaResponse struct {
+	Success bool             `json:"success"`
+	Module  moduleResponse   `json:"module"`
+	Detail  []detailResponse `json:"detail"`
+	Review  reviewResponse    `json:"review"`
+}
+
+// GetActaReview function get data acta
+func GetActaReview(c echo.Context) error {
+	// Get data request
+	review := models.Review{}
+	if err := c.Bind(&review); err != nil {
+		return err
+	}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Find reviews
+	moduleResponses := make([]moduleResponse, 0)
+	if err := db.Table("reviews").
+		Select("modules.id, modules.name, modules.sequence, modules.points, modules.hours, modules.semester, students.id as student_id, students.dni as student_dni, students.full_name as student_full_name").
+		Joins("INNER JOIN modules on reviews.module_id = modules.id").
+		Joins("INNER JOIN students on reviews.student_id = students.id").
+		Where("reviews.id = ?", review.ID).
+		Scan(&moduleResponses).Error; err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	// Find detailResponse
+	detailResponses := make([]detailResponse, 0)
+	if err := db.Table("review_details").
+		Select("review_details.hours, review_details.note, review_details.note_appreciation,review_details.start_date, review_details.end_date, companies.ruc, companies.name_social_reason, companies.address").
+		Joins("INNER JOIN companies on review_details.company_id = companies.id").
+		Where("review_details.review_id = ?", review.ID).
+		Scan(&detailResponses).Error; err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	// Find Review
+    reviewResponses := make([]reviewResponse, 0)
+    if err := db.Table("reviews").
+        Select("reviews.id, reviews.approbation_date, teachers.first_name, teachers.last_name").
+        Joins("INNER JOIN teachers on reviews.teacher_id = teachers.id").
+        Where("reviews.id = ?", review.ID).
+        Scan(&reviewResponses).Error; err != nil {
+        return c.NoContent(http.StatusInternalServerError)
+    }
+
+
+	// Response data
+	return c.JSON(http.StatusOK, actaResponse{
+		Success: true,
+		Module:  moduleResponses[0],
+		Detail:  detailResponses,
+		Review:  reviewResponses[0],
+	})
 }
 
 // consResponse struct
 type consResponse struct {
-	Module  moduleResponse   `json:"module"`
 	Success bool             `json:"success"`
+	Module  moduleResponse   `json:"module"`
 	Detail  []detailResponse `json:"detail"`
 }
 

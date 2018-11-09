@@ -379,12 +379,12 @@ func SetTempUploadStudent(c echo.Context) error {
 	for k, row := range rows {
 
 		if k >= ignoreCols {
-            // Validate required fields
-            if row[0] == "" {
-                break
-            }
+			// Validate required fields
+			if row[0] == "" {
+				break
+			}
 
-            // program id
+			// program id
 			var currentProgram uint
 			currentProgram = currentUser.ProgramID
 

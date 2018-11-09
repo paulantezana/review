@@ -59,7 +59,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/teacher/search", controller.GetTeacherSearch)
 	ar.GET("/teacher/download/template", controller.GetTempUploadTeacher)
 	ar.POST("/teacher/upload/template", controller.SetTempUploadTeacher)
-    ar.GET("/teacher/export/all", controller.ExportAllTeachers)
+	ar.GET("/teacher/export/all", controller.ExportAllTeachers)
 
 	// Module
 	ar.POST("/module/all", controller.GetModules)
