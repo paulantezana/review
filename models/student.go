@@ -11,8 +11,8 @@ type Student struct {
 	State    bool   `json:"state" gorm:"default:'true'"`
 
 	BirthDate     time.Time `json:"birth_date"`
-	AdmissionDate time.Time `json:"admission_date"`
-	PromotionDate time.Time `json:"promotion_date"`
+	AdmissionYear uint `json:"admission_year"`
+	PromotionYear uint `json:"promotion_year"`
 
 	ProgramID uint `json:"program_id"`
 

@@ -102,4 +102,5 @@ func ProtectedApi(e *echo.Echo) {
 
 	// Review Detail
 	ar.POST("/reviewDetail/by/review", controller.GetReviewsDetailByReview)
+	ar.DELETE("/reviewDetail/delete", controller.DeleteReviewDetail)
 }

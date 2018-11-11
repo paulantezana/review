@@ -389,14 +389,22 @@ func SetTempUploadStudent(c echo.Context) error {
 			currentProgram = currentUser.ProgramID
 
 			if currentProgram == 0 {
-				u, _ := strconv.ParseUint(strings.TrimSpace(row[3]), 0, 32)
+				u, _ := strconv.ParseUint(strings.TrimSpace(row[5]), 0, 32)
 				currentProgram = uint(u)
 			}
+
+            ay, _ := strconv.ParseUint(strings.TrimSpace(row[3]), 0, 32)
+            py, _ := strconv.ParseUint(strings.TrimSpace(row[4]), 0, 32)
+
+            admissionYear := uint(ay)
+            promotionYear := uint(py)
 
 			students = append(students, models.Student{
 				DNI:       strings.TrimSpace(row[0]),
 				FullName:  strings.TrimSpace(row[1]),
 				Phone:     strings.TrimSpace(row[2]),
+				AdmissionYear: admissionYear,
+				PromotionYear: promotionYear,
 				State:     true,
 				ProgramID: currentProgram,
 			})
