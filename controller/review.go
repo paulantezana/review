@@ -190,14 +190,15 @@ type detailResponse struct {
 	RUC              string    `json:"ruc"`
 	NameSocialReason string    `json:"name_social_reason"`
 	Address          string    `json:"address"`
+	Phone            string    `json:"phone"`
 }
 
 type reviewResponse struct {
-    ID              uint      `json:"id" gorm:"primary_key"`
-    TeacherLastName  string `json:"teacher_last_name"`
-    TeacherFirstName string `json:"teacher_first_name"`
-    ApprobationDate time.Time `json:"approbation_date"`
-    TeacherID uint `json:"teacher_id"`
+	ID               uint      `json:"id" gorm:"primary_key"`
+	TeacherLastName  string    `json:"teacher_last_name"`
+	TeacherFirstName string    `json:"teacher_first_name"`
+	ApprobationDate  time.Time `json:"approbation_date"`
+	TeacherID        uint      `json:"teacher_id"`
 }
 
 // consResponse struct
@@ -205,7 +206,7 @@ type actaResponse struct {
 	Success bool             `json:"success"`
 	Module  moduleResponse   `json:"module"`
 	Detail  []detailResponse `json:"detail"`
-	Review  reviewResponse    `json:"review"`
+	Review  reviewResponse   `json:"review"`
 }
 
 // GetActaReview function get data acta
@@ -242,15 +243,14 @@ func GetActaReview(c echo.Context) error {
 	}
 
 	// Find Review
-    reviewResponses := make([]reviewResponse, 0)
-    if err := db.Table("reviews").
-        Select("reviews.id, reviews.approbation_date, teachers.first_name, teachers.last_name").
-        Joins("INNER JOIN teachers on reviews.teacher_id = teachers.id").
-        Where("reviews.id = ?", review.ID).
-        Scan(&reviewResponses).Error; err != nil {
-        return c.NoContent(http.StatusInternalServerError)
-    }
-
+	reviewResponses := make([]reviewResponse, 0)
+	if err := db.Table("reviews").
+		Select("reviews.id, reviews.approbation_date, teachers.first_name as teacher_first_name, teachers.last_name as teacher_last_name").
+		Joins("INNER JOIN teachers on reviews.teacher_id = teachers.id").
+		Where("reviews.id = ?", review.ID).
+		Scan(&reviewResponses).Error; err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
 	// Response data
 	return c.JSON(http.StatusOK, actaResponse{
@@ -294,7 +294,7 @@ func GetConstReview(c echo.Context) error {
 	// Find detailResponse
 	detailResponses := make([]detailResponse, 0)
 	if err := db.Table("review_details").
-		Select("review_details.hours, review_details.note, review_details.note_appreciation,review_details.start_date, review_details.end_date, companies.ruc, companies.name_social_reason, companies.address").
+		Select("review_details.hours, review_details.note, review_details.note_appreciation,review_details.start_date, review_details.end_date, companies.ruc, companies.name_social_reason, companies.address, companies.phone").
 		Joins("INNER JOIN companies on review_details.company_id = companies.id").
 		Where("review_details.review_id = ?", review.ID).
 		Scan(&detailResponses).Error; err != nil {
@@ -308,62 +308,77 @@ func GetConstReview(c echo.Context) error {
 	})
 }
 
+type reviewDetailResponse struct {
+	ID                      uint      `json:"id" gorm:"primary_key"`
+	Hours                   uint      `json:"hours"`
+	Note                    uint      `json:"note"`
+	NoteAppreciation        uint      `json:"note_appreciation"`
+	StartDate               time.Time `json:"start_date"`
+	EndDate                 time.Time `json:"end_date"`
+	CompanyNameSocialReason string    `json:"company_name_social_reason"`
+	CompanyAddress          string    `json:"company_address"`
+}
+
 type reviewModuleResponse struct {
-    ID              uint      `json:"id"`
-    ApprobationDate time.Time `json:"approbation_date"`
-    ModuleID          uint   `json:"module_id"`
-    ModuleSequence    uint   `json:"module_sequence"`
-    ModuleName        string `json:"module_name"`
-    ModuleDescription string `json:"module_description"`
-    ModulePoints      uint   `json:"module_points"`
-    ModuleHours       uint   `json:"module_hours"`
-    ModuleSemester    string `json:"module_semester"`
-    ReviewDetails []models.ReviewDetail `json:"review_details"`
+	ID                uint                   `json:"id"`
+	ApprobationDate   time.Time              `json:"approbation_date"`
+	ModuleID          uint                   `json:"module_id"`
+	ModuleSequence    uint                   `json:"module_sequence"`
+	ModuleName        string                 `json:"module_name"`
+	ModuleDescription string                 `json:"module_description"`
+	ModulePoints      uint                   `json:"module_points"`
+	ModuleHours       uint                   `json:"module_hours"`
+	ModuleSemester    string                 `json:"module_semester"`
+	ReviewDetails     []reviewDetailResponse `json:"review_details"`
 }
 
 type consolidateResponse struct {
-    Success bool             `json:"success"`
-    Student models.Student `json:"student"`
-    Reviews  []reviewModuleResponse `json:"reviews"`
-} 
+	Success bool                   `json:"success"`
+	Student models.Student         `json:"student"`
+	Reviews []reviewModuleResponse `json:"reviews"`
+}
 
 // GetConsolidateReview function get data constancy
 func GetConsolidateReview(c echo.Context) error {
-    // Get data request
-    student := models.Student{}
-    if err := c.Bind(&student); err != nil {
-        return err
-    }
+	// Get data request
+	student := models.Student{}
+	if err := c.Bind(&student); err != nil {
+		return err
+	}
 
-    // get connection
-    db := config.GetConnection()
-    defer db.Close()
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
 
-    // Find reviews
-    reviewModuleResponses := make([]reviewModuleResponse, 0)
-    if err := db.Table("reviews").
-        Select("reviews.id, reviews.approbation_date, modules.id as module_id, modules.sequence as module_sequence, modules.name as module_name, modules.description as module_description, modules.points as module_points, modules.hours as module_hours, modules.semester as module_semester").
-        Joins("INNER JOIN modules on reviews.module_id = modules.id").
-        Where("reviews.student_id  = ?", student.ID).
-        Scan(&reviewModuleResponses).Error; err != nil {
-        return c.NoContent(http.StatusInternalServerError)
-    }
+	// Find reviews
+	reviewModuleResponses := make([]reviewModuleResponse, 0)
+	if err := db.Table("reviews").
+		Select("reviews.id, reviews.approbation_date, modules.id as module_id, modules.sequence as module_sequence, modules.name as module_name, modules.description as module_description, modules.points as module_points, modules.hours as module_hours, modules.semester as module_semester").
+		Joins("INNER JOIN modules on reviews.module_id = modules.id").
+		Where("reviews.student_id  = ?", student.ID).
+		Scan(&reviewModuleResponses).Error; err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
-    // Find current student
-    db.First(&student, student.ID)
+	// Find current student
+	db.First(&student, student.ID)
 
-    // consult review detail
-    for key, review := range reviewModuleResponses {
-        red := make([]models.ReviewDetail, 0)
-        if err := db.Where("review_id = ?", review.ID).Find(&red).Error; err != nil{
-            return c.NoContent(http.StatusInternalServerError)
-        }
-        reviewModuleResponses[key].ReviewDetails = red
-    }
+	// consult review detail
+	for key, review := range reviewModuleResponses {
+		redR := make([]reviewDetailResponse, 0)
+		if err := db.Table("review_details").
+			Select("review_details.id, review_details.hours, review_details.note, review_details.note_appreciation, review_details.start_date, review_details.end_date, companies.name_social_reason as company_name_social_reason, companies.address as company_address").
+			Joins("INNER JOIN companies on review_details.company_id = companies.id").
+			Where("review_details.review_id  = ?", review.ID).
+			Scan(&redR).Error; err != nil {
+			return c.NoContent(http.StatusInternalServerError)
+		}
+		reviewModuleResponses[key].ReviewDetails = redR
+	}
 
-    return c.JSON(http.StatusOK, consolidateResponse{
-        Success: true,
-        Reviews:  reviewModuleResponses,
-        Student: student,
-    })
+	return c.JSON(http.StatusOK, consolidateResponse{
+		Success: true,
+		Reviews: reviewModuleResponses,
+		Student: student,
+	})
 }

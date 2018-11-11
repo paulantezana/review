@@ -7,6 +7,7 @@ type Company struct {
 	NameSocialReason string         `json:"name_social_reason"`
 	Address          string         `json:"address"`
 	Manager          string         `json:"manager"`
+	Phone            string         `json:"phone"`
 	ReviewDetails    []ReviewDetail `json:"review_details"`
 }
 
