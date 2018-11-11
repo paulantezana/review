@@ -307,3 +307,63 @@ func GetConstReview(c echo.Context) error {
 		Detail:  detailResponses,
 	})
 }
+
+type reviewModuleResponse struct {
+    ID              uint      `json:"id"`
+    ApprobationDate time.Time `json:"approbation_date"`
+    ModuleID          uint   `json:"module_id"`
+    ModuleSequence    uint   `json:"module_sequence"`
+    ModuleName        string `json:"module_name"`
+    ModuleDescription string `json:"module_description"`
+    ModulePoints      uint   `json:"module_points"`
+    ModuleHours       uint   `json:"module_hours"`
+    ModuleSemester    string `json:"module_semester"`
+    ReviewDetails []models.ReviewDetail `json:"review_details"`
+}
+
+type consolidateResponse struct {
+    Success bool             `json:"success"`
+    Student models.Student `json:"student"`
+    Reviews  []reviewModuleResponse `json:"reviews"`
+} 
+
+// GetConsolidateReview function get data constancy
+func GetConsolidateReview(c echo.Context) error {
+    // Get data request
+    student := models.Student{}
+    if err := c.Bind(&student); err != nil {
+        return err
+    }
+
+    // get connection
+    db := config.GetConnection()
+    defer db.Close()
+
+    // Find reviews
+    reviewModuleResponses := make([]reviewModuleResponse, 0)
+    if err := db.Table("reviews").
+        Select("reviews.id, reviews.approbation_date, modules.id as module_id, modules.sequence as module_sequence, modules.name as module_name, modules.description as module_description, modules.points as module_points, modules.hours as module_hours, modules.semester as module_semester").
+        Joins("INNER JOIN modules on reviews.module_id = modules.id").
+        Where("reviews.student_id  = ?", student.ID).
+        Scan(&reviewModuleResponses).Error; err != nil {
+        return c.NoContent(http.StatusInternalServerError)
+    }
+
+    // Find current student
+    db.First(&student, student.ID)
+
+    // consult review detail
+    for key, review := range reviewModuleResponses {
+        red := make([]models.ReviewDetail, 0)
+        if err := db.Where("review_id = ?", review.ID).Find(&red).Error; err != nil{
+            return c.NoContent(http.StatusInternalServerError)
+        }
+        reviewModuleResponses[key].ReviewDetails = red
+    }
+
+    return c.JSON(http.StatusOK, consolidateResponse{
+        Success: true,
+        Reviews:  reviewModuleResponses,
+        Student: student,
+    })
+}
