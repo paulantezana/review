@@ -25,9 +25,25 @@ type reviewsResponse struct {
 	TeacherLastName  string    `json:"teacher_last_name"`
 }
 
+type reviewEnablesResponse struct {
+    Consolidate bool `json:"consolidate"`
+}
+
+type getReviewsResponse struct {
+    Message string      `json:"message"`
+    Success bool        `json:"success"`
+    Data    interface{} `json:"data"`
+    Validates reviewEnablesResponse `json:"validates"`
+} 
+
 // GetReviews functions get all reviews
 func GetReviews(c echo.Context) error {
-	// Get data request
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+    
+    // Get data request
 	student := models.Student{}
 	if err := c.Bind(&student); err != nil {
 		return err
@@ -40,7 +56,7 @@ func GetReviews(c echo.Context) error {
 	// Query in database
 	reviewsResponses := make([]reviewsResponse, 0)
 	if err := db.Table("reviews").
-		Select("reviews.id, reviews.supervisor, reviews.approbation_date, modules.id as module_id, modules.name, modules.semester, modules.sequence, teachers.id as teacher_id, teachers.first_name as teacher_first_name, teachers.last_name as teacher_last_name").
+		Select("reviews.id, reviews.approbation_date, modules.id as module_id, modules.name, modules.semester, modules.sequence, teachers.id as teacher_id, teachers.first_name as teacher_first_name, teachers.last_name as teacher_last_name").
 		Joins("INNER JOIN modules on reviews.module_id = modules.id").
 		Joins("INNER JOIN teachers on reviews.teacher_id = teachers.id").
 		Order("reviews.id asc").
@@ -49,10 +65,24 @@ func GetReviews(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	// Return response
-	return c.JSON(http.StatusCreated, utilities.Response{
+    // validation
+    allReviews := len(reviewsResponses) // all review count
+    var allModules uint // all modules count
+    if err := db.Model(&models.Module{}).Where("program_id = ?", currentUser.ProgramID).Count(&allModules).Error; err != nil{
+        return c.NoContent(http.StatusInternalServerError)
+    }
+
+    reviewEnablesResponse := reviewEnablesResponse{}
+
+    if allModules == uint(allReviews) && allModules != 0 {
+        reviewEnablesResponse.Consolidate = true
+    }
+
+    // Return response
+	return c.JSON(http.StatusCreated, getReviewsResponse{
 		Success: true,
 		Data:    reviewsResponses,
+		Validates: reviewEnablesResponse,
 	})
 }
 
