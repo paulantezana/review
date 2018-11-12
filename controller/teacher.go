@@ -120,6 +120,7 @@ func GetTeacherSearch(c echo.Context) error {
 			ID:        teacher.ID,
 			FirstName: teacher.FirstName,
 			DNI:       teacher.DNI,
+			LastName: teacher.LastName,
 		})
 	}
 

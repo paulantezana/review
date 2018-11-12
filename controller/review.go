@@ -214,7 +214,6 @@ type detailResponse struct {
 	ID               uint      `json:"id" gorm:"primary_key"`
 	Hours            uint      `json:"hours"`
 	Note             uint      `json:"note"`
-	NoteAppreciation uint      `json:"note_appreciation"`
 	StartDate        time.Time `json:"start_date"`
 	EndDate          time.Time `json:"end_date"`
 	RUC              string    `json:"ruc"`
@@ -265,7 +264,7 @@ func GetActaReview(c echo.Context) error {
 	// Find detailResponse
 	detailResponses := make([]detailResponse, 0)
 	if err := db.Table("review_details").
-		Select("review_details.hours, review_details.note, review_details.note_appreciation,review_details.start_date, review_details.end_date, companies.ruc, companies.name_social_reason, companies.address").
+		Select("review_details.hours, review_details.note,review_details.start_date, review_details.end_date, companies.ruc, companies.name_social_reason, companies.address, companies.phone").
 		Joins("INNER JOIN companies on review_details.company_id = companies.id").
 		Where("review_details.review_id = ?", review.ID).
 		Scan(&detailResponses).Error; err != nil {
@@ -296,6 +295,7 @@ type consResponse struct {
 	Success bool             `json:"success"`
 	Module  moduleResponse   `json:"module"`
 	Detail  []detailResponse `json:"detail"`
+	Review models.Review `json:"review"`
 }
 
 // GetConstReview function get data constancy
@@ -324,17 +324,23 @@ func GetConstReview(c echo.Context) error {
 	// Find detailResponse
 	detailResponses := make([]detailResponse, 0)
 	if err := db.Table("review_details").
-		Select("review_details.hours, review_details.note, review_details.note_appreciation,review_details.start_date, review_details.end_date, companies.ruc, companies.name_social_reason, companies.address, companies.phone").
+		Select("review_details.hours, review_details.note, review_details.start_date, review_details.end_date, companies.ruc, companies.name_social_reason, companies.address, companies.phone").
 		Joins("INNER JOIN companies on review_details.company_id = companies.id").
 		Where("review_details.review_id = ?", review.ID).
 		Scan(&detailResponses).Error; err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+    // find review
+    if err := db.First(&review, review.ID).Error; err != nil {
+        return err
+    }
+
 	return c.JSON(http.StatusOK, consResponse{
 		Success: true,
 		Module:  moduleResponses[0],
 		Detail:  detailResponses,
+		Review: review,
 	})
 }
 
@@ -342,7 +348,6 @@ type reviewDetailResponse struct {
 	ID                      uint      `json:"id" gorm:"primary_key"`
 	Hours                   uint      `json:"hours"`
 	Note                    uint      `json:"note"`
-	NoteAppreciation        uint      `json:"note_appreciation"`
 	StartDate               time.Time `json:"start_date"`
 	EndDate                 time.Time `json:"end_date"`
 	CompanyNameSocialReason string    `json:"company_name_social_reason"`
@@ -397,7 +402,7 @@ func GetConsolidateReview(c echo.Context) error {
 	for key, review := range reviewModuleResponses {
 		redR := make([]reviewDetailResponse, 0)
 		if err := db.Table("review_details").
-			Select("review_details.id, review_details.hours, review_details.note, review_details.note_appreciation, review_details.start_date, review_details.end_date, companies.name_social_reason as company_name_social_reason, companies.address as company_address").
+			Select("review_details.id, review_details.hours, review_details.note, review_details.start_date, review_details.end_date, companies.name_social_reason as company_name_social_reason, companies.address as company_address").
 			Joins("INNER JOIN companies on review_details.company_id = companies.id").
 			Where("review_details.review_id  = ?", review.ID).
 			Scan(&redR).Error; err != nil {

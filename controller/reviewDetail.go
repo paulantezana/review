@@ -15,7 +15,6 @@ type reviewDetailByReviewResponse struct {
 	ID               uint      `json:"id" gorm:"primary_key"`
 	Hours            uint      `json:"hours"`
 	Note             uint      `json:"note"`
-	NoteAppreciation uint      `json:"note_appreciation"`
 	StartDate        time.Time `json:"start_date"`
 	EndDate          time.Time `json:"end_date"`
 
@@ -41,7 +40,7 @@ func GetReviewsDetailByReview(c echo.Context) error {
 
 	// Query in database
 	if err := db.Table("review_details").
-		Select("review_details.id, review_details.hours, review_details.note, review_details.note_appreciation, review_details.start_date, review_details.end_date, review_details.company_id, companies.name_social_reason as company_name").
+		Select("review_details.id, review_details.hours, review_details.note, review_details.start_date, review_details.end_date, review_details.company_id, companies.name_social_reason as company_name").
 		Joins("INNER JOIN companies on review_details.company_id = companies.id").
 		Order("review_details.id asc").
 		Where("review_details.review_id = ?", review.ID).

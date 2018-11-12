@@ -106,7 +106,7 @@ func migration() {
 		PrefixShortName: "I.E.S.T.P.",
 		Institute:       "SEDNA",
 		Logo:            "static/logo.png",
-		Ministry:        "static/ministerio.png",
+		Ministry:        "static/ministry.jpg",
 	}
 
 	// Insert database
