@@ -9,6 +9,7 @@ type Student struct {
 	FullName string `json:"full_name" gorm:"type:varchar(250)"`
 	Phone    string `json:"phone" gorm:"type:varchar(32)"`
 	State    bool   `json:"state" gorm:"default:'true'"`
+    Gender    string    `json:"gender"`
 
 	BirthDate     time.Time `json:"birth_date"`
 	AdmissionYear uint `json:"admission_year"`
