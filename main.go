@@ -3,7 +3,8 @@ package main
 import (
 	"crypto/sha256"
 	"fmt"
-	"os"
+    "github.com/paulantezana/review/models/monitoring"
+    "os"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -60,6 +61,14 @@ func migration() {
 		&models.Teacher{},
 		&models.Company{},
 		&models.Setting{},
+
+		// Migration monitoring
+        &monitoring.Answer{},
+        &monitoring.AnswerDetail{},
+        &monitoring.MultipleQuestion{},
+        &monitoring.Poll{},
+        &monitoring.Question{},
+        &monitoring.TypeQuestion{},
 	)
 	db.Model(&models.Review{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.Review{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")

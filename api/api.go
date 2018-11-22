@@ -5,7 +5,8 @@ import (
 	"github.com/labstack/echo/middleware"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/controller"
-	"github.com/paulantezana/review/utilities"
+    "github.com/paulantezana/review/controller/monitoringcontroller"
+    "github.com/paulantezana/review/utilities"
 )
 
 // PublicApi function public urls
@@ -104,4 +105,13 @@ func ProtectedApi(e *echo.Echo) {
 	// Review Detail
 	ar.POST("/reviewDetail/by/review", controller.GetReviewsDetailByReview)
 	ar.DELETE("/reviewDetail/delete", controller.DeleteReviewDetail)
+
+
+
+	// ---------------------------------------------------------------------------
+	//      Monitoring routes ----------------------------------------------------
+    ar.POST("/monitoring/poll/all", monitoringcontroller.GetPollsPaginate)
+    ar.POST("/monitoring/poll/create", monitoringcontroller.CreatePoll)
+    ar.PUT("/monitoring/poll/update", monitoringcontroller.UpdatePoll)
+    ar.DELETE("/monitoring/poll/delete", monitoringcontroller.DeletePoll)
 }
