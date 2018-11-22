@@ -1,8 +1,8 @@
 package controller
 
 import (
-    "fmt"
-    "github.com/labstack/echo"
+	"fmt"
+	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
@@ -12,11 +12,11 @@ import (
 
 // reviewDetailByReviewResponse struct
 type reviewDetailByReviewResponse struct {
-	ID               uint      `json:"id" gorm:"primary_key"`
-	Hours            uint      `json:"hours"`
-	Note             uint      `json:"note"`
-	StartDate        time.Time `json:"start_date"`
-	EndDate          time.Time `json:"end_date"`
+	ID        uint      `json:"id" gorm:"primary_key"`
+	Hours     uint      `json:"hours"`
+	Note      uint      `json:"note"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
 
 	ReviewID    uint   `json:"review_id"`
 	CompanyID   uint   `json:"company_id"`
@@ -55,39 +55,38 @@ func GetReviewsDetailByReview(c echo.Context) error {
 	})
 }
 
-
 // DeleteReview function delete review
 func DeleteReviewDetail(c echo.Context) error {
-    // Get data request
-    reviewDetail := models.ReviewDetail{}
-    if err := c.Bind(&reviewDetail); err != nil {
-        return err
-    }
+	// Get data request
+	reviewDetail := models.ReviewDetail{}
+	if err := c.Bind(&reviewDetail); err != nil {
+		return err
+	}
 
-    // get connection
-    db := config.GetConnection()
-    defer db.Close()
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
 
-    // Validation review exist
-    if db.First(&reviewDetail).RecordNotFound() {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Success: false,
-            Message: fmt.Sprintf("No se encontró el registro con id %d", reviewDetail.ID),
-        })
-    }
+	// Validation review exist
+	if db.First(&reviewDetail).RecordNotFound() {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: false,
+			Message: fmt.Sprintf("No se encontró el registro con id %d", reviewDetail.ID),
+		})
+	}
 
-    // Delete review in database
-    if err := db.Delete(&reviewDetail).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Success: false,
-            Message: fmt.Sprintf("%s", err),
-        })
-    }
+	// Delete review in database
+	if err := db.Delete(&reviewDetail).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: false,
+			Message: fmt.Sprintf("%s", err),
+		})
+	}
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    reviewDetail.ID,
-        Message: fmt.Sprintf("El el detalle de la revision se elimino correctamente"),
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    reviewDetail.ID,
+		Message: fmt.Sprintf("El el detalle de la revision se elimino correctamente"),
+	})
 }

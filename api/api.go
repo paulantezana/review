@@ -73,6 +73,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/company/create", controller.CreateCompany)
 	ar.PUT("/company/update", controller.UpdateCompany)
 	ar.DELETE("/company/delete", controller.DeleteCompany)
+	ar.DELETE("/company/delete/multiple", controller.MultipleDeleteCompany)
 	ar.POST("/company/search", controller.GetCompanySearch)
 	ar.GET("/company/download/template", controller.GetTempUploadCompany)
 	ar.POST("/company/upload/template", controller.SetTempUploadCompany)

@@ -1,7 +1,8 @@
 package controller
 
 import (
-	"fmt"
+    "crypto/sha256"
+    "fmt"
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
@@ -120,7 +121,7 @@ func GetTeacherSearch(c echo.Context) error {
 			ID:        teacher.ID,
 			FirstName: teacher.FirstName,
 			DNI:       teacher.DNI,
-			LastName: teacher.LastName,
+			LastName:  teacher.LastName,
 		})
 	}
 
@@ -152,13 +153,41 @@ func CreateTeacher(c echo.Context) error {
 	db := config.GetConnection()
 	defer db.Close()
 
+    // start transaction
+    tr := db.Begin()
+
+    // has password new user account
+    cc := sha256.Sum256([]byte(teacher.DNI + "TA"))
+    pwd := fmt.Sprintf("%x", cc)
+
+    // New Account
+    userAccount := models.User{
+        UserName: teacher.DNI,
+        Password: pwd,
+        Profile: "teacher",
+    }
+
+    // Insert user in database
+    if err := tr.Create(&userAccount).Error; err != nil {
+        tr.Rollback()
+        return c.JSON(http.StatusOK, utilities.Response{
+            Success: false,
+            Message: fmt.Sprintf("%s", err),
+        })
+    }
+
 	// Insert teachers in database
-	if err := db.Create(&teacher).Error; err != nil {
+    teacher.UserID = userAccount.ID
+	if err := tr.Create(&teacher).Error; err != nil {
+        tr.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{
 			Success: false,
 			Message: fmt.Sprintf("%s", err),
 		})
 	}
+
+    // Commit transaction
+    tr.Commit()
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -361,6 +390,28 @@ func SetTempUploadTeacher(c echo.Context) error {
 	// Insert teachers in database
 	tr := db.Begin()
 	for _, teacher := range teachers {
+        // has password new user account
+        cc := sha256.Sum256([]byte(teacher.DNI + "TA"))
+        pwd := fmt.Sprintf("%x", cc)
+
+        // New Account
+        userAccount := models.User{
+            UserName: teacher.DNI,
+            Password: pwd,
+            Profile: "teacher",
+        }
+
+        // Insert user in database
+        if err := tr.Create(&userAccount).Error; err != nil {
+            tr.Rollback()
+            return c.JSON(http.StatusOK, utilities.Response{
+                Success: false,
+                Message: fmt.Sprintf("%s", err),
+            })
+        }
+
+        // Insert teacher in database
+        teacher.UserID = userAccount.ID
 		if err := tr.Create(&teacher).Error; err != nil {
 			tr.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{

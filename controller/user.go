@@ -39,27 +39,27 @@ func Login(c echo.Context) error {
 	pwd := fmt.Sprintf("%x", cc)
 
 	// Validate user and email
-    if user.Profile == ""  {
-        // login without using the profile
-        if db.Where("user_name = ? and password = ?", user.UserName, pwd).First(&user).RecordNotFound() {
-            if db.Where("email = ? and password = ?", user.UserName, pwd).First(&user).RecordNotFound() {
-                return c.JSON(http.StatusOK, utilities.Response{
-                    Success: false,
-                    Message: "El nombre de usuario o contraseña es incorecta",
-                })
-            }
-        }
-    }else {
-        // login with profile
-        if db.Where("user_name = ? and password = ? and profile = ?", user.UserName, pwd, user.Profile).First(&user).RecordNotFound() {
-            if db.Where("email = ? and password = ? and profile = ?", user.UserName, pwd, user.Profile).First(&user).RecordNotFound() {
-                return c.JSON(http.StatusOK, utilities.Response{
-                    Success: false,
-                    Message: "El nombre de usuario o contraseña es incorecta",
-                })
-            }
-        }
-    }
+	if user.Profile == "" {
+		// login without using the profile
+		if db.Where("user_name = ? and password = ?", user.UserName, pwd).First(&user).RecordNotFound() {
+			if db.Where("email = ? and password = ?", user.UserName, pwd).First(&user).RecordNotFound() {
+				return c.JSON(http.StatusOK, utilities.Response{
+					Success: false,
+					Message: "El nombre de usuario o contraseña es incorecta",
+				})
+			}
+		}
+	} else {
+		// login with profile
+		if db.Where("user_name = ? and password = ? and profile = ?", user.UserName, pwd, user.Profile).First(&user).RecordNotFound() {
+			if db.Where("email = ? and password = ? and profile = ?", user.UserName, pwd, user.Profile).First(&user).RecordNotFound() {
+				return c.JSON(http.StatusOK, utilities.Response{
+					Success: false,
+					Message: "El nombre de usuario o contraseña es incorecta",
+				})
+			}
+		}
+	}
 
 	// Check state user
 	if !user.State {

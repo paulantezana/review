@@ -53,7 +53,6 @@ func migration() {
 	db.Debug().AutoMigrate(
 		&models.User{},
 		&models.Module{},
-		&models.Representative{},
 		&models.Review{},
 		&models.ReviewDetail{},
 		&models.Program{},
@@ -71,15 +70,17 @@ func migration() {
 	db.Model(&models.ReviewDetail{}).AddForeignKey("review_id", "reviews(id)", "RESTRICT", "RESTRICT")
 
 	db.Model(&models.Student{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.Module{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+    db.Model(&models.Student{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.Teacher{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-	//db.Model(&models.User{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+    db.Model(&models.Teacher{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Module{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 
 	// -------------------------------------------------------------
 	// INSERT FIST DATA --------------------------------------------
 	// -------------------------------------------------------------
 	usr := models.User{}
 	db.First(&usr)
+
 	// hash password
 	cc := sha256.Sum256([]byte("FyYkbJo2W1T1"))
 	pwd := fmt.Sprintf("%x", cc)

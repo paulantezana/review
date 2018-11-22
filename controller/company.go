@@ -175,6 +175,40 @@ func DeleteCompany(c echo.Context) error {
 	})
 }
 
+func MultipleDeleteCompany(c echo.Context) error {
+	// Get data request
+	deleteRequest := utilities.DeleteRequest{}
+	if err := c.Bind(&deleteRequest); err != nil {
+		return err
+	}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	tx := db.Begin()
+	for _, value := range deleteRequest.Ids {
+		company := models.Company{
+			ID: value,
+		}
+
+		// Delete company in database
+		if err := tx.Delete(&company).Error; err != nil {
+			tx.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{
+				Success: false,
+				Message: fmt.Sprintf("%s", err),
+			})
+		}
+	}
+
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: fmt.Sprintf("Sel eliminaron %d registros", len(deleteRequest.Ids)),
+	})
+}
+
 // GetTempUploadStudent dowloand template
 func GetTempUploadCompany(c echo.Context) error {
 	// Return file admin

@@ -26,5 +26,5 @@ type Teacher struct {
 	Specialty string `json:"specialty"`
 
 	ProgramID uint      `json:"program_id"`
-	Teachers  []Teacher `json:"teachers"`
+    UserID uint `json:"user_id"`
 }

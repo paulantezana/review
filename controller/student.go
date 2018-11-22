@@ -1,7 +1,8 @@
 package controller
 
 import (
-	"fmt"
+    "crypto/sha256"
+    "fmt"
 	"io"
 	"net/http"
 	"os"
@@ -201,13 +202,41 @@ func CreateStudent(c echo.Context) error {
 	db := config.GetConnection()
 	defer db.Close()
 
+	// start transaction
+    tx := db.Begin()
+
+    // has password new user account
+    cc := sha256.Sum256([]byte(student.DNI + "ST"))
+    pwd := fmt.Sprintf("%x", cc)
+
+    // New Account
+    userAccount := models.User{
+        UserName: student.DNI,
+        Password: pwd,
+        Profile: "student",
+    }
+
+    // Insert user in database
+    if err := tx.Create(&userAccount).Error; err != nil {
+        tx.Rollback()
+        return c.JSON(http.StatusOK, utilities.Response{
+            Success: false,
+            Message: fmt.Sprintf("%s", err),
+        })
+    }
+
 	// Insert student in database
-	if err := db.Create(&student).Error; err != nil {
+	student.UserID = userAccount.ID
+    if err := tx.Create(&student).Error; err != nil {
+        tx.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{
 			Success: false,
 			Message: fmt.Sprintf("%s", err),
 		})
 	}
+
+    // Commit transaction
+    tx.Commit()
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -393,20 +422,20 @@ func SetTempUploadStudent(c echo.Context) error {
 				currentProgram = uint(u)
 			}
 
-            ay, _ := strconv.ParseUint(strings.TrimSpace(row[3]), 0, 32)
-            py, _ := strconv.ParseUint(strings.TrimSpace(row[4]), 0, 32)
+			ay, _ := strconv.ParseUint(strings.TrimSpace(row[3]), 0, 32)
+			py, _ := strconv.ParseUint(strings.TrimSpace(row[4]), 0, 32)
 
-            admissionYear := uint(ay)
-            promotionYear := uint(py)
+			admissionYear := uint(ay)
+			promotionYear := uint(py)
 
 			students = append(students, models.Student{
-				DNI:       strings.TrimSpace(row[0]),
-				FullName:  strings.TrimSpace(row[1]),
-				Phone:     strings.TrimSpace(row[2]),
+				DNI:           strings.TrimSpace(row[0]),
+				FullName:      strings.TrimSpace(row[1]),
+				Phone:         strings.TrimSpace(row[2]),
 				AdmissionYear: admissionYear,
 				PromotionYear: promotionYear,
-				State:     true,
-				ProgramID: currentProgram,
+				State:         true,
+				ProgramID:     currentProgram,
 			})
 		}
 	}
@@ -418,6 +447,28 @@ func SetTempUploadStudent(c echo.Context) error {
 	// Insert students in database
 	tr := db.Begin()
 	for _, student := range students {
+
+        // has password new user account
+        cc := sha256.Sum256([]byte(student.DNI + "ST"))
+        pwd := fmt.Sprintf("%x", cc)
+
+        // New Account
+        userAccount := models.User{
+            UserName: student.DNI,
+            Password: pwd,
+            Profile: "student",
+        }
+
+        // Insert user in database
+        if err := tr.Create(&userAccount).Error; err != nil {
+            tr.Rollback()
+            return c.JSON(http.StatusOK, utilities.Response{
+                Success: false,
+                Message: fmt.Sprintf("%s", err),
+            })
+        }
+
+        student.UserID = userAccount.ID
 		if err := tr.Create(&student).Error; err != nil {
 			tr.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{

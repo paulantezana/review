@@ -26,24 +26,24 @@ type reviewsResponse struct {
 }
 
 type reviewEnablesResponse struct {
-    Consolidate bool `json:"consolidate"`
+	Consolidate bool `json:"consolidate"`
 }
 
 type getReviewsResponse struct {
-    Message string      `json:"message"`
-    Success bool        `json:"success"`
-    Data    interface{} `json:"data"`
-    Validates reviewEnablesResponse `json:"validates"`
-} 
+	Message   string                `json:"message"`
+	Success   bool                  `json:"success"`
+	Data      interface{}           `json:"data"`
+	Validates reviewEnablesResponse `json:"validates"`
+}
 
 // GetReviews functions get all reviews
 func GetReviews(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
-    
-    // Get data request
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
+
+	// Get data request
 	student := models.Student{}
 	if err := c.Bind(&student); err != nil {
 		return err
@@ -65,23 +65,23 @@ func GetReviews(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-    // validation
-    allReviews := len(reviewsResponses) // all review count
-    var allModules uint // all modules count
-    if err := db.Model(&models.Module{}).Where("program_id = ?", currentUser.ProgramID).Count(&allModules).Error; err != nil{
-        return c.NoContent(http.StatusInternalServerError)
-    }
+	// validation
+	allReviews := len(reviewsResponses) // all review count
+	var allModules uint                 // all modules count
+	if err := db.Model(&models.Module{}).Where("program_id = ?", currentUser.ProgramID).Count(&allModules).Error; err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
-    reviewEnablesResponse := reviewEnablesResponse{}
+	reviewEnablesResponse := reviewEnablesResponse{}
 
-    if allModules == uint(allReviews) && allModules != 0 {
-        reviewEnablesResponse.Consolidate = true
-    }
+	if allModules == uint(allReviews) && allModules != 0 {
+		reviewEnablesResponse.Consolidate = true
+	}
 
-    // Return response
+	// Return response
 	return c.JSON(http.StatusCreated, getReviewsResponse{
-		Success: true,
-		Data:    reviewsResponses,
+		Success:   true,
+		Data:      reviewsResponses,
 		Validates: reviewEnablesResponse,
 	})
 }
@@ -295,7 +295,7 @@ type consResponse struct {
 	Success bool             `json:"success"`
 	Module  moduleResponse   `json:"module"`
 	Detail  []detailResponse `json:"detail"`
-	Review models.Review `json:"review"`
+	Review  models.Review    `json:"review"`
 }
 
 // GetConstReview function get data constancy
@@ -331,16 +331,16 @@ func GetConstReview(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-    // find review
-    if err := db.First(&review, review.ID).Error; err != nil {
-        return err
-    }
+	// find review
+	if err := db.First(&review, review.ID).Error; err != nil {
+		return err
+	}
 
 	return c.JSON(http.StatusOK, consResponse{
 		Success: true,
 		Module:  moduleResponses[0],
 		Detail:  detailResponses,
-		Review: review,
+		Review:  review,
 	})
 }
 

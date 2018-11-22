@@ -10,3 +10,8 @@ type Request struct {
 	Limit       uint   `json:"limit"`
 	Type        uint   `json:"query"`
 }
+
+// DeleteRequest use in multiple deletes
+type DeleteRequest struct {
+	Ids []uint `json:"ids"`
+}
