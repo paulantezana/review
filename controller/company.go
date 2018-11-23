@@ -24,11 +24,8 @@ func GetCompanies(c echo.Context) error {
 	db := config.GetConnection()
 	defer db.Close()
 
-	// Pagination calculate
-	if request.CurrentPage == 0 {
-		request.CurrentPage = 1
-	}
-	offset := request.Limit*request.CurrentPage - request.Limit
+    // Pagination calculate
+    offset := request.Validate()
 
 	// Execute instructions
 	var total uint
@@ -150,14 +147,6 @@ func DeleteCompany(c echo.Context) error {
 	// get connection
 	db := config.GetConnection()
 	defer db.Close()
-
-	// Validation company exist
-	if db.First(&company).RecordNotFound() {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("No se encontró el registro con id %d", company.ID),
-		})
-	}
 
 	// Delete company in database
 	if err := db.Delete(&company).Error; err != nil {

@@ -27,14 +27,7 @@ func GetPollsPaginate(c echo.Context) error {
     defer db.Close()
 
     // Pagination calculate
-    con := config.GetConfig()
-    if request.Limit == 0 {
-        request.Limit = con.Global.Paginate
-    }
-    if request.CurrentPage == 0 {
-        request.CurrentPage = 1
-    }
-    offset := request.Limit*request.CurrentPage - request.Limit
+    offset := request.Validate()
 
     // Execute instructions
     var total uint
@@ -131,14 +124,6 @@ func DeletePoll(c echo.Context) error {
     // get connection
     db := config.GetConnection()
     defer db.Close()
-
-    // Validation poll exist
-    if db.First(&poll).RecordNotFound() {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Success: false,
-            Message: fmt.Sprintf("No se encontró el registro con id %d", poll.ID),
-        })
-    }
 
     // Delete poll in database
     if err := db.Delete(&poll).Error; err != nil {

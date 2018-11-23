@@ -171,14 +171,6 @@ func DeleteReview(c echo.Context) error {
 	db := config.GetConnection()
 	defer db.Close()
 
-	// Validation review exist
-	if db.First(&review).RecordNotFound() {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("No se encontró el registro con id %d", review.ID),
-		})
-	}
-
 	// Delete review in database
 	if err := db.Delete(&review).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{

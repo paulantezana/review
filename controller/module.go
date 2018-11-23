@@ -143,14 +143,6 @@ func DeleteModule(c echo.Context) error {
 	db := config.GetConnection()
 	defer db.Close()
 
-	// Validation module exist
-	if db.First(&module).RecordNotFound() {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("No se encontró el registro con id %d", module.ID),
-		})
-	}
-
 	// Delete module in database
 	if err := db.Delete(&module).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{
