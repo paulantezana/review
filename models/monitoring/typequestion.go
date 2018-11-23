@@ -1,9 +1,9 @@
 package monitoring
 
+// TypeQuestion struct
 type TypeQuestion struct {
-    ID    uint   `json:"id" gorm:"primary_key"`
-    Name  string `json:"name"`
-    State bool   `json:"state" gorm:"default:'true'"`
+	ID   uint   `json:"id" gorm:"primary_key"`
+	Name string `json:"name"`
 
-    Questions []Question `json:"questions"`
+	Questions []Question `json:"questions"`
 }
