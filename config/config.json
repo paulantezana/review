@@ -10,6 +10,9 @@
         "port": "1323",
         "key": "Mc]-7EEP}vJ{q{P@"
     },
+    "Global": {
+        "paginate": 20
+    },
     "Email": {
         "name": "REVIEW",
         "from": "paul.antezana.2@gmail.com",

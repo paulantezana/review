@@ -1,6 +1,8 @@
 package monitoring
 
-import "time"
+import (
+    "time"
+)
 
 type Poll struct {
     ID          uint      `json:"id" gorm:"primary_key"`
@@ -9,8 +11,10 @@ type Poll struct {
     StartDate   time.Time `json:"start_date"`
     EndDate     time.Time `json:"end_date"`
     Message     string    `json:"message"`
-    Weather     string    `json:"weather"`
+    Weather     bool    `json:"weather"` //definite / undefined
     State       bool      `json:"state" gorm:"default:'true'"`
+    
+    ProgramID uint `json:"program_id"`
 
     Questions []Question `json:"questions"`
 }

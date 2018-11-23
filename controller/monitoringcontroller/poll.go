@@ -2,6 +2,7 @@ package monitoringcontroller
 
 import (
     "fmt"
+    "github.com/dgrijalva/jwt-go"
     "github.com/labstack/echo"
     "github.com/paulantezana/review/config"
     "github.com/paulantezana/review/models/monitoring"
@@ -10,6 +11,11 @@ import (
 )
 
 func GetPollsPaginate(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
     // Get data request
     request := utilities.Request{}
     if err := c.Bind(&request); err != nil {
@@ -21,6 +27,10 @@ func GetPollsPaginate(c echo.Context) error {
     defer db.Close()
 
     // Pagination calculate
+    con := config.GetConfig()
+    if request.Limit == 0 {
+        request.Limit = con.Global.Paginate
+    }
     if request.CurrentPage == 0 {
         request.CurrentPage = 1
     }
@@ -31,7 +41,7 @@ func GetPollsPaginate(c echo.Context) error {
     companies := make([]monitoring.Poll, 0)
 
     // Query in database
-    if err := db.Where("lower(name_social_reason) LIKE lower(?)", "%"+request.Search+"%").
+    if err := db.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
         Order("id asc").
         Offset(offset).Limit(request.Limit).Find(&companies).
         Offset(-1).Limit(-1).Count(&total).Error; err != nil {
@@ -44,15 +54,24 @@ func GetPollsPaginate(c echo.Context) error {
         Data:        companies,
         Total:       total,
         CurrentPage: request.CurrentPage,
+        Limit: request.Limit,
     })
 }
 
 func CreatePoll(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
     // Get data request
     poll := monitoring.Poll{}
     if err := c.Bind(&poll); err != nil {
         return err
     }
+
+    // set current programID
+    poll.ProgramID = currentUser.ProgramID
 
     // get connection
     db := config.GetConnection()

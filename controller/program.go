@@ -82,18 +82,7 @@ func CreateProgram(c echo.Context) error {
 		Name: request.Name,
 	}
 	// Create new program
-	if err := db.Create(&program).Error; err != nil {
-		tr.Rollback()
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
-
-	// Create teacher
-	teacher := models.Teacher{
-		DNI:       request.DNI,
-		FirstName: request.FirstName,
-		ProgramID: program.ID,
-	}
-	if err := db.Create(&teacher).Error; err != nil {
+	if err := tr.Create(&program).Error; err != nil {
 		tr.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
@@ -109,12 +98,25 @@ func CreateProgram(c echo.Context) error {
 		ProgramID: program.ID,
 		Profile:   "admin",
 	}
-	if err := db.Create(&user).Error; err != nil {
+	if err := tr.Create(&user).Error; err != nil {
 		tr.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	tr.Commit()
+    // Create teacher
+    teacher := models.Teacher{
+        DNI:       request.DNI,
+        FirstName: request.FirstName,
+        ProgramID: program.ID,
+        UserID: user.ID,
+    }
+    if err := tr.Create(&teacher).Error; err != nil {
+        tr.Rollback()
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+
+    tr.Commit()
 	// ------------------------------------
 	// End Transaction
 	// ------------------------------------

@@ -84,7 +84,19 @@ func migration() {
     db.Model(&models.Teacher{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.Module{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 
-	// -------------------------------------------------------------
+
+	// Monitoring
+    db.Model(&monitoring.Poll{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+    db.Model(&monitoring.AnswerDetail{}).AddForeignKey("question_id", "questions(id)", "RESTRICT", "RESTRICT")
+    db.Model(&monitoring.AnswerDetail{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
+    db.Model(&monitoring.AnswerDetail{}).AddForeignKey("answer_id", "answers(id)", "RESTRICT", "RESTRICT")
+
+    db.Model(&monitoring.Question{}).AddForeignKey("poll_id", "polls(id)", "RESTRICT", "RESTRICT")
+    db.Model(&monitoring.Question{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
+
+    db.Model(&monitoring.MultipleQuestion{}).AddForeignKey("question_id", "questions(id)", "RESTRICT", "RESTRICT")
+
+    // -------------------------------------------------------------
 	// INSERT FIST DATA --------------------------------------------
 	// -------------------------------------------------------------
 	usr := models.User{}
@@ -111,7 +123,6 @@ func migration() {
 	prm := models.Setting{}
 	db.First(&prm)
 	co := models.Setting{
-		ItemTable:       10,
 		Prefix:          "INSTITUTO DE EDUCACIÓN SUPERIOR TECNOLÓGICO PÚBLICO",
 		PrefixShortName: "I.E.S.T.P.",
 		Institute:       "SEDNA",

@@ -23,10 +23,15 @@ type Email struct {
 	Host     string
 }
 
+type Global struct {
+    Paginate uint
+}
+
 type Config struct {
 	Database Database
 	Email    Email
 	Server   Server
+    Global Global
 }
 
 type Server struct {

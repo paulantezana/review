@@ -14,4 +14,5 @@ type ResponsePaginate struct {
 	Data        interface{} `json:"data"`
 	Total       uint        `json:"total"`
 	CurrentPage uint        `json:"current_page"`
+	Limit uint `json:"limit"`
 }
