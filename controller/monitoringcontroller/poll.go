@@ -36,7 +36,7 @@ func GetPollsPaginate(c echo.Context) error {
 
 	// Query in database
 	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
-		Order("id asc").
+		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&companies).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return err
@@ -49,6 +49,29 @@ func GetPollsPaginate(c echo.Context) error {
 		Total:       total,
 		CurrentPage: request.CurrentPage,
 		Limit:       request.Limit,
+	})
+}
+
+func GetPollByID(c echo.Context) error {
+	// Get data request
+	poll := monitoring.Poll{}
+	if err := c.Bind(&poll); err != nil {
+		return err
+	}
+
+	// Get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Execute instructions
+	if err := db.First(&poll, poll.ID).Error; err != nil {
+		return err
+	}
+
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    poll,
 	})
 }
 

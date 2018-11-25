@@ -17,5 +17,5 @@ type Poll struct {
 
 	ProgramID uint `json:"program_id"`
 
-	Questions []Question `json:"questions"`
+	Questions []Question `json:"questions, omitempty"`
 }

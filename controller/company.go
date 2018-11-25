@@ -2,15 +2,16 @@ package controller
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strings"
+
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
-	"io"
-	"net/http"
-	"os"
-	"strings"
 )
 
 func GetCompanies(c echo.Context) error {
@@ -24,8 +25,8 @@ func GetCompanies(c echo.Context) error {
 	db := config.GetConnection()
 	defer db.Close()
 
-    // Pagination calculate
-    offset := request.Validate()
+	// Pagination calculate
+	offset := request.Validate()
 
 	// Execute instructions
 	var total uint
@@ -45,6 +46,7 @@ func GetCompanies(c echo.Context) error {
 		Data:        companies,
 		Total:       total,
 		CurrentPage: request.CurrentPage,
+		Limit:       request.Limit,
 	})
 }
 

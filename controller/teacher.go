@@ -1,19 +1,20 @@
 package controller
 
 import (
-    "crypto/sha256"
-    "fmt"
+	"crypto/sha256"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
-	"io"
-	"net/http"
-	"os"
-	"strconv"
-	"strings"
 )
 
 func GetTeachers(c echo.Context) error {
@@ -32,8 +33,8 @@ func GetTeachers(c echo.Context) error {
 	db := config.GetConnection()
 	defer db.Close()
 
-    // Pagination calculate
-    offset := request.Validate()
+	// Pagination calculate
+	offset := request.Validate()
 
 	// Execute instructions
 	var total uint
@@ -85,6 +86,7 @@ func GetTeachers(c echo.Context) error {
 		Data:        teachers,
 		Total:       total,
 		CurrentPage: request.CurrentPage,
+		Limit:       request.Limit,
 	})
 }
 
@@ -150,41 +152,41 @@ func CreateTeacher(c echo.Context) error {
 	db := config.GetConnection()
 	defer db.Close()
 
-    // start transaction
-    tr := db.Begin()
+	// start transaction
+	tr := db.Begin()
 
-    // has password new user account
-    cc := sha256.Sum256([]byte(teacher.DNI + "TA"))
-    pwd := fmt.Sprintf("%x", cc)
+	// has password new user account
+	cc := sha256.Sum256([]byte(teacher.DNI + "TA"))
+	pwd := fmt.Sprintf("%x", cc)
 
-    // New Account
-    userAccount := models.User{
-        UserName: teacher.DNI,
-        Password: pwd,
-        Profile: "teacher",
-    }
+	// New Account
+	userAccount := models.User{
+		UserName: teacher.DNI,
+		Password: pwd,
+		Profile:  "teacher",
+	}
 
-    // Insert user in database
-    if err := tr.Create(&userAccount).Error; err != nil {
-        tr.Rollback()
-        return c.JSON(http.StatusOK, utilities.Response{
-            Success: false,
-            Message: fmt.Sprintf("%s", err),
-        })
-    }
-
-	// Insert teachers in database
-    teacher.UserID = userAccount.ID
-	if err := tr.Create(&teacher).Error; err != nil {
-        tr.Rollback()
+	// Insert user in database
+	if err := tr.Create(&userAccount).Error; err != nil {
+		tr.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{
 			Success: false,
 			Message: fmt.Sprintf("%s", err),
 		})
 	}
 
-    // Commit transaction
-    tr.Commit()
+	// Insert teachers in database
+	teacher.UserID = userAccount.ID
+	if err := tr.Create(&teacher).Error; err != nil {
+		tr.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: false,
+			Message: fmt.Sprintf("%s", err),
+		})
+	}
+
+	// Commit transaction
+	tr.Commit()
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -379,28 +381,28 @@ func SetTempUploadTeacher(c echo.Context) error {
 	// Insert teachers in database
 	tr := db.Begin()
 	for _, teacher := range teachers {
-        // has password new user account
-        cc := sha256.Sum256([]byte(teacher.DNI + "TA"))
-        pwd := fmt.Sprintf("%x", cc)
+		// has password new user account
+		cc := sha256.Sum256([]byte(teacher.DNI + "TA"))
+		pwd := fmt.Sprintf("%x", cc)
 
-        // New Account
-        userAccount := models.User{
-            UserName: teacher.DNI,
-            Password: pwd,
-            Profile: "teacher",
-        }
+		// New Account
+		userAccount := models.User{
+			UserName: teacher.DNI,
+			Password: pwd,
+			Profile:  "teacher",
+		}
 
-        // Insert user in database
-        if err := tr.Create(&userAccount).Error; err != nil {
-            tr.Rollback()
-            return c.JSON(http.StatusOK, utilities.Response{
-                Success: false,
-                Message: fmt.Sprintf("%s", err),
-            })
-        }
+		// Insert user in database
+		if err := tr.Create(&userAccount).Error; err != nil {
+			tr.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{
+				Success: false,
+				Message: fmt.Sprintf("%s", err),
+			})
+		}
 
-        // Insert teacher in database
-        teacher.UserID = userAccount.ID
+		// Insert teacher in database
+		teacher.UserID = userAccount.ID
 		if err := tr.Create(&teacher).Error; err != nil {
 			tr.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{

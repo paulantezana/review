@@ -1,8 +1,8 @@
 package controller
 
 import (
-    "crypto/sha256"
-    "fmt"
+	"crypto/sha256"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -35,8 +35,8 @@ func GetStudents(c echo.Context) error {
 	db := config.GetConnection()
 	defer db.Close()
 
-    // Pagination calculate
-    offset := request.Validate()
+	// Pagination calculate
+	offset := request.Validate()
 
 	// Execute instructions
 	var total uint
@@ -86,6 +86,7 @@ func GetStudents(c echo.Context) error {
 		Data:        students,
 		Total:       total,
 		CurrentPage: request.CurrentPage,
+		Limit:       request.Limit,
 	})
 }
 
@@ -200,40 +201,40 @@ func CreateStudent(c echo.Context) error {
 	defer db.Close()
 
 	// start transaction
-    tx := db.Begin()
+	tx := db.Begin()
 
-    // has password new user account
-    cc := sha256.Sum256([]byte(student.DNI + "ST"))
-    pwd := fmt.Sprintf("%x", cc)
+	// has password new user account
+	cc := sha256.Sum256([]byte(student.DNI + "ST"))
+	pwd := fmt.Sprintf("%x", cc)
 
-    // New Account
-    userAccount := models.User{
-        UserName: student.DNI,
-        Password: pwd,
-        Profile: "student",
-    }
+	// New Account
+	userAccount := models.User{
+		UserName: student.DNI,
+		Password: pwd,
+		Profile:  "student",
+	}
 
-    // Insert user in database
-    if err := tx.Create(&userAccount).Error; err != nil {
-        tx.Rollback()
-        return c.JSON(http.StatusOK, utilities.Response{
-            Success: false,
-            Message: fmt.Sprintf("%s", err),
-        })
-    }
-
-	// Insert student in database
-	student.UserID = userAccount.ID
-    if err := tx.Create(&student).Error; err != nil {
-        tx.Rollback()
+	// Insert user in database
+	if err := tx.Create(&userAccount).Error; err != nil {
+		tx.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{
 			Success: false,
 			Message: fmt.Sprintf("%s", err),
 		})
 	}
 
-    // Commit transaction
-    tx.Commit()
+	// Insert student in database
+	student.UserID = userAccount.ID
+	if err := tx.Create(&student).Error; err != nil {
+		tx.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: false,
+			Message: fmt.Sprintf("%s", err),
+		})
+	}
+
+	// Commit transaction
+	tx.Commit()
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -437,27 +438,27 @@ func SetTempUploadStudent(c echo.Context) error {
 	tr := db.Begin()
 	for _, student := range students {
 
-        // has password new user account
-        cc := sha256.Sum256([]byte(student.DNI + "ST"))
-        pwd := fmt.Sprintf("%x", cc)
+		// has password new user account
+		cc := sha256.Sum256([]byte(student.DNI + "ST"))
+		pwd := fmt.Sprintf("%x", cc)
 
-        // New Account
-        userAccount := models.User{
-            UserName: student.DNI,
-            Password: pwd,
-            Profile: "student",
-        }
+		// New Account
+		userAccount := models.User{
+			UserName: student.DNI,
+			Password: pwd,
+			Profile:  "student",
+		}
 
-        // Insert user in database
-        if err := tr.Create(&userAccount).Error; err != nil {
-            tr.Rollback()
-            return c.JSON(http.StatusOK, utilities.Response{
-                Success: false,
-                Message: fmt.Sprintf("%s", err),
-            })
-        }
+		// Insert user in database
+		if err := tr.Create(&userAccount).Error; err != nil {
+			tr.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{
+				Success: false,
+				Message: fmt.Sprintf("%s", err),
+			})
+		}
 
-        student.UserID = userAccount.ID
+		student.UserID = userAccount.ID
 		if err := tr.Create(&student).Error; err != nil {
 			tr.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{

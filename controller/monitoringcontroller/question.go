@@ -27,7 +27,7 @@ func GetQuestions(c echo.Context) error {
 
 	// Query in database
 	if err := db.Where("poll_id = ?", poll.ID).
-		Order("id asc").Scan(&questions).Error; err != nil {
+		Order("position asc").Find(&questions).Error; err != nil {
 		return err
 	}
 
@@ -57,14 +57,24 @@ func CreateQuestions(c echo.Context) error {
 	// Insert companies in database
 	tr := db.Begin()
 
+	insetCount := 0
+	updateCount := 0
 	for _, question := range request.Questions {
-		if err := db.Create(&question).Error; err != nil {
-			tr.Rollback()
-			return c.JSON(http.StatusOK, utilities.Response{
-				Success: false,
-				Message: fmt.Sprintf("%s", err),
-			})
-		}
+        fmt.Println("---------------------------------------------------------")
+        if question.ID == 0 {
+            if err := tr.Debug().Create(&question).Error; err != nil {
+            	tr.Rollback()
+            	return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err)	})
+            }
+            insetCount ++
+        }else {
+            if err := tr.Debug().Model(&question).Update(question).Error; err != nil {
+                tr.Rollback()
+                return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err)	})
+            }
+            updateCount++
+        }
+        fmt.Println("---------------------------------------------------------")
 	}
 
 	// Commit transaction
@@ -73,7 +83,7 @@ func CreateQuestions(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Message: fmt.Sprintf("Se inserto %d preguntas correctamente", len(request.Questions)),
+		Message: fmt.Sprintf("Se inserto %d preguntas y se actualizo %d preguntas de manera exitosa", insetCount, updateCount),
 	})
 }
 

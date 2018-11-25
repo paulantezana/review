@@ -7,5 +7,5 @@ type Answer struct {
 
 	StudentID uint `json:"student_id"`
 
-	AnswerDetails []AnswerDetail `json:"answer_details"`
+	AnswerDetails []AnswerDetail `json:"answer_details, omitempty"`
 }
