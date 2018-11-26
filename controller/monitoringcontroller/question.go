@@ -31,6 +31,15 @@ func GetQuestions(c echo.Context) error {
 		return err
 	}
 
+    for k, question := range questions {
+        multipleQuestions := make([]monitoring.MultipleQuestion,0)
+        if err := db.Where("question_id = ?", question.ID).
+            Order("id asc").Find(&multipleQuestions).Error; err != nil {
+            return err
+        }
+        questions[k].MultipleQuestions = multipleQuestions
+    }
+
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
@@ -62,13 +71,13 @@ func CreateQuestions(c echo.Context) error {
 	for _, question := range request.Questions {
         fmt.Println("---------------------------------------------------------")
         if question.ID == 0 {
-            if err := tr.Debug().Create(&question).Error; err != nil {
+            if err := tr.Create(&question).Error; err != nil {
             	tr.Rollback()
             	return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err)	})
             }
             insetCount ++
         }else {
-            if err := tr.Debug().Model(&question).Update(question).Error; err != nil {
+            if err := tr.Model(&question).Update(question).Error; err != nil {
                 tr.Rollback()
                 return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err)	})
             }

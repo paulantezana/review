@@ -11,5 +11,5 @@ type Question struct {
 	TypeQuestionID uint `json:"type_question_id"`
 	PollID         uint `json:"poll_id"`
 
-	MultipleQuestions []MultipleQuestion `json:"multiple_questions, omitempty"`
+	MultipleQuestions []MultipleQuestion `json:"multiple_questions"`
 }

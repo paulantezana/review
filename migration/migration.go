@@ -49,14 +49,14 @@ func Migrate() {
 
 	// Monitoring
 	db.Model(&monitoring.Poll{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-	db.Model(&monitoring.AnswerDetail{}).AddForeignKey("question_id", "questions(id)", "RESTRICT", "RESTRICT")
+	db.Model(&monitoring.AnswerDetail{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
 	db.Model(&monitoring.AnswerDetail{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
 	db.Model(&monitoring.AnswerDetail{}).AddForeignKey("answer_id", "answers(id)", "RESTRICT", "RESTRICT")
 
 	db.Model(&monitoring.Question{}).AddForeignKey("poll_id", "polls(id)", "RESTRICT", "RESTRICT")
 	db.Model(&monitoring.Question{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
 
-	db.Model(&monitoring.MultipleQuestion{}).AddForeignKey("question_id", "questions(id)", "RESTRICT", "RESTRICT")
+	db.Model(&monitoring.MultipleQuestion{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
 
 	// -------------------------------------------------------------
 	// INSERT FIST DATA --------------------------------------------
@@ -105,7 +105,7 @@ func Migrate() {
 	if tpq.ID == 0 {
 		// Create Models
 		tq1 := monitoring.TypeQuestion{Name: "Respuesta breve"}          // 1 = Simple input
-		tq2 := monitoring.TypeQuestion{Name: "Párrafo"}                  // 2 = Textarea input
+		tq2 := monitoring.TypeQuestion{Name: "Párrafo"}                  // 2 = TextArea input
 		tq3 := monitoring.TypeQuestion{Name: "Opción múltiple"}          // 3 = Radio input
 		tq4 := monitoring.TypeQuestion{Name: "Casillas de verificación"} // 4 = Checkbox input
 
