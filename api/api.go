@@ -124,5 +124,5 @@ func ProtectedApi(e *echo.Echo) {
 
 	// Type questions
 	ar.POST("/monitoring/type/question/all", monitoringcontroller.GetTypeQuestions)
-    ar.DELETE("/monitoring/multiple/question/delete", monitoringcontroller.DeleteMultipleQuestion)
+	ar.DELETE("/monitoring/multiple/question/delete", monitoringcontroller.DeleteMultipleQuestion)
 }

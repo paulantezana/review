@@ -16,7 +16,7 @@ type Student struct {
 	PromotionYear uint      `json:"promotion_year"`
 
 	ProgramID uint `json:"program_id"`
-	UserID uint `json:"user_id"`
+	UserID    uint `json:"user_id"`
 
 	Reviews []Review `json:"reviews"`
 	User    User     `json:"user"`

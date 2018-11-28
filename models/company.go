@@ -8,6 +8,7 @@ type Company struct {
 	Address          string         `json:"address"`
 	Manager          string         `json:"manager"`
 	Phone            string         `json:"phone"`
+	CompanyType      string         `json:"company_type"` // 1 = public || 2 = private
 	ReviewDetails    []ReviewDetail `json:"review_details"`
 }
 

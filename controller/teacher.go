@@ -161,7 +161,7 @@ func CreateTeacher(c echo.Context) error {
 
 	// New Account
 	userAccount := models.User{
-		UserName: teacher.DNI,
+		UserName: teacher.DNI + "TA",
 		Password: pwd,
 		Profile:  "teacher",
 	}

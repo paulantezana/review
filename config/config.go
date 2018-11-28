@@ -24,14 +24,14 @@ type Email struct {
 }
 
 type Global struct {
-    Paginate uint
+	Paginate uint
 }
 
 type Config struct {
 	Database Database
 	Email    Email
 	Server   Server
-    Global Global
+	Global   Global
 }
 
 type Server struct {

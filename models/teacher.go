@@ -25,6 +25,6 @@ type Teacher struct {
 	//TeachingMonths uint `json:"teaching_months"`
 	Specialty string `json:"specialty"`
 
-	ProgramID uint      `json:"program_id"`
-    UserID uint `json:"user_id"`
+	ProgramID uint `json:"program_id"`
+	UserID    uint `json:"user_id"`
 }

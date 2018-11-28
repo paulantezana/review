@@ -115,26 +115,26 @@ func ForgotSearch(c echo.Context) error {
 	// SEND EMAIL get html template
 	t, err := template.ParseFiles("utilities/email.html")
 	if err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("%s", err),
-        })
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("%s", err),
+		})
 	}
 
 	// SEND EMAIL new buffer
 	buf := new(bytes.Buffer)
 	err = t.Execute(buf, user)
 	if err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("%s", err),
-        })
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("%s", err),
+		})
 	}
 
 	// SEND EMAIL
 	err = config.SendEmail(user.Email, fmt.Sprint(key)+" es el código de recuperación de tu cuenta en REVIEW", buf.String())
 	if err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("%s", err),
-        })
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("%s", err),
+		})
 	}
 
 	// Response success api service

@@ -103,20 +103,19 @@ func CreateProgram(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-    // Create teacher
-    teacher := models.Teacher{
-        DNI:       request.DNI,
-        FirstName: request.FirstName,
-        ProgramID: program.ID,
-        UserID: user.ID,
-    }
-    if err := tr.Create(&teacher).Error; err != nil {
-        tr.Rollback()
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Create teacher
+	teacher := models.Teacher{
+		DNI:       request.DNI,
+		FirstName: request.FirstName,
+		ProgramID: program.ID,
+		UserID:    user.ID,
+	}
+	if err := tr.Create(&teacher).Error; err != nil {
+		tr.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-
-    tr.Commit()
+	tr.Commit()
 	// ------------------------------------
 	// End Transaction
 	// ------------------------------------

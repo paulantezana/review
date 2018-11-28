@@ -209,7 +209,7 @@ func CreateStudent(c echo.Context) error {
 
 	// New Account
 	userAccount := models.User{
-		UserName: student.DNI,
+		UserName: student.DNI + "ST",
 		Password: pwd,
 		Profile:  "student",
 	}
@@ -444,7 +444,7 @@ func SetTempUploadStudent(c echo.Context) error {
 
 		// New Account
 		userAccount := models.User{
-			UserName: student.DNI,
+			UserName: student.DNI + "ST",
 			Password: pwd,
 			Profile:  "student",
 		}
