@@ -101,6 +101,7 @@ func ProtectedApi(e *echo.Echo) {
 
 	// Statistic
 	ar.POST("/statistic/top/users", controller.TopUsers)
+	ar.POST("/statistic/top/student/whit/reviews", controller.TopStudentsWithReview)
 
 	// Review Detail
 	ar.POST("/reviewDetail/by/review", controller.GetReviewsDetailByReview)
