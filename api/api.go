@@ -36,6 +36,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.GET("/setting/download/logo", controller.DownloadLogoSetting)
 	ar.POST("/setting/upload/ministry", controller.UploadMinistrySetting)
 	ar.GET("/setting/download/ministry", controller.DownloadMinistrySetting)
+	ar.GET("/setting/download/national/emblem", controller.DownloadNationalEmblemSetting)
 
 	// Program
 	ar.POST("/program/all", controller.GetPrograms)

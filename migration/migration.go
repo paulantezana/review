@@ -90,6 +90,7 @@ func Migrate() {
 			Prefix:          "INSTITUTO DE EDUCACIÓN SUPERIOR TECNOLÓGICO PÚBLICO",
 			PrefixShortName: "I.E.S.T.P.",
 			Institute:       "SEDNA",
+			NationalEmblem: "static/nationalEmblem.jpg",
 			Logo:            "static/logo.png",
 			Ministry:        "static/ministry.jpg",
 		}

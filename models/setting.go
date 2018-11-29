@@ -5,6 +5,7 @@ type Setting struct {
 	ID                         uint   `json:"id" gorm:"primary_key"`
 	Logo                       string `json:"logo"`
 	Ministry                   string `json:"ministry"`
+	NationalEmblem             string `json:"national_emblem"`
 	Prefix                     string `json:"prefix"`
 	PrefixShortName            string `json:"prefix_short_name"`
 	Institute                  string `json:"institute"`

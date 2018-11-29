@@ -243,3 +243,20 @@ func DownloadMinistrySetting(c echo.Context) error {
 	}
 	return c.File(setting.Ministry)
 }
+
+// DownloadNationalEmblemSetting function download logo settings
+func DownloadNationalEmblemSetting(c echo.Context) error {
+    // get connection
+    db := config.GetConnection()
+    defer db.Close()
+
+    // Validation user exist
+    setting := models.Setting{}
+    if db.First(&setting).RecordNotFound() {
+        return c.JSON(http.StatusOK, utilities.Response{
+            Success: false,
+            Message: fmt.Sprintf("No se encontró el registro con id %d", setting.ID),
+        })
+    }
+    return c.File(setting.NationalEmblem)
+}
