@@ -3,8 +3,9 @@ package migration
 import (
 	"crypto/sha256"
 	"fmt"
+    "github.com/paulantezana/review/models/coursemodel"
 
-	"github.com/paulantezana/review/config"
+    "github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/models/monitoring"
 )
@@ -24,6 +25,11 @@ func Migrate() {
 		&models.Teacher{},
 		&models.Company{},
 		&models.Setting{},
+
+		// Migration certification
+		&coursemodel.Course{},
+		&coursemodel.CourseStudent{},
+		&coursemodel.CourseExam{},
 
 		// Migration monitoring
 		&monitoring.Answer{},
@@ -46,6 +52,11 @@ func Migrate() {
 	db.Model(&models.Teacher{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.Teacher{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.Module{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+
+	// Certification
+    db.Model(&coursemodel.CourseStudent{}).AddForeignKey("course_id", "courses(id)", "RESTRICT", "RESTRICT")
+    db.Model(&coursemodel.CourseStudent{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+    db.Model(&coursemodel.CourseExam{}).AddForeignKey("course_student_id", "course_students(id)", "RESTRICT", "RESTRICT")
 
 	// Monitoring
 	db.Model(&monitoring.Poll{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
@@ -90,7 +101,7 @@ func Migrate() {
 			Prefix:          "INSTITUTO DE EDUCACIÓN SUPERIOR TECNOLÓGICO PÚBLICO",
 			PrefixShortName: "I.E.S.T.P.",
 			Institute:       "SEDNA",
-			NationalEmblem: "static/nationalEmblem.jpg",
+			NationalEmblem:  "static/nationalEmblem.jpg",
 			Logo:            "static/logo.png",
 			Ministry:        "static/ministry.jpg",
 		}

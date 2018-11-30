@@ -5,7 +5,8 @@ import (
 	"github.com/labstack/echo/middleware"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/controller"
-	"github.com/paulantezana/review/controller/monitoringcontroller"
+    "github.com/paulantezana/review/controller/coursescontroller"
+    "github.com/paulantezana/review/controller/monitoringcontroller"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -107,6 +108,36 @@ func ProtectedApi(e *echo.Echo) {
 	// Review Detail
 	ar.POST("/reviewDetail/by/review", controller.GetReviewsDetailByReview)
 	ar.DELETE("/reviewDetail/delete", controller.DeleteReviewDetail)
+
+
+
+
+
+
+
+
+
+    // ---------------------------------------------------------------------------
+    //      Certificate routes ----------------------------------------------------
+    ar.POST("/course/all", coursescontroller.GetCoursesPaginate)
+    ar.POST("/course/create", coursescontroller.CreateCourse)
+    ar.PUT("/course/update", coursescontroller.UpdateCourse)
+    ar.DELETE("/course/delete", coursescontroller.DeleteCourse)
+    ar.POST("/course/by/id", coursescontroller.GetCourseByID)
+
+    ar.POST("/course/student/all", coursescontroller.GetCourseStudentsPaginate)
+    ar.POST("/course/student/create", coursescontroller.CreateCourseStudent)
+    ar.PUT("/course/student/update", coursescontroller.UpdateCourseStudent)
+    ar.DELETE("/course/student/delete", coursescontroller.DeleteCourseStudent)
+
+
+
+
+
+
+
+
+
 
 	// ---------------------------------------------------------------------------
 	//      Monitoring routes ----------------------------------------------------
