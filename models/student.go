@@ -19,5 +19,5 @@ type Student struct {
 	UserID    uint `json:"user_id"`
 
 	Reviews []Review `json:"reviews"`
-	User    User     `json:"user"`
+	//User    User     `json:"user"`
 }

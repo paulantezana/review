@@ -11,7 +11,7 @@ type Request struct {
 	CurrentPage uint   `json:"current_page"`
 	Limit       uint   `json:"limit"`
 	Type        uint   `json:"query"`
-	ID uint `json:"id"`
+	ID          uint   `json:"id"`
 }
 
 func (r *Request) Validate() uint {

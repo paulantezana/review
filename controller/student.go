@@ -144,6 +144,30 @@ func GetStudentDetailByID(c echo.Context) error {
 	})
 }
 
+// GetStudentDetailByID get student detail
+func GetStudentDetailByDNI(c echo.Context) error {
+	// Get data request
+	student := models.Student{}
+	if err := c.Bind(&student); err != nil {
+		return err
+	}
+
+	// Get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Execute instructions
+	if err := db.Where("dni = ?", student.DNI).First(&student).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: "No se encontro ningun registro"})
+	}
+
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    student,
+	})
+}
+
 func GetStudentSearch(c echo.Context) error {
 	// Get data request
 	request := utilities.Request{}

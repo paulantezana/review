@@ -12,7 +12,7 @@ type CourseStudent struct {
 
 	StudentID uint `json:"student_id"`
 
-	CourseID   uint `json:"course_id"`
+	CourseID  uint `json:"course_id"`
 	ProgramID uint `json:"program_id"`
 
 	CourseExams []CourseExam `json:"course_exams"`

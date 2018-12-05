@@ -3,9 +3,9 @@ package migration
 import (
 	"crypto/sha256"
 	"fmt"
-    "github.com/paulantezana/review/models/coursemodel"
+	"github.com/paulantezana/review/models/coursemodel"
 
-    "github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/models/monitoring"
 )
@@ -54,9 +54,9 @@ func Migrate() {
 	db.Model(&models.Module{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 
 	// Certification
-    db.Model(&coursemodel.CourseStudent{}).AddForeignKey("course_id", "courses(id)", "RESTRICT", "RESTRICT")
-    db.Model(&coursemodel.CourseStudent{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-    db.Model(&coursemodel.CourseExam{}).AddForeignKey("course_student_id", "course_students(id)", "RESTRICT", "RESTRICT")
+	db.Model(&coursemodel.CourseStudent{}).AddForeignKey("course_id", "courses(id)", "RESTRICT", "RESTRICT")
+	db.Model(&coursemodel.CourseStudent{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&coursemodel.CourseExam{}).AddForeignKey("course_student_id", "course_students(id)", "RESTRICT", "RESTRICT")
 
 	// Monitoring
 	db.Model(&monitoring.Poll{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")

@@ -13,4 +13,5 @@ type Setting struct {
 	AcademicLevelDirector      string `json:"academic_level_director"`
 	ShortAcademicLevelDirector string `json:"short_academic_level_director"`
 	MinHoursPracticePercentage uint   `json:"min_hours_practice_percentage"`
+	YearName                   string `json:"year_name"`
 }

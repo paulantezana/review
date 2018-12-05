@@ -8,6 +8,7 @@ type Course struct {
 	Description string    `json:"description"`
 	StartDate   time.Time `json:"start_date"`
 	EndDate     time.Time `json:"end_date"`
-	
+	Price       float32   `json:"price"`
+
 	CourseStudents []CourseStudent `json:"course_students"`
 }
