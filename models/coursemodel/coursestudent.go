@@ -9,6 +9,7 @@ type CourseStudent struct {
 	Gender   string  `json:"gender"`
 	Year     uint    `json:"year"`
 	Payment  float32 `json:"payment"`
+	Note     float32 `json:"note"`
 
 	StudentID uint `json:"student_id"`
 

@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"github.com/paulantezana/review/models/coursemodel"
+	"github.com/paulantezana/review/models/librarymodel"
 
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
@@ -38,6 +39,11 @@ func Migrate() {
 		&monitoring.Poll{},
 		&monitoring.Question{},
 		&monitoring.TypeQuestion{},
+
+		// Libraries
+		&librarymodel.Category{},
+		&librarymodel.Book{},
+		&librarymodel.Reading{},
 	)
 	db.Model(&models.Review{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.Review{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
@@ -68,6 +74,9 @@ func Migrate() {
 	db.Model(&monitoring.Question{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
 
 	db.Model(&monitoring.MultipleQuestion{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
+
+	// Libraries
+	db.Model(&librarymodel.Book{}).AddForeignKey("category_id", "categories(id)", "CASCADE", "RESTRICT")
 
 	// -------------------------------------------------------------
 	// INSERT FIST DATA --------------------------------------------

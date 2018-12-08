@@ -1,4 +1,4 @@
-package library
+package librarymodel
 
 // Reading struct
 type Reading struct {

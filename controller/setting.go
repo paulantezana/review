@@ -63,6 +63,62 @@ func GetGlobalSettings(c echo.Context) error {
 	})
 }
 
+type studentSettingsResponse struct {
+    Setting  models.Setting `json:"setting"`
+    Program models.Program `json:"program"`
+    User models.User `json:"user"`
+    Student models.Student `json:"student"`
+    Message     string      `json:"message"`
+    Success     bool        `json:"success"`
+}
+
+// GetGlobalSettings function
+func GetStudentSettings(c echo.Context) error {
+	// Get data request
+	setting := models.Setting{}
+	program := models.Program{}
+	student := models.Student{}
+
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return err
+	}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// find user
+	if err := db.First(&user, user.ID).Error; err != nil {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	user.Password = ""
+	user.Key = ""
+
+	// find program
+	if err := db.First(&program, user.ProgramID).Error; err != nil {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	// find student
+	if err := db.First(&student, user.ProgramID).Error; err != nil {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	// Find settings
+	db.First(&setting)
+
+	// Set object response
+	return c.JSON(http.StatusOK, studentSettingsResponse{
+		User:    user,
+		Setting: setting,
+		Program: program,
+		Student: student,
+		Success: true,
+		Message: "OK",
+	})
+}
+
 // UpdateSetting function update settings
 func UpdateSetting(c echo.Context) error {
 	// Get data request

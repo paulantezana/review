@@ -6,6 +6,7 @@ import (
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/controller"
 	"github.com/paulantezana/review/controller/coursescontroller"
+	"github.com/paulantezana/review/controller/librarycontroller"
 	"github.com/paulantezana/review/controller/monitoringcontroller"
 	"github.com/paulantezana/review/utilities"
 )
@@ -38,6 +39,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/setting/upload/ministry", controller.UploadMinistrySetting)
 	ar.GET("/setting/download/ministry", controller.DownloadMinistrySetting)
 	ar.GET("/setting/download/national/emblem", controller.DownloadNationalEmblemSetting)
+	ar.POST("/setting/by/student", controller.GetStudentSettings)
 
 	// Program
 	ar.POST("/program/all", controller.GetPrograms)
@@ -142,4 +144,21 @@ func ProtectedApi(e *echo.Echo) {
 	// Type questions
 	ar.POST("/monitoring/type/question/all", monitoringcontroller.GetTypeQuestions)
 	ar.DELETE("/monitoring/multiple/question/delete", monitoringcontroller.DeleteMultipleQuestion)
+
+	// ---------------------------------------------------------------------------
+	//      Book routes ----------------------------------------------------
+	// category
+	ar.POST("/library/category/paginate", librarycontroller.GetCategoriesPaginate)
+	ar.POST("/library/category/all", librarycontroller.GetCategoriesAll)
+	ar.POST("/library/category/create", librarycontroller.CreateCategory)
+	ar.PUT("/library/category/update", librarycontroller.UpdateCategory)
+	ar.DELETE("/library/category/delete", librarycontroller.DeleteCategory)
+	ar.POST("/library/category/by/id", librarycontroller.GetCategoryByID)
+
+	// book
+	ar.POST("/library/book/paginate", librarycontroller.GetBooksPaginate)
+	ar.POST("/library/book/create", librarycontroller.CreateBook)
+	ar.PUT("/library/book/update", librarycontroller.UpdateBook)
+	ar.DELETE("/library/book/delete", librarycontroller.DeleteBook)
+	ar.POST("/library/book/by/id", librarycontroller.GetBookByID)
 }
