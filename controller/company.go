@@ -98,7 +98,6 @@ func CreateCompany(c echo.Context) error {
 	// Insert companies in database
 	if err := db.Create(&company).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("%s", err),
 		})
 	}

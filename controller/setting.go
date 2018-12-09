@@ -64,12 +64,12 @@ func GetGlobalSettings(c echo.Context) error {
 }
 
 type studentSettingsResponse struct {
-    Setting  models.Setting `json:"setting"`
-    Program models.Program `json:"program"`
-    User models.User `json:"user"`
-    Student models.Student `json:"student"`
-    Message     string      `json:"message"`
-    Success     bool        `json:"success"`
+	Setting models.Setting `json:"setting"`
+	Program models.Program `json:"program"`
+	User    models.User    `json:"user"`
+	Student models.Student `json:"student"`
+	Message string         `json:"message"`
+	Success bool           `json:"success"`
 }
 
 // GetGlobalSettings function
@@ -97,12 +97,16 @@ func GetStudentSettings(c echo.Context) error {
 
 	// find program
 	if err := db.First(&program, user.ProgramID).Error; err != nil {
-		return c.NoContent(http.StatusUnauthorized)
+        return c.JSON(http.StatusOK, utilities.Response{
+            Message: fmt.Sprintf("%s", err),
+        })
 	}
 
 	// find student
-	if err := db.First(&student, user.ProgramID).Error; err != nil {
-		return c.NoContent(http.StatusUnauthorized)
+	if err := db.Where("user_id = ?",user.ID).First(&student).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{
+            Message: fmt.Sprintf("%s", err),
+        })
 	}
 
 	// Find settings
