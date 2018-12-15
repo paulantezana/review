@@ -1,13 +1,13 @@
 package main
 
 import (
-	"os"
+    "github.com/paulantezana/review/api"
+    "net/http"
+    "os"
 
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
-	"github.com/paulantezana/review/api"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/migration"
+    "github.com/labstack/echo"
+    "github.com/labstack/echo/middleware"
+    "github.com/paulantezana/review/config"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 	e.Use(middleware.Recover())
 
 	// Migration database
-	migration.Migrate()
+	//migration.Migrate()
 
 	// Configuration cor
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -28,6 +28,11 @@ func main() {
 	// Assets
 	static := e.Group("/static")
 	static.Static("", "static")
+
+	// Root router success
+    e.GET("/", func(c echo.Context) error {
+        return c.String(http.StatusOK, "Stating Server OK")
+    })
 
 	// Sting API services
 	api.PublicApi(e)

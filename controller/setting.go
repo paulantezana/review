@@ -95,18 +95,18 @@ func GetStudentSettings(c echo.Context) error {
 	user.Password = ""
 	user.Key = ""
 
-	// find program
-	if err := db.First(&program, user.ProgramID).Error; err != nil {
+    // find student
+    if err := db.First(&student, "user_id = ?", user.ID).Error; err != nil {
         return c.JSON(http.StatusOK, utilities.Response{
             Message: fmt.Sprintf("%s", err),
         })
-	}
+    }
 
-	// find student
-	if err := db.Where("user_id = ?",user.ID).First(&student).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("%s", err),
-        })
+	// find program
+	if err := db.First(&program, student.ProgramID).Error; err != nil {
+       return c.JSON(http.StatusOK, utilities.Response{
+           Message: fmt.Sprintf("%s", err),
+       })
 	}
 
 	// Find settings
