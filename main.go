@@ -2,6 +2,7 @@ package main
 
 import (
     "github.com/paulantezana/review/api"
+    "github.com/paulantezana/review/migration"
     "net/http"
     "os"
 
@@ -16,7 +17,7 @@ func main() {
 	e.Use(middleware.Recover())
 
 	// Migration database
-	//migration.Migrate()
+	migration.Migrate()
 
 	// Configuration cor
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{

@@ -87,7 +87,7 @@ func Migrate() {
 	// Validate
 	if usr.ID == 0 {
 		// hash password
-		cc := sha256.Sum256([]byte("FyYkbJo2W1T1"))
+		cc := sha256.Sum256([]byte("sa"))
 		pwd := fmt.Sprintf("%x", cc)
 
 		// create model
