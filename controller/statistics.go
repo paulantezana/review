@@ -79,13 +79,18 @@ func TopStudentsWithReview(c echo.Context) error {
 	// All revisions
 	countAllRevisions := countModules * countStudents
 	var countReviews uint
-	if err := db.Debug().Table("reviews").Joins("INNER JOIN students on reviews.student_id = students.id").
+	if err := db.Table("reviews").Joins("INNER JOIN students on reviews.student_id = students.id").
 		Where("students.program_id = ?", currentUser.ProgramID).Count(&countReviews).Error; err != nil {
 		return err
 	}
 
-	percentageP := uint((countReviews * 100) / countAllRevisions)
-	percentageN := uint(100 - percentageP)
+    percentageP := uint(0)
+    percentageN := uint(0)
+
+    if countAllRevisions > 0 {
+        percentageP = uint((countReviews * 100) / countAllRevisions)
+        percentageN = uint(100 - percentageP)
+    }
 
 	return c.JSON(http.StatusOK, studentsWithReviewResponse{
 		Success:                   true,

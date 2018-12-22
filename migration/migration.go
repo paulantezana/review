@@ -111,7 +111,7 @@ func Migrate() {
 			PrefixShortName: "I.E.S.T.P.",
 			Institute:       "SEDNA",
 			NationalEmblem:  "static/nationalEmblem.jpg",
-			Logo:            "static/logo.png",
+			Logo:            "static/logo.jpg",
 			Ministry:        "static/ministry.jpg",
 		}
 		// Insert in database
