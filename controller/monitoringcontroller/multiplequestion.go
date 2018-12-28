@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models/monitoring"
+	"github.com/paulantezana/review/models/monitoringmodel"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
@@ -12,7 +12,7 @@ import (
 // DeleteMultipleQuestion Delete one question
 func DeleteMultipleQuestion(c echo.Context) error {
 	// Get data request
-	multipleQuestion := monitoring.MultipleQuestion{}
+	multipleQuestion := monitoringmodel.MultipleQuestion{}
 	if err := c.Bind(&multipleQuestion); err != nil {
 		return err
 	}

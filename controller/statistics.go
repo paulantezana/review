@@ -2,11 +2,12 @@ package controller
 
 import (
 	"github.com/dgrijalva/jwt-go"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/models/institutemodel"
 	"net/http"
 
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -66,13 +67,13 @@ func TopStudentsWithReview(c echo.Context) error {
 
 	// All modules
 	var countModules uint
-	if err := db.Model(&models.Module{}).Where("program_id = ?", currentUser.ProgramID).Count(&countModules).Error; err != nil {
+	if err := db.Model(&institutemodel.Module{}).Where("program_id = ?", currentUser.DefaultProgramID).Count(&countModules).Error; err != nil {
 		return err
 	}
 
 	// All students
 	var countStudents uint
-	if err := db.Model(&models.Student{}).Where("program_id = ?", currentUser.ProgramID).Count(&countStudents).Error; err != nil {
+	if err := db.Model(&institutemodel.Student{}).Where("program_id = ?", currentUser.DefaultProgramID).Count(&countStudents).Error; err != nil {
 		return err
 	}
 
@@ -80,17 +81,17 @@ func TopStudentsWithReview(c echo.Context) error {
 	countAllRevisions := countModules * countStudents
 	var countReviews uint
 	if err := db.Table("reviews").Joins("INNER JOIN students on reviews.student_id = students.id").
-		Where("students.program_id = ?", currentUser.ProgramID).Count(&countReviews).Error; err != nil {
+		Where("students.program_id = ?", currentUser.DefaultProgramID).Count(&countReviews).Error; err != nil {
 		return err
 	}
 
-    percentageP := uint(0)
-    percentageN := uint(0)
+	percentageP := uint(0)
+	percentageN := uint(0)
 
-    if countAllRevisions > 0 {
-        percentageP = uint((countReviews * 100) / countAllRevisions)
-        percentageN = uint(100 - percentageP)
-    }
+	if countAllRevisions > 0 {
+		percentageP = uint((countReviews * 100) / countAllRevisions)
+		percentageN = uint(100 - percentageP)
+	}
 
 	return c.JSON(http.StatusOK, studentsWithReviewResponse{
 		Success:                   true,

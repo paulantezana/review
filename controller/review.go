@@ -2,13 +2,14 @@ package controller
 
 import (
 	"fmt"
+	"github.com/paulantezana/review/models/institutemodel"
+	"github.com/paulantezana/review/models/reviewmodel"
 	"net/http"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -44,7 +45,7 @@ func GetReviews(c echo.Context) error {
 	currentUser := claims.User
 
 	// Get data request
-	student := models.Student{}
+	student := institutemodel.Student{}
 	if err := c.Bind(&student); err != nil {
 		return err
 	}
@@ -68,7 +69,7 @@ func GetReviews(c echo.Context) error {
 	// validation
 	allReviews := len(reviewsResponses) // all review count
 	var allModules uint                 // all modules count
-	if err := db.Model(&models.Module{}).Where("program_id = ?", currentUser.ProgramID).Count(&allModules).Error; err != nil {
+	if err := db.Model(&institutemodel.Module{}).Where("program_id = ?", currentUser.DefaultProgramID).Count(&allModules).Error; err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -94,7 +95,7 @@ func CreateReview(c echo.Context) error {
 	currentUser := claims.User
 
 	// Get data request
-	review := models.Review{}
+	review := reviewmodel.Review{}
 	if err := c.Bind(&review); err != nil {
 		return err
 	}
@@ -105,7 +106,7 @@ func CreateReview(c echo.Context) error {
 	defer db.Close()
 
 	// Validate
-	rvw := make([]models.Review, 0)
+	rvw := make([]reviewmodel.Review, 0)
 	if db.Where("student_id = ? and module_id = ?", review.StudentID, review.ModuleId).
 		Find(&rvw).RowsAffected >= 1 {
 		return c.JSON(http.StatusOK, utilities.Response{
@@ -133,7 +134,7 @@ func CreateReview(c echo.Context) error {
 // UpdateReview function update review
 func UpdateReview(c echo.Context) error {
 	// Get data request
-	review := models.Review{}
+	review := reviewmodel.Review{}
 	if err := c.Bind(&review); err != nil {
 		return err
 	}
@@ -162,7 +163,7 @@ func UpdateReview(c echo.Context) error {
 // DeleteReview function delete review
 func DeleteReview(c echo.Context) error {
 	// Get data request
-	review := models.Review{}
+	review := reviewmodel.Review{}
 	if err := c.Bind(&review); err != nil {
 		return err
 	}
@@ -233,7 +234,7 @@ type actaResponse struct {
 // GetActaReview function get data acta
 func GetActaReview(c echo.Context) error {
 	// Get data request
-	review := models.Review{}
+	review := reviewmodel.Review{}
 	if err := c.Bind(&review); err != nil {
 		return err
 	}
@@ -284,16 +285,16 @@ func GetActaReview(c echo.Context) error {
 
 // consResponse struct
 type consResponse struct {
-	Success bool             `json:"success"`
-	Module  moduleResponse   `json:"module"`
-	Detail  []detailResponse `json:"detail"`
-	Review  models.Review    `json:"review"`
+	Success bool               `json:"success"`
+	Module  moduleResponse     `json:"module"`
+	Detail  []detailResponse   `json:"detail"`
+	Review  reviewmodel.Review `json:"review"`
 }
 
 // GetConstReview function get data constancy
 func GetConstReview(c echo.Context) error {
 	// Get data request
-	review := models.Review{}
+	review := reviewmodel.Review{}
 	if err := c.Bind(&review); err != nil {
 		return err
 	}
@@ -361,14 +362,14 @@ type reviewModuleResponse struct {
 
 type consolidateResponse struct {
 	Success bool                   `json:"success"`
-	Student models.Student         `json:"student"`
+	Student institutemodel.Student `json:"student"`
 	Reviews []reviewModuleResponse `json:"reviews"`
 }
 
 // GetConsolidateReview function get data constancy
 func GetConsolidateReview(c echo.Context) error {
 	// Get data request
-	student := models.Student{}
+	student := institutemodel.Student{}
 	if err := c.Bind(&student); err != nil {
 		return err
 	}

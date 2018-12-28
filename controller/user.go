@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
+	"github.com/paulantezana/review/models"
 	"html/template"
 	"io"
 	"math/rand"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -39,22 +39,20 @@ func Login(c echo.Context) error {
 	pwd := fmt.Sprintf("%x", cc)
 
 	// Validate user and email
-	if user.Profile == "" {
+	if user.RoleID == 0 {
 		// login without using the profile
 		if db.Where("user_name = ? and password = ?", user.UserName, pwd).First(&user).RecordNotFound() {
 			if db.Where("email = ? and password = ?", user.UserName, pwd).First(&user).RecordNotFound() {
 				return c.JSON(http.StatusOK, utilities.Response{
-					Success: false,
 					Message: "El nombre de usuario o contraseña es incorecta",
 				})
 			}
 		}
 	} else {
 		// login with profile
-		if db.Where("user_name = ? and password = ? and profile = ?", user.UserName, pwd, user.Profile).First(&user).RecordNotFound() {
-			if db.Where("email = ? and password = ? and profile = ?", user.UserName, pwd, user.Profile).First(&user).RecordNotFound() {
+		if db.Where("user_name = ? and password = ? and role_id = ?", user.UserName, pwd, user.RoleID).First(&user).RecordNotFound() {
+			if db.Where("email = ? and password = ? and role_id = ?", user.UserName, pwd, user.RoleID).First(&user).RecordNotFound() {
 				return c.JSON(http.StatusOK, utilities.Response{
-					Success: false,
 					Message: "El nombre de usuario o contraseña es incorecta",
 				})
 			}
@@ -224,10 +222,7 @@ func GetUsers(c echo.Context) error {
 	defer db.Close()
 
 	// Pagination calculate
-	if request.CurrentPage == 0 {
-		request.CurrentPage = 1
-	}
-	offset := request.Limit*request.CurrentPage - request.Limit
+	offset := request.Validate()
 
 	// Check the number of matches
 	var total uint
@@ -235,37 +230,18 @@ func GetUsers(c echo.Context) error {
 
 	// Find users
 	if err := db.Where("user_name LIKE ?", "%"+request.Search+"%").
-		Order("id asc").
-		Offset(offset).Limit(request.Limit).Find(&users).
-		Offset(-1).Limit(-1).Count(&total).
-		Error; err != nil {
+		Order("id asc").Offset(offset).Limit(request.Limit).Find(&users).
+		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return err
 	}
 
-	// Type response
-	// 0 = all data
-	// 1 = minimal data
-	if request.Type == 1 {
-		customUsers := make([]models.User, 0)
-		for _, user := range users {
-			customUsers = append(customUsers, models.User{
-				ID:       user.ID,
-				UserName: user.UserName,
-			})
-		}
-		return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
-			Success:     true,
-			Data:        customUsers,
-			Total:       total,
-			CurrentPage: request.CurrentPage,
-		})
-	}
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
 		Success:     true,
 		Data:        users,
 		Total:       total,
 		CurrentPage: request.CurrentPage,
+		Limit:       request.Limit,
 	})
 }
 
@@ -302,8 +278,8 @@ func CreateUser(c echo.Context) error {
 	}
 
 	// Default empty values
-	if len(user.Profile) == 0 {
-		user.Profile = "user"
+	if user.RoleID == 0 {
+		user.RoleID = 6
 	}
 
 	// get connection
@@ -380,6 +356,14 @@ func DeleteUser(c echo.Context) error {
 	// get connection
 	db := config.GetConnection()
 	defer db.Close()
+
+	// Validate
+	db.First(&user, user.ID)
+	if user.Freeze {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("El usuario %s está protegido por el sistema y no se permite eliminar", user.UserName),
+		})
+	}
 
 	// Delete user in database
 	if err := db.Delete(&user).Error; err != nil {

@@ -1,4 +1,4 @@
-package models
+package institutemodel
 
 // Module struct
 type Module struct {
@@ -8,9 +8,8 @@ type Module struct {
 	Description string `json:"description"`
 	Points      uint   `json:"points"`
 	Hours       uint   `json:"hours"`
-	Semester    string `json:"semester"`
 
 	ProgramID uint `json:"program_id"`
 
-	Reviews []Review `json:"reviews"`
+	Semesters []ModuleSemester `json:"semesters"`
 }

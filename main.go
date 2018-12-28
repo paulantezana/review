@@ -1,14 +1,14 @@
 package main
 
 import (
-    "github.com/paulantezana/review/api"
-    "github.com/paulantezana/review/migration"
-    "net/http"
-    "os"
+	"github.com/paulantezana/review/api"
+	"github.com/paulantezana/review/migration"
+	"net/http"
+	"os"
 
-    "github.com/labstack/echo"
-    "github.com/labstack/echo/middleware"
-    "github.com/paulantezana/review/config"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+	"github.com/paulantezana/review/config"
 )
 
 func main() {
@@ -31,9 +31,9 @@ func main() {
 	static.Static("", "static")
 
 	// Root router success
-    e.GET("/", func(c echo.Context) error {
-        return c.String(http.StatusOK, "Stating Server OK")
-    })
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Stating Server OK")
+	})
 
 	// Sting API services
 	api.PublicApi(e)

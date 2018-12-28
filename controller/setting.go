@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"github.com/paulantezana/review/models/institutemodel"
 	"io"
 	"net/http"
 	"os"
@@ -15,17 +16,17 @@ import (
 
 // GlobalSettings struct
 type GlobalSettings struct {
-	Message string         `json:"message"`
-	Success bool           `json:"success"`
-	Setting models.Setting `json:"setting"`
-	User    models.User    `json:"user"`
-	Program models.Program `json:"program"`
+	Message string                 `json:"message"`
+	Success bool                   `json:"success"`
+	Roles   []models.Role          `json:"roles"`
+	Setting models.Setting         `json:"setting"`
+	User    models.User            `json:"user"`
+	Program institutemodel.Program `json:"program"`
 }
 
 // GetGlobalSettings function
 func GetGlobalSettings(c echo.Context) error {
 	// Get data request
-	con := models.Setting{}
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
 		return err
@@ -43,12 +44,17 @@ func GetGlobalSettings(c echo.Context) error {
 	user.Key = ""
 
 	// Find settings
+	con := models.Setting{}
 	db.First(&con)
 
+	// Find settings
+	roles := make([]models.Role, 0)
+	db.Find(&roles)
+
 	// Find program
-	var program models.Program
-	if user.ProgramID > 0 {
-		if err := db.First(&program, user.ProgramID).Error; err != nil {
+	var program institutemodel.Program
+	if user.DefaultProgramID > 0 {
+		if err := db.First(&program, user.DefaultProgramID).Error; err != nil {
 			return err
 		}
 	}
@@ -57,6 +63,7 @@ func GetGlobalSettings(c echo.Context) error {
 	return c.JSON(http.StatusOK, GlobalSettings{
 		User:    user,
 		Setting: con,
+		Roles:   roles,
 		Program: program,
 		Success: true,
 		Message: "OK",
@@ -64,20 +71,21 @@ func GetGlobalSettings(c echo.Context) error {
 }
 
 type studentSettingsResponse struct {
-	Setting models.Setting `json:"setting"`
-	Program models.Program `json:"program"`
-	User    models.User    `json:"user"`
-	Student models.Student `json:"student"`
-	Message string         `json:"message"`
-	Success bool           `json:"success"`
+	Setting models.Setting         `json:"setting"`
+	Program institutemodel.Program `json:"program"`
+	User    models.User            `json:"user"`
+	Roles   models.Role            `json:"roles"`
+	Student institutemodel.Student `json:"student"`
+	Message string                 `json:"message"`
+	Success bool                   `json:"success"`
 }
 
 // GetGlobalSettings function
 func GetStudentSettings(c echo.Context) error {
 	// Get data request
 	setting := models.Setting{}
-	program := models.Program{}
-	student := models.Student{}
+	program := institutemodel.Program{}
+	student := institutemodel.Student{}
 
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
@@ -95,18 +103,18 @@ func GetStudentSettings(c echo.Context) error {
 	user.Password = ""
 	user.Key = ""
 
-    // find student
-    if err := db.First(&student, "user_id = ?", user.ID).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("%s", err),
-        })
-    }
+	// find student
+	if err := db.First(&student, "user_id = ?", user.ID).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("%s", err),
+		})
+	}
 
 	// find program
-	if err := db.First(&program, student.ProgramID).Error; err != nil {
-       return c.JSON(http.StatusOK, utilities.Response{
-           Message: fmt.Sprintf("%s", err),
-       })
+	if err := db.First(&program, student.DefaultProgramID).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("%s", err),
+		})
 	}
 
 	// Find settings

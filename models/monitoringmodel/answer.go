@@ -1,4 +1,4 @@
-package monitoring
+package monitoringmodel
 
 // Answer struct
 type Answer struct {

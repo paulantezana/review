@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/models/reviewmodel"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 	"time"
@@ -26,7 +26,7 @@ type reviewDetailByReviewResponse struct {
 // GetReviewsDetailByReview function
 func GetReviewsDetailByReview(c echo.Context) error {
 	// Get data request
-	review := models.Review{}
+	review := reviewmodel.Review{}
 	if err := c.Bind(&review); err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func GetReviewsDetailByReview(c echo.Context) error {
 // DeleteReview function delete review
 func DeleteReviewDetail(c echo.Context) error {
 	// Get data request
-	reviewDetail := models.ReviewDetail{}
+	reviewDetail := reviewmodel.ReviewDetail{}
 	if err := c.Bind(&reviewDetail); err != nil {
 		return err
 	}

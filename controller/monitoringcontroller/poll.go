@@ -2,12 +2,12 @@ package monitoringcontroller
 
 import (
 	"fmt"
+	"github.com/paulantezana/review/models/monitoringmodel"
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models/monitoring"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -32,10 +32,10 @@ func GetPollsPaginate(c echo.Context) error {
 
 	// Execute instructions
 	var total uint
-	companies := make([]monitoring.Poll, 0)
+	companies := make([]monitoringmodel.Poll, 0)
 
 	// Query in database
-	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
+	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&companies).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
@@ -54,7 +54,7 @@ func GetPollsPaginate(c echo.Context) error {
 
 func GetPollByID(c echo.Context) error {
 	// Get data request
-	poll := monitoring.Poll{}
+	poll := monitoringmodel.Poll{}
 	if err := c.Bind(&poll); err != nil {
 		return err
 	}
@@ -82,13 +82,13 @@ func CreatePoll(c echo.Context) error {
 	currentUser := claims.User
 
 	// Get data request
-	poll := monitoring.Poll{}
+	poll := monitoringmodel.Poll{}
 	if err := c.Bind(&poll); err != nil {
 		return err
 	}
 
 	// set current programID
-	poll.ProgramID = currentUser.ProgramID
+	poll.ProgramID = currentUser.DefaultProgramID
 
 	// get connection
 	db := config.GetConnection()
@@ -112,7 +112,7 @@ func CreatePoll(c echo.Context) error {
 
 func UpdatePoll(c echo.Context) error {
 	// Get data request
-	poll := monitoring.Poll{}
+	poll := monitoringmodel.Poll{}
 	if err := c.Bind(&poll); err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func UpdatePoll(c echo.Context) error {
 // DeletePoll delete pooll by id
 func DeletePoll(c echo.Context) error {
 	// Get data request
-	poll := monitoring.Poll{}
+	poll := monitoringmodel.Poll{}
 	if err := c.Bind(&poll); err != nil {
 		return err
 	}

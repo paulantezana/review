@@ -1,4 +1,4 @@
-package monitoring
+package monitoringmodel
 
 // TypeQuestion struct
 type TypeQuestion struct {

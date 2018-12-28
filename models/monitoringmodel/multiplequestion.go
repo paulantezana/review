@@ -1,4 +1,4 @@
-package monitoring
+package monitoringmodel
 
 // MultipleQuestion struct
 type MultipleQuestion struct {

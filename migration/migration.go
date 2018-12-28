@@ -3,12 +3,13 @@ package migration
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/paulantezana/review/models/coursemodel"
-	"github.com/paulantezana/review/models/librarymodel"
-
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/models/monitoring"
+	"github.com/paulantezana/review/models/coursemodel"
+	"github.com/paulantezana/review/models/institutemodel"
+	"github.com/paulantezana/review/models/librarymodel"
+	"github.com/paulantezana/review/models/monitoringmodel"
+	"github.com/paulantezana/review/models/reviewmodel"
 )
 
 // migration function
@@ -17,15 +18,32 @@ func Migrate() {
 	defer db.Close()
 
 	db.Debug().AutoMigrate(
+		&models.Role{},
 		&models.User{},
-		&models.Module{},
-		&models.Review{},
-		&models.ReviewDetail{},
-		&models.Program{},
-		&models.Student{},
-		&models.Teacher{},
-		&models.Company{},
+
 		&models.Setting{},
+
+		// Institute
+		&institutemodel.Subsidiary{},
+		&institutemodel.Program{},
+		&institutemodel.Semester{},
+		&institutemodel.Module{},
+		&institutemodel.ModuleSemester{},
+		&institutemodel.Unity{},
+
+		&institutemodel.StudentStatus{},
+		&institutemodel.Student{},
+		&institutemodel.StudentHistory{},
+		&institutemodel.StudentProgram{},
+
+		&institutemodel.Teacher{},
+		&institutemodel.TeacherAction{},
+		&institutemodel.TeacherProgram{},
+
+		// Review
+		&reviewmodel.Review{},
+		&reviewmodel.ReviewDetail{},
+		&reviewmodel.Company{},
 
 		// Migration certification
 		&coursemodel.Course{},
@@ -33,54 +51,93 @@ func Migrate() {
 		&coursemodel.CourseExam{},
 
 		// Migration monitoring
-		&monitoring.Answer{},
-		&monitoring.AnswerDetail{},
-		&monitoring.MultipleQuestion{},
-		&monitoring.Poll{},
-		&monitoring.Question{},
-		&monitoring.TypeQuestion{},
+		&monitoringmodel.Answer{},
+		&monitoringmodel.AnswerDetail{},
+		&monitoringmodel.MultipleQuestion{},
+		&monitoringmodel.Poll{},
+		&monitoringmodel.Question{},
+		&monitoringmodel.TypeQuestion{},
 
 		// Libraries
 		&librarymodel.Category{},
 		&librarymodel.Book{},
 		&librarymodel.Reading{},
 	)
-	db.Model(&models.Review{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.Review{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.Review{}).AddForeignKey("module_id", "modules(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.Review{}).AddForeignKey("teacher_id", "teachers(id)", "RESTRICT", "RESTRICT")
+	// General
+	db.Model(&models.User{}).AddForeignKey("role_id", "roles(id)", "RESTRICT", "RESTRICT")
 
-	db.Model(&models.ReviewDetail{}).AddForeignKey("company_id", "companies(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.ReviewDetail{}).AddForeignKey("review_id", "reviews(id)", "RESTRICT", "RESTRICT")
+	// Institutional
+	db.Model(&institutemodel.Program{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "RESTRICT", "RESTRICT")
+	db.Model(&institutemodel.Semester{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&institutemodel.ModuleSemester{}).AddForeignKey("semester_id", "semesters(id)", "CASCADE", "CASCADE")
+	db.Model(&institutemodel.ModuleSemester{}).AddForeignKey("module_id", "modules(id)", "CASCADE", "CASCADE")
+	db.Model(&institutemodel.Unity{}).AddForeignKey("module_id", "modules(id)", "RESTRICT", "RESTRICT")
+	db.Model(&institutemodel.Unity{}).AddForeignKey("semester_id", "semesters(id)", "RESTRICT", "RESTRICT")
 
-	db.Model(&models.Student{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.Student{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.Teacher{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.Teacher{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.Module{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&institutemodel.Student{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&institutemodel.Student{}).AddForeignKey("student_status_id", "student_status(id)", "RESTRICT", "RESTRICT")
+	db.Model(&institutemodel.StudentHistory{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
+	db.Model(&institutemodel.StudentHistory{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&institutemodel.StudentProgram{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
+	db.Model(&institutemodel.StudentProgram{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 
-	// Certification
-	db.Model(&coursemodel.CourseStudent{}).AddForeignKey("course_id", "courses(id)", "RESTRICT", "RESTRICT")
-	db.Model(&coursemodel.CourseStudent{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-	db.Model(&coursemodel.CourseExam{}).AddForeignKey("course_student_id", "course_students(id)", "RESTRICT", "RESTRICT")
+	db.Model(&institutemodel.Teacher{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&institutemodel.TeacherAction{}).AddForeignKey("teacher_id", "teachers(id)", "RESTRICT", "RESTRICT")
+	db.Model(&institutemodel.TeacherProgram{}).AddForeignKey("teacher_id", "teachers(id)", "CASCADE", "CASCADE")
+	db.Model(&institutemodel.TeacherProgram{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 
-	// Monitoring
-	db.Model(&monitoring.Poll{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-	db.Model(&monitoring.AnswerDetail{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
-	db.Model(&monitoring.AnswerDetail{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
-	db.Model(&monitoring.AnswerDetail{}).AddForeignKey("answer_id", "answers(id)", "RESTRICT", "RESTRICT")
-
-	db.Model(&monitoring.Question{}).AddForeignKey("poll_id", "polls(id)", "RESTRICT", "RESTRICT")
-	db.Model(&monitoring.Question{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
-
-	db.Model(&monitoring.MultipleQuestion{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
-
-	// Libraries
-	db.Model(&librarymodel.Book{}).AddForeignKey("category_id", "categories(id)", "CASCADE", "RESTRICT")
+	//db.Model(&reviewmodel.Review{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&reviewmodel.Review{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&reviewmodel.Review{}).AddForeignKey("module_id", "modules(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&reviewmodel.Review{}).AddForeignKey("teacher_id", "teachers(id)", "RESTRICT", "RESTRICT")
+	//
+	//db.Model(&reviewmodel.ReviewDetail{}).AddForeignKey("company_id", "companies(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&reviewmodel.ReviewDetail{}).AddForeignKey("review_id", "reviews(id)", "RESTRICT", "RESTRICT")
+	//
+	//db.Model(&institutemodel.Student{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&institutemodel.Student{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&institutemodel.Teacher{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&institutemodel.Teacher{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&institutemodel.Module{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	//
+	//// Certification
+	//db.Model(&coursemodel.CourseStudent{}).AddForeignKey("course_id", "courses(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&coursemodel.CourseStudent{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&coursemodel.CourseExam{}).AddForeignKey("course_student_id", "course_students(id)", "RESTRICT", "RESTRICT")
+	//
+	//// Monitoring
+	//db.Model(&monitoringmodel.Poll{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&monitoringmodel.AnswerDetail{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
+	//db.Model(&monitoringmodel.AnswerDetail{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&monitoringmodel.AnswerDetail{}).AddForeignKey("answer_id", "answers(id)", "RESTRICT", "RESTRICT")
+	//
+	//db.Model(&monitoringmodel.Question{}).AddForeignKey("poll_id", "polls(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&monitoringmodel.Question{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
+	//
+	//db.Model(&monitoringmodel.MultipleQuestion{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
+	//
+	//// Libraries
+	//db.Model(&librarymodel.Book{}).AddForeignKey("category_id", "categories(id)", "CASCADE", "RESTRICT")
 
 	// -------------------------------------------------------------
 	// INSERT FIST DATA --------------------------------------------
 	// -------------------------------------------------------------
+	role := models.Role{}
+	db.First(&role)
+
+	// Validate
+	if role.ID == 0 {
+		role1 := models.Role{Name: "sa"}
+		role2 := models.Role{Name: "admin"}
+		role3 := models.Role{Name: "teacher"}
+		role4 := models.Role{Name: "student"}
+		role5 := models.Role{Name: "coordinator"}
+		role6 := models.Role{Name: "invited"}
+		db.Save(&role1).Save(&role2).Save(&role3).Save(&role4).Save(&role5).Save(role6)
+	}
+
+	// -------------------------------------------------------------
+	// Insert user --------------------------------------------
 	usr := models.User{}
 	db.First(&usr)
 
@@ -95,11 +152,13 @@ func Migrate() {
 			UserName: "sa",
 			Password: pwd,
 			Email:    "yoel.antezana@gmail.com",
-			Profile:  "sa",
+			RoleID:   1,
+			Freeze:   true,
 		}
 		db.Create(&user)
 	}
 
+	// =====================================================
 	// First Setting
 	prm := models.Setting{}
 	db.First(&prm)
@@ -120,15 +179,15 @@ func Migrate() {
 
 	// ====================================================
 	// -- Insert Type Quiestions
-	tpq := monitoring.TypeQuestion{}
+	tpq := monitoringmodel.TypeQuestion{}
 	db.First(&tpq)
 
 	if tpq.ID == 0 {
 		// Create Models
-		tq1 := monitoring.TypeQuestion{Name: "Respuesta breve"}          // 1 = Simple input
-		tq2 := monitoring.TypeQuestion{Name: "Párrafo"}                  // 2 = TextArea input
-		tq3 := monitoring.TypeQuestion{Name: "Opción múltiple"}          // 3 = Radio input
-		tq4 := monitoring.TypeQuestion{Name: "Casillas de verificación"} // 4 = Checkbox input
+		tq1 := monitoringmodel.TypeQuestion{Name: "Respuesta breve"}          // 1 = Simple input
+		tq2 := monitoringmodel.TypeQuestion{Name: "Párrafo"}                  // 2 = TextArea input
+		tq3 := monitoringmodel.TypeQuestion{Name: "Opción múltiple"}          // 3 = Radio input
+		tq4 := monitoringmodel.TypeQuestion{Name: "Casillas de verificación"} // 4 = Checkbox input
 
 		// Insert in Database
 		db.Create(&tq1)

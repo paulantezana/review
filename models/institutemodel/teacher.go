@@ -1,4 +1,4 @@
-package models
+package institutemodel
 
 import "time"
 
@@ -25,6 +25,11 @@ type Teacher struct {
 	//TeachingMonths uint `json:"teaching_months"`
 	Specialty string `json:"specialty"`
 
-	ProgramID uint `json:"program_id"`
-	UserID    uint `json:"user_id"`
+	UserID           uint `json:"user_id"`
+
+	// Only in REQUEST OR RESPONSE JSON
+	Type string `json:"type" gorm:"-"`
+	DefaultProgramID uint `json:"default_program_id" gorm:"-"`
+
+	TeacherPrograms []TeacherProgram `json:"teacher_programs"`
 }

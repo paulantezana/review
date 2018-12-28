@@ -6,6 +6,7 @@ import (
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/controller"
 	"github.com/paulantezana/review/controller/coursescontroller"
+	"github.com/paulantezana/review/controller/institutecontroller"
 	"github.com/paulantezana/review/controller/librarycontroller"
 	"github.com/paulantezana/review/controller/monitoringcontroller"
 	"github.com/paulantezana/review/utilities"
@@ -40,38 +41,54 @@ func ProtectedApi(e *echo.Echo) {
 	ar.GET("/setting/download/ministry", controller.DownloadMinistrySetting)
 	ar.GET("/setting/download/national/emblem", controller.DownloadNationalEmblemSetting)
 
+	// ============================================================================
+	//   Institutional controller api
 	// Program
-	ar.POST("/program/all", controller.GetPrograms)
-	ar.POST("/program/create", controller.CreateProgram)
-	ar.PUT("/program/update", controller.UpdateProgram)
+	ar.POST("/subsidiary/all", institutecontroller.GetSubsidiaries)
+	ar.POST("/subsidiary/all/tree", institutecontroller.GetSubsidiariesTree)
+	ar.POST("/subsidiary/by/id", institutecontroller.GetSubsidiaryByID)
+	ar.POST("/subsidiary/create", institutecontroller.CreateSubsidiary)
+	ar.PUT("/subsidiary/update", institutecontroller.UpdateSubsidiary)
+	ar.DELETE("/subsidiary/delete", institutecontroller.DeleteSubsidiary)
+
+	// Program
+	ar.POST("/program/all", institutecontroller.GetPrograms)
+	ar.POST("/program/create", institutecontroller.CreateProgram)
+	ar.PUT("/program/update", institutecontroller.UpdateProgram)
+
+	// Program
+	ar.POST("/semester/all", institutecontroller.GetSemesters)
+	ar.POST("/semester/create", institutecontroller.CreateSemester)
+	ar.PUT("/semester/update", institutecontroller.UpdateSemester)
+	ar.DELETE("/semester/delete", institutecontroller.DeleteSemester)
 
 	// Student
-	ar.POST("/student/all", controller.GetStudents)
-	ar.POST("/student/create", controller.CreateStudent)
-	ar.PUT("/student/update", controller.UpdateStudent)
-	ar.DELETE("/student/delete", controller.DeleteStudent)
-	ar.POST("/student/search", controller.GetStudentSearch)
-	ar.GET("/student/download/template", controller.GetTempUploadStudent)
-	ar.POST("/student/upload/template", controller.SetTempUploadStudent)
-	ar.POST("/student/detail/by/id", controller.GetStudentDetailByID)
-	ar.POST("/student/detail/by/dni", controller.GetStudentDetailByDNI)
+	ar.POST("/student/all", institutecontroller.GetStudents)
+	ar.POST("/student/create", institutecontroller.CreateStudent)
+	ar.PUT("/student/update", institutecontroller.UpdateStudent)
+	ar.DELETE("/student/delete", institutecontroller.DeleteStudent)
+	ar.POST("/student/search", institutecontroller.GetStudentSearch)
+	ar.GET("/student/download/template", institutecontroller.GetTempUploadStudent)
+	ar.POST("/student/upload/template", institutecontroller.SetTempUploadStudent)
+	ar.POST("/student/detail/by/id", institutecontroller.GetStudentDetailByID)
+	ar.POST("/student/detail/by/dni", institutecontroller.GetStudentDetailByDNI)
 
 	// Student
-	ar.POST("/teacher/all", controller.GetTeachers)
-	ar.POST("/teacher/create", controller.CreateTeacher)
-	ar.PUT("/teacher/update", controller.UpdateTeacher)
-	ar.DELETE("/teacher/delete", controller.DeleteTeacher)
-	ar.POST("/teacher/search", controller.GetTeacherSearch)
-	ar.GET("/teacher/download/template", controller.GetTempUploadTeacher)
-	ar.POST("/teacher/upload/template", controller.SetTempUploadTeacher)
-	ar.GET("/teacher/export/all", controller.ExportAllTeachers)
+	ar.POST("/teacher/all", institutecontroller.GetTeachers)
+	ar.POST("/teacher/create", institutecontroller.CreateTeacher)
+	ar.PUT("/teacher/update", institutecontroller.UpdateTeacher)
+	ar.DELETE("/teacher/delete", institutecontroller.DeleteTeacher)
+	ar.POST("/teacher/search", institutecontroller.GetTeacherSearch)
+	ar.GET("/teacher/download/template", institutecontroller.GetTempUploadTeacher)
+	ar.POST("/teacher/upload/template", institutecontroller.SetTempUploadTeacher)
+	ar.GET("/teacher/export/all", institutecontroller.ExportAllTeachers)
 
 	// Module
-	ar.POST("/module/all", controller.GetModules)
-	ar.POST("/module/create", controller.CreateModule)
-	ar.PUT("/module/update", controller.UpdateModule)
-	ar.DELETE("/module/delete", controller.DeleteModule)
-	ar.POST("/module/search", controller.GetModuleSearch)
+	ar.POST("/module/all", institutecontroller.GetModules)
+	ar.POST("/module/create", institutecontroller.CreateModule)
+	ar.PUT("/module/update", institutecontroller.UpdateModule)
+	ar.DELETE("/module/delete", institutecontroller.DeleteModule)
+	ar.POST("/module/search", institutecontroller.GetModuleSearch)
 
 	// Company
 	ar.POST("/company/all", controller.GetCompanies)
@@ -160,9 +177,9 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/library/book/update", librarycontroller.UpdateBook)
 	ar.DELETE("/library/book/delete", librarycontroller.DeleteBook)
 	ar.POST("/library/book/by/id", librarycontroller.GetBookByID)
-    ar.POST("/library/book/upload/avatar", librarycontroller.UploadAvatarBook)
-    ar.POST("/library/book/upload/pdf", librarycontroller.UploadPdfBook)
+	ar.POST("/library/book/upload/avatar", librarycontroller.UploadAvatarBook)
+	ar.POST("/library/book/upload/pdf", librarycontroller.UploadPdfBook)
 
 	// Web Site services
-    ar.POST("/web/setting/by/student", controller.GetStudentSettings)
+	ar.POST("/web/setting/by/student", controller.GetStudentSettings)
 }

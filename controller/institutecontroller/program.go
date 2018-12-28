@@ -1,4 +1,4 @@
-package controller
+package institutecontroller
 
 import (
 	"crypto/sha256"
@@ -6,26 +6,31 @@ import (
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/models/institutemodel"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
 func GetPrograms(c echo.Context) error {
+	// Get data request
+	program := institutemodel.Program{}
+	if err := c.Bind(&program); err != nil {
+		return err
+	}
 
 	// Get connection
-	db := config.GetConnection()
-	defer db.Close()
+    DB := config.GetConnection()
+	defer DB.Close()
 
 	// Execute instructions
-	programs := make([]models.Program, 0)
-	if err := db.Find(&programs).
-		Order("id desc").
+	programs := make([]institutemodel.Program, 0)
+	if err := DB.Where("subsidiary_id = ?", program.SubsidiaryID).Find(&programs).Order("id desc").
 		Error; err != nil {
 		return err
 	}
 
 	// Return response
-	return c.JSON(http.StatusCreated, utilities.Response{
+	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    programs,
 	})
@@ -33,17 +38,17 @@ func GetPrograms(c echo.Context) error {
 
 func GetProgramByID(c echo.Context) error {
 	// Get data request
-	program := models.Program{}
+	program := institutemodel.Program{}
 	if err := c.Bind(&program); err != nil {
 		return err
 	}
 
 	// Get connection
-	db := config.GetConnection()
-	defer db.Close()
+    DB := config.GetConnection()
+	defer DB.Close()
 
 	// Execute instructions
-	if err := db.First(&program, program.ID).Error; err != nil {
+	if err := DB.First(&program, program.ID).Error; err != nil {
 		return err
 	}
 
@@ -55,7 +60,9 @@ func GetProgramByID(c echo.Context) error {
 }
 
 type createProgramRequest struct {
-	Name      string `json:"name"`
+	Name         string `json:"name"`
+	SubsidiaryID uint   `json:"subsidiary_id"`
+
 	DNI       string `json:"dni"`
 	FirstName string `json:"first_name"`
 	Email     string `json:"email"`
@@ -71,19 +78,20 @@ func CreateProgram(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
-	defer db.Close()
+	DB := config.GetConnection()
+	defer DB.Close()
 
 	// ------------------------------------
 	// Starting transaction
 	// ------------------------------------
-	tr := db.Begin()
-	program := models.Program{
-		Name: request.Name,
+	TR := DB.Begin()
+	program := institutemodel.Program{
+		Name:         request.Name,
+		SubsidiaryID: request.SubsidiaryID,
 	}
 	// Create new program
-	if err := tr.Create(&program).Error; err != nil {
-		tr.Rollback()
+	if err := TR.Create(&program).Error; err != nil {
+        TR.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -92,35 +100,46 @@ func CreateProgram(c echo.Context) error {
 	pwd := fmt.Sprintf("%x", cc)
 
 	user := models.User{
-		UserName:  request.UserName,
-		Password:  pwd,
-		Email:     request.Email,
-		ProgramID: program.ID,
-		Profile:   "admin",
+		UserName:         request.UserName,
+		Password:         pwd,
+		Email:            request.Email,
+		DefaultProgramID: program.ID,
+		RoleID:           2,
+		Freeze:           true,
 	}
-	if err := tr.Create(&user).Error; err != nil {
-		tr.Rollback()
+	if err := TR.Create(&user).Error; err != nil {
+        TR.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Create teacher
-	teacher := models.Teacher{
-		DNI:       request.DNI,
-		FirstName: request.FirstName,
-		ProgramID: program.ID,
-		UserID:    user.ID,
+	teacher := institutemodel.Teacher{
+		DNI:              request.DNI,
+		FirstName:        request.FirstName,
+		DefaultProgramID: program.ID,
+		UserID:           user.ID,
 	}
-	if err := tr.Create(&teacher).Error; err != nil {
-		tr.Rollback()
+	if err := TR.Create(&teacher).Error; err != nil {
+        TR.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	tr.Commit()
+	// Create Relation
+	teacherProgram := institutemodel.TeacherProgram{
+		ProgramID: program.ID,
+		TeacherID: teacher.ID,
+		Type: "career",
+		ByDefault: true,
+	}
+	if err := TR.Create(&teacherProgram).Error; err != nil {
+        TR.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+    TR.Commit()
 	// ------------------------------------
 	// End Transaction
 	// ------------------------------------
-
-	// Insert program in database
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -132,17 +151,17 @@ func CreateProgram(c echo.Context) error {
 
 func UpdateProgram(c echo.Context) error {
 	// Get data request
-	program := models.Program{}
+	program := institutemodel.Program{}
 	if err := c.Bind(&program); err != nil {
 		return err
 	}
 
 	// get connection
-	db := config.GetConnection()
-	defer db.Close()
+	DB := config.GetConnection()
+	defer DB.Close()
 
 	// Update program in database
-	rows := db.Model(&program).Update(program).RowsAffected
+	rows := DB.Model(&program).Update(program).RowsAffected
 	if rows == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
 			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", program.ID),

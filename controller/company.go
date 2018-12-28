@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"github.com/paulantezana/review/models/reviewmodel"
 	"io"
 	"net/http"
 	"os"
@@ -10,7 +11,6 @@ import (
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -30,7 +30,7 @@ func GetCompanies(c echo.Context) error {
 
 	// Execute instructions
 	var total uint
-	companies := make([]models.Company, 0)
+	companies := make([]reviewmodel.Company, 0)
 
 	// Query in database
 	if err := db.Where("lower(name_social_reason) LIKE lower(?)", "%"+request.Search+"%").
@@ -62,15 +62,15 @@ func GetCompanySearch(c echo.Context) error {
 	defer db.Close()
 
 	// Execute instructions
-	companies := make([]models.Company, 0)
+	companies := make([]reviewmodel.Company, 0)
 	if err := db.Where("lower(name_social_reason) LIKE lower(?)", "%"+request.Search+"%").
 		Limit(10).Find(&companies).Error; err != nil {
 		return err
 	}
 
-	customCompanies := make([]models.Company, 0)
+	customCompanies := make([]reviewmodel.Company, 0)
 	for _, student := range companies {
-		customCompanies = append(customCompanies, models.Company{
+		customCompanies = append(customCompanies, reviewmodel.Company{
 			ID:               student.ID,
 			NameSocialReason: student.NameSocialReason,
 			RUC:              student.RUC,
@@ -86,7 +86,7 @@ func GetCompanySearch(c echo.Context) error {
 
 func CreateCompany(c echo.Context) error {
 	// Get data request
-	company := models.Company{}
+	company := reviewmodel.Company{}
 	if err := c.Bind(&company); err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func CreateCompany(c echo.Context) error {
 
 func UpdateCompany(c echo.Context) error {
 	// Get data request
-	company := models.Company{}
+	company := reviewmodel.Company{}
 	if err := c.Bind(&company); err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func UpdateCompany(c echo.Context) error {
 
 func DeleteCompany(c echo.Context) error {
 	// Get data request
-	company := models.Company{}
+	company := reviewmodel.Company{}
 	if err := c.Bind(&company); err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func MultipleDeleteCompany(c echo.Context) error {
 
 	tx := db.Begin()
 	for _, value := range deleteRequest.Ids {
-		company := models.Company{
+		company := reviewmodel.Company{
 			ID: value,
 		}
 
@@ -240,14 +240,14 @@ func SetTempUploadCompany(c echo.Context) error {
 	}
 
 	// Prepare
-	companies := make([]models.Company, 0)
+	companies := make([]reviewmodel.Company, 0)
 	ignoreCols := 1
 
 	// Get all the rows in the student.
 	rows := xlsx.GetRows("empresa")
 	for k, row := range rows {
 		if k >= ignoreCols {
-			companies = append(companies, models.Company{
+			companies = append(companies, reviewmodel.Company{
 				RUC:              strings.TrimSpace(row[0]),
 				NameSocialReason: strings.TrimSpace(row[1]),
 				Address:          strings.TrimSpace(row[2]),
@@ -288,7 +288,7 @@ func ExportAllCompanies(c echo.Context) error {
 	defer db.Close()
 
 	// Execute instructions
-	companies := make([]models.Company, 0)
+	companies := make([]reviewmodel.Company, 0)
 
 	// Query in database
 	if err := db.Order("id asc").Find(&companies).Error; err != nil {

@@ -1,16 +1,16 @@
 package librarycontroller
 
 import (
-    "crypto/sha256"
-    "fmt"
+	"crypto/sha256"
+	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models/librarymodel"
 	"github.com/paulantezana/review/utilities"
-    "io"
-    "net/http"
-    "os"
-    "path/filepath"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
 )
 
 func GetBooksPaginate(c echo.Context) error {
@@ -156,114 +156,114 @@ func DeleteBook(c echo.Context) error {
 
 // UploadAvatarUser function upload avatar user
 func UploadAvatarBook(c echo.Context) error {
-    // Read form fields
-    idBook := c.FormValue("id")
-    book := librarymodel.Book{}
+	// Read form fields
+	idBook := c.FormValue("id")
+	book := librarymodel.Book{}
 
-    // get connection
-    db := config.GetConnection()
-    defer db.Close()
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
 
-    // Validation user exist
-    if db.First(&book, "id = ?", idBook).RecordNotFound() {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("No se encontró el registro con id %d", idBook),
-        })
-    }
+	// Validation user exist
+	if db.First(&book, "id = ?", idBook).RecordNotFound() {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("No se encontró el registro con id %d", idBook),
+		})
+	}
 
-    // Source
-    file, err := c.FormFile("avatar")
-    if err != nil {
-        return err
-    }
-    src, err := file.Open()
-    if err != nil {
-        return err
-    }
-    defer src.Close()
+	// Source
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
 
-    // Destination
-    ccc := sha256.Sum256([]byte(string(book.ID)))
-    name := fmt.Sprintf("%x%s", ccc, filepath.Ext(file.Filename))
-    avatarSRC := "static/books/" + name
-    dst, err := os.Create(avatarSRC)
-    if err != nil {
-        return err
-    }
-    defer dst.Close()
-    book.Avatar = avatarSRC
+	// Destination
+	ccc := sha256.Sum256([]byte(string(book.ID)))
+	name := fmt.Sprintf("%x%s", ccc, filepath.Ext(file.Filename))
+	avatarSRC := "static/books/" + name
+	dst, err := os.Create(avatarSRC)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+	book.Avatar = avatarSRC
 
-    // Copy
-    if _, err = io.Copy(dst, src); err != nil {
-        return err
-    }
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
 
-    // Update database user
-    if err := db.Model(&book).Update(book).Error; err != nil {
-        return err
-    }
+	// Update database user
+	if err := db.Model(&book).Update(book).Error; err != nil {
+		return err
+	}
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    book.ID,
-        Message: fmt.Sprintf("El avatar del libro %s, se subió correctamente", book.Name),
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    book.ID,
+		Message: fmt.Sprintf("El avatar del libro %s, se subió correctamente", book.Name),
+	})
 }
 
 // UploadAvatarUser function upload avatar user
 func UploadPdfBook(c echo.Context) error {
-    // Read form fields
-    idBook := c.FormValue("id")
-    book := librarymodel.Book{}
+	// Read form fields
+	idBook := c.FormValue("id")
+	book := librarymodel.Book{}
 
-    // get connection
-    db := config.GetConnection()
-    defer db.Close()
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
 
-    // Validation user exist
-    if db.First(&book, "id = ?", idBook).RecordNotFound() {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("No se encontró el registro con id %d", idBook),
-        })
-    }
+	// Validation user exist
+	if db.First(&book, "id = ?", idBook).RecordNotFound() {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("No se encontró el registro con id %d", idBook),
+		})
+	}
 
-    // Source
-    file, err := c.FormFile("pdf")
-    if err != nil {
-        return err
-    }
-    src, err := file.Open()
-    if err != nil {
-        return err
-    }
-    defer src.Close()
+	// Source
+	file, err := c.FormFile("pdf")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
 
-    // Destination
-    ccc := sha256.Sum256([]byte(string(book.ID)))
-    name := fmt.Sprintf("%x%s", ccc, filepath.Ext(file.Filename))
-    avatarSRC := "static/books/" + name
-    dst, err := os.Create(avatarSRC)
-    if err != nil {
-        return err
-    }
-    defer dst.Close()
-    book.Pdf = avatarSRC
+	// Destination
+	ccc := sha256.Sum256([]byte(string(book.ID)))
+	name := fmt.Sprintf("%x%s", ccc, filepath.Ext(file.Filename))
+	avatarSRC := "static/books/" + name
+	dst, err := os.Create(avatarSRC)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+	book.Pdf = avatarSRC
 
-    // Copy
-    if _, err = io.Copy(dst, src); err != nil {
-        return err
-    }
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
 
-    // Update database user
-    if err := db.Model(&book).Update(book).Error; err != nil {
-        return err
-    }
+	// Update database user
+	if err := db.Model(&book).Update(book).Error; err != nil {
+		return err
+	}
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    book.ID,
-        Message: fmt.Sprintf("El avatar del libro %s, se subió correctamente", book.Name),
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    book.ID,
+		Message: fmt.Sprintf("El avatar del libro %s, se subió correctamente", book.Name),
+	})
 }

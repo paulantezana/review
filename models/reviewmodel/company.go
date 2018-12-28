@@ -1,4 +1,4 @@
-package models
+package reviewmodel
 
 // Company struct
 type Company struct {

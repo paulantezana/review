@@ -1,8 +1,10 @@
-package controller
+package institutecontroller
 
 import (
 	"crypto/sha256"
 	"fmt"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/models/institutemodel"
 	"io"
 	"net/http"
 	"os"
@@ -13,7 +15,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -38,9 +39,9 @@ func GetTeachers(c echo.Context) error {
 
 	// Execute instructions
 	var total uint
-	teachers := make([]models.Teacher, 0)
+	teachers := make([]institutemodel.Teacher, 0)
 
-	if currentUser.Profile == "sa" {
+	if currentUser.RoleID == 1 {
 		// Query in database
 		if err := db.Where("lower(first_name) LIKE lower(?)", "%"+request.Search+"%").
 			Or("lower(last_name) LIKE lower(?)", "%"+request.Search+"%").
@@ -48,13 +49,13 @@ func GetTeachers(c echo.Context) error {
 			Order("id asc").
 			Offset(offset).Limit(request.Limit).Find(&teachers).
 			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-			return err
+			    return err
 		}
 	} else {
 		// Query in database
-		if err := db.Where("lower(first_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
-			Or("lower(last_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
-			Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
+		if err := db.Where("lower(first_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
+			Or("lower(last_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
+			Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
 			Order("id asc").
 			Offset(offset).Limit(request.Limit).Find(&teachers).
 			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
@@ -62,24 +63,17 @@ func GetTeachers(c echo.Context) error {
 		}
 	}
 
-	// Type response
-	// 0 = all data
-	// 1 = minimal data
-	if request.Type == 1 {
-		customTeacher := make([]models.Teacher, 0)
-		for _, teacher := range teachers {
-			customTeacher = append(customTeacher, models.Teacher{
-				ID:        teacher.ID,
-				FirstName: teacher.FirstName,
-			})
-		}
-		return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
-			Success:     true,
-			Data:        customTeacher,
-			Total:       total,
-			CurrentPage: request.CurrentPage,
-		})
-	}
+	// Get type teacher
+    for k, teacher := range teachers {
+        teacherProgram := institutemodel.TeacherProgram{}
+        db.First(&teacherProgram,institutemodel.TeacherProgram{
+            TeacherID: teacher.ID,
+            ByDefault: true,
+        })
+        teachers[k].Type = teacherProgram.Type
+        teachers[k].DefaultProgramID = teacherProgram.ProgramID
+    }
+
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
 		Success:     true,
@@ -103,20 +97,20 @@ func GetTeacherSearch(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
-	defer db.Close()
+	DB := config.GetConnection()
+	defer DB.Close()
 
 	// Execute instructions
-	teachers := make([]models.Teacher, 0)
-	if err := db.Where("lower(last_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
-		Or("lower(first_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
+	teachers := make([]institutemodel.Teacher, 0)
+	if err := DB.Where("lower(last_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
+		Or("lower(first_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
 		Limit(10).Find(&teachers).Error; err != nil {
 		return err
 	}
 
-	customTeachers := make([]models.Teacher, 0)
+	customTeachers := make([]institutemodel.Teacher, 0)
 	for _, teacher := range teachers {
-		customTeachers = append(customTeachers, models.Teacher{
+		customTeachers = append(customTeachers, institutemodel.Teacher{
 			ID:        teacher.ID,
 			FirstName: teacher.FirstName,
 			DNI:       teacher.DNI,
@@ -138,55 +132,60 @@ func CreateTeacher(c echo.Context) error {
 	currentUser := claims.User
 
 	// Get data request
-	teacher := models.Teacher{}
+	teacher := institutemodel.Teacher{}
 	if err := c.Bind(&teacher); err != nil {
 		return err
 	}
 
 	// Set program ID
-	if teacher.ProgramID == 0 {
-		teacher.ProgramID = currentUser.ProgramID
+	if teacher.DefaultProgramID == 0 {
+		teacher.DefaultProgramID = currentUser.DefaultProgramID
 	}
 
 	// get connection
-	db := config.GetConnection()
-	defer db.Close()
+	DB := config.GetConnection()
+	defer DB.Close()
 
 	// start transaction
-	tr := db.Begin()
+    TR := DB.Begin()
 
 	// has password new user account
 	cc := sha256.Sum256([]byte(teacher.DNI + "TA"))
 	pwd := fmt.Sprintf("%x", cc)
 
-	// New Account
+	// Insert user in database
 	userAccount := models.User{
 		UserName: teacher.DNI + "TA",
 		Password: pwd,
-		Profile:  "teacher",
+		RoleID:   3,
+		DefaultProgramID: teacher.DefaultProgramID,
 	}
-
-	// Insert user in database
-	if err := tr.Create(&userAccount).Error; err != nil {
-		tr.Rollback()
+	if err := TR.Create(&userAccount).Error; err != nil {
+        TR.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("%s", err),
 		})
 	}
 
 	// Insert teachers in database
+    teacherPrograms := make([]institutemodel.TeacherProgram,0)
+    teacherPrograms = append(teacherPrograms, institutemodel.TeacherProgram{
+        ProgramID: teacher.DefaultProgramID,
+        Type: teacher.Type,
+        ByDefault: true,
+    })
+
 	teacher.UserID = userAccount.ID
-	if err := tr.Create(&teacher).Error; err != nil {
-		tr.Rollback()
+	teacher.TeacherPrograms = teacherPrograms
+	if err := TR.Create(&teacher).Error; err != nil {
+        TR.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("%s", err),
 		})
 	}
 
 	// Commit transaction
-	tr.Commit()
+    TR.Commit()
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -198,23 +197,41 @@ func CreateTeacher(c echo.Context) error {
 
 func UpdateTeacher(c echo.Context) error {
 	// Get data request
-	teacher := models.Teacher{}
+	teacher := institutemodel.Teacher{}
 	if err := c.Bind(&teacher); err != nil {
 		return err
 	}
 
 	// get connection
-	db := config.GetConnection()
-	defer db.Close()
+    DB := config.GetConnection()
+	defer DB.Close()
+
+    // start transaction
+    TR := DB.Begin()
 
 	// Update teacher in database
-	rows := db.Model(&teacher).Update(teacher).RowsAffected
-	if rows == 0 {
+    if err := TR.Model(&teacher).Update(teacher).Error; err != nil {
+	    TR.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", teacher.ID),
 		})
-	}
+    }
+
+	// Update teacher program
+    teacherProgram := institutemodel.TeacherProgram{
+       ProgramID: teacher.DefaultProgramID,
+       Type: teacher.Type,
+    }
+    if err :=  TR.Debug().Model(&institutemodel.TeacherProgram{}).Where("teacher_id = ? AND by_default = true",teacher.ID).
+	   Update(teacherProgram).Error; err != nil {
+       TR.Rollback()
+       return c.JSON(http.StatusOK, utilities.Response{
+           Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", teacher.ID),
+       })
+    }
+
+    // Commit transaction
+    TR.Commit()
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
@@ -226,7 +243,7 @@ func UpdateTeacher(c echo.Context) error {
 
 func DeleteTeacher(c echo.Context) error {
 	// Get data request
-	teacher := models.Teacher{}
+	teacher := institutemodel.Teacher{}
 	if err := c.Bind(&teacher); err != nil {
 		return err
 	}
@@ -258,7 +275,7 @@ func GetTempUploadTeacher(c echo.Context) error {
 	currentUser := claims.User
 
 	// Return file sa
-	if currentUser.Profile == "sa" {
+	if currentUser.RoleID == 1 {
 		fileDir := "templates/templateTeacherSA.xlsx"
 		xlsx, err := excelize.OpenFile(fileDir)
 		if err != nil {
@@ -271,7 +288,7 @@ func GetTempUploadTeacher(c echo.Context) error {
 		defer db.Close()
 
 		// Execute instructions
-		programs := make([]models.Program, 0)
+		programs := make([]institutemodel.Program, 0)
 		if err := db.Find(&programs).Order("id desc").Error; err != nil {
 			return err
 		}
@@ -337,7 +354,7 @@ func SetTempUploadTeacher(c echo.Context) error {
 	}
 
 	// Prepare
-	teachers := make([]models.Teacher, 0)
+	teachers := make([]institutemodel.Teacher, 0)
 	ignoreCols := 1
 
 	// Get all the rows in the Sheet1.
@@ -352,24 +369,23 @@ func SetTempUploadTeacher(c echo.Context) error {
 
 			// program id
 			var currentProgram uint
-			currentProgram = currentUser.ProgramID
+			currentProgram = currentUser.DefaultProgramID
 
 			if currentProgram == 0 {
 				u, _ := strconv.ParseUint(strings.TrimSpace(row[12]), 0, 32)
 				currentProgram = uint(u)
 			}
 
-			teachers = append(teachers, models.Teacher{
-				DNI:            strings.TrimSpace(row[0]),
-				LastName:       strings.TrimSpace(row[1]),
-				FirstName:      strings.TrimSpace(row[2]),
-				Gender:         strings.TrimSpace(row[4]),
-				Address:        strings.TrimSpace(row[5]),
-				Phone:          strings.TrimSpace(row[6]),
-				WorkConditions: strings.TrimSpace(row[7]),
-				EducationLevel: strings.TrimSpace(row[8]),
-				Specialty:      strings.TrimSpace(row[11]),
-				ProgramID:      currentProgram,
+			teachers = append(teachers, institutemodel.Teacher{
+				DNI:              strings.TrimSpace(row[0]),
+				LastName:         strings.TrimSpace(row[1]),
+				FirstName:        strings.TrimSpace(row[2]),
+				Gender:           strings.TrimSpace(row[4]),
+				Address:          strings.TrimSpace(row[5]),
+				Phone:            strings.TrimSpace(row[6]),
+				WorkConditions:   strings.TrimSpace(row[7]),
+				EducationLevel:   strings.TrimSpace(row[8]),
+				Specialty:        strings.TrimSpace(row[11]),
 			})
 		}
 	}
@@ -389,7 +405,7 @@ func SetTempUploadTeacher(c echo.Context) error {
 		userAccount := models.User{
 			UserName: teacher.DNI,
 			Password: pwd,
-			Profile:  "teacher",
+			RoleID:   3,
 		}
 
 		// Insert user in database
@@ -433,8 +449,8 @@ func ExportAllTeachers(c echo.Context) error {
 	defer db.Close()
 
 	// Query in database
-	teachers := make([]models.Teacher, 0)
-	if err := db.Where("program_id = ?", currentUser.ProgramID).Order("id asc").Find(&teachers).Error; err != nil {
+	teachers := make([]institutemodel.Teacher, 0)
+	if err := db.Where("program_id = ?", currentUser.DefaultProgramID).Order("id asc").Find(&teachers).Error; err != nil {
 		return err
 	}
 

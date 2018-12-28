@@ -1,8 +1,10 @@
-package controller
+package institutecontroller
 
 import (
 	"crypto/sha256"
 	"fmt"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/models/institutemodel"
 	"io"
 	"net/http"
 	"os"
@@ -14,7 +16,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -40,9 +41,9 @@ func GetStudents(c echo.Context) error {
 
 	// Execute instructions
 	var total uint
-	students := make([]models.Student, 0)
+	students := make([]institutemodel.Student, 0)
 
-	if currentUser.Profile == "sa" {
+	if currentUser.RoleID == 1 {
 		// Query in database
 		if err := db.Where("lower(full_name) LIKE lower(?)", "%"+request.Search+"%").
 			Or("dni LIKE ?", "%"+request.Search+"%").
@@ -53,8 +54,8 @@ func GetStudents(c echo.Context) error {
 		}
 	} else {
 		// Query in database
-		if err := db.Where("lower(full_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
-			Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", currentUser.ProgramID).
+		if err := db.Where("lower(full_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
+			Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
 			Order("id asc").
 			Offset(offset).Limit(request.Limit).Find(&students).
 			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
@@ -66,9 +67,9 @@ func GetStudents(c echo.Context) error {
 	// 0 = all data
 	// 1 = minimal data
 	if request.Type == 1 {
-		customStudent := make([]models.Student, 0)
+		customStudent := make([]institutemodel.Student, 0)
 		for _, student := range students {
-			customStudent = append(customStudent, models.Student{
+			customStudent = append(customStudent, institutemodel.Student{
 				ID:       student.ID,
 				FullName: student.FullName,
 			})
@@ -103,14 +104,14 @@ type StudentDetail struct {
 
 // StudentDetailResponse response struct
 type StudentDetailResponse struct {
-	StudentDetail []StudentDetail `json:"student_detail"`
-	Student       models.Student  `json:"student"`
+	StudentDetail []StudentDetail        `json:"student_detail"`
+	Student       institutemodel.Student `json:"student"`
 }
 
 // GetStudentDetailByID get student detail
 func GetStudentDetailByID(c echo.Context) error {
 	// Get data request
-	student := models.Student{}
+	student := institutemodel.Student{}
 	if err := c.Bind(&student); err != nil {
 		return err
 	}
@@ -147,7 +148,7 @@ func GetStudentDetailByID(c echo.Context) error {
 // GetStudentDetailByID get student detail
 func GetStudentDetailByDNI(c echo.Context) error {
 	// Get data request
-	student := models.Student{}
+	student := institutemodel.Student{}
 	if err := c.Bind(&student); err != nil {
 		return err
 	}
@@ -180,16 +181,16 @@ func GetStudentSearch(c echo.Context) error {
 	defer db.Close()
 
 	// Execute instructions
-	students := make([]models.Student, 0)
+	students := make([]institutemodel.Student, 0)
 	if err := db.Where("lower(full_name) LIKE lower(?)", "%"+request.Search+"%").
 		Or("dni LIKE ?", "%"+request.Search+"%").
 		Limit(10).Find(&students).Error; err != nil {
 		return err
 	}
 
-	customStudents := make([]models.Student, 0)
+	customStudents := make([]institutemodel.Student, 0)
 	for _, student := range students {
-		customStudents = append(customStudents, models.Student{
+		customStudents = append(customStudents, institutemodel.Student{
 			ID:       student.ID,
 			FullName: student.FullName,
 			DNI:      student.DNI,
@@ -210,14 +211,14 @@ func CreateStudent(c echo.Context) error {
 	currentUser := claims.User
 
 	// Get data request
-	student := models.Student{}
+	student := institutemodel.Student{}
 	if err := c.Bind(&student); err != nil {
 		return err
 	}
 
 	// Set program ID
-	if student.ProgramID == 0 {
-		student.ProgramID = currentUser.ProgramID
+	if student.DefaultProgramID == 0 {
+		student.DefaultProgramID = currentUser.DefaultProgramID
 	}
 
 	// get connection
@@ -235,7 +236,7 @@ func CreateStudent(c echo.Context) error {
 	userAccount := models.User{
 		UserName: student.DNI + "ST",
 		Password: pwd,
-		Profile:  "student",
+		RoleID:   6,
 	}
 
 	// Insert user in database
@@ -270,7 +271,7 @@ func CreateStudent(c echo.Context) error {
 
 func UpdateStudent(c echo.Context) error {
 	// Get data request
-	student := models.Student{}
+	student := institutemodel.Student{}
 	if err := c.Bind(&student); err != nil {
 		return err
 	}
@@ -281,9 +282,6 @@ func UpdateStudent(c echo.Context) error {
 
 	// Update student in database
 	rows := db.Model(&student).Update(student).RowsAffected
-	if !student.State {
-		rows = db.Model(student).UpdateColumn("state", false).RowsAffected
-	}
 	if rows == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
 			Success: false,
@@ -301,7 +299,7 @@ func UpdateStudent(c echo.Context) error {
 
 func DeleteStudent(c echo.Context) error {
 	// Get data request
-	student := models.Student{}
+	student := institutemodel.Student{}
 	if err := c.Bind(&student); err != nil {
 		return err
 	}
@@ -334,7 +332,7 @@ func GetTempUploadStudent(c echo.Context) error {
 	currentUser := claims.User
 
 	// Return file sa
-	if currentUser.Profile == "sa" {
+	if currentUser.RoleID == 1 {
 		fileDir := "templates/templateStudentSA.xlsx"
 		xlsx, err := excelize.OpenFile(fileDir)
 		if err != nil {
@@ -347,7 +345,7 @@ func GetTempUploadStudent(c echo.Context) error {
 		defer db.Close()
 
 		// Execute instructions
-		programs := make([]models.Program, 0)
+		programs := make([]institutemodel.Program, 0)
 		if err := db.Find(&programs).Order("id desc").Error; err != nil {
 			return err
 		}
@@ -414,7 +412,7 @@ func SetTempUploadStudent(c echo.Context) error {
 	}
 
 	// Prepare
-	students := make([]models.Student, 0)
+	students := make([]institutemodel.Student, 0)
 	ignoreCols := 1
 
 	// Get all the rows in the student.
@@ -429,7 +427,7 @@ func SetTempUploadStudent(c echo.Context) error {
 
 			// program id
 			var currentProgram uint
-			currentProgram = currentUser.ProgramID
+			currentProgram = currentUser.DefaultProgramID
 
 			if currentProgram == 0 {
 				u, _ := strconv.ParseUint(strings.TrimSpace(row[5]), 0, 32)
@@ -442,14 +440,13 @@ func SetTempUploadStudent(c echo.Context) error {
 			admissionYear := uint(ay)
 			promotionYear := uint(py)
 
-			students = append(students, models.Student{
-				DNI:           strings.TrimSpace(row[0]),
-				FullName:      strings.TrimSpace(row[1]),
-				Phone:         strings.TrimSpace(row[2]),
-				AdmissionYear: admissionYear,
-				PromotionYear: promotionYear,
-				State:         true,
-				ProgramID:     currentProgram,
+			students = append(students, institutemodel.Student{
+				DNI:              strings.TrimSpace(row[0]),
+				FullName:         strings.TrimSpace(row[1]),
+				Phone:            strings.TrimSpace(row[2]),
+				AdmissionYear:    admissionYear,
+				PromotionYear:    promotionYear,
+				DefaultProgramID: currentProgram,
 			})
 		}
 	}
@@ -470,7 +467,7 @@ func SetTempUploadStudent(c echo.Context) error {
 		userAccount := models.User{
 			UserName: student.DNI + "ST",
 			Password: pwd,
-			Profile:  "student",
+			RoleID:   4,
 		}
 
 		// Insert user in database
