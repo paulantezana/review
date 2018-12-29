@@ -68,7 +68,6 @@ func GetTeachers(c echo.Context) error {
         teacherProgram := institutemodel.TeacherProgram{}
         db.First(&teacherProgram,institutemodel.TeacherProgram{
             TeacherID: teacher.ID,
-            ByDefault: true,
         })
         teachers[k].Type = teacherProgram.Type
         teachers[k].DefaultProgramID = teacherProgram.ProgramID
@@ -84,12 +83,14 @@ func GetTeachers(c echo.Context) error {
 	})
 }
 
-func GetTeacherSearch(c echo.Context) error {
-	// Get user token authenticate
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
+type teacherSearchResponse struct {
+    ID        uint   `json:"id"`
+    DNI       string `json:"dni"`
+    LastName  string `json:"last_name"`
+    FirstName string `json:"first_name"`
+}
 
+func GetTeacherSearch(c echo.Context) error {
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
@@ -101,27 +102,21 @@ func GetTeacherSearch(c echo.Context) error {
 	defer DB.Close()
 
 	// Execute instructions
-	teachers := make([]institutemodel.Teacher, 0)
-	if err := DB.Where("lower(last_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
-		Or("lower(first_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
-		Limit(10).Find(&teachers).Error; err != nil {
-		return err
-	}
+	teachers := make([]teacherSearchResponse, 0)
 
-	customTeachers := make([]institutemodel.Teacher, 0)
-	for _, teacher := range teachers {
-		customTeachers = append(customTeachers, institutemodel.Teacher{
-			ID:        teacher.ID,
-			FirstName: teacher.FirstName,
-			DNI:       teacher.DNI,
-			LastName:  teacher.LastName,
-		})
-	}
+    if request.Search != "" {
+        if err := DB.Table("teachers").Select("id, dni, first_name, last_name").Where("lower(last_name) LIKE lower(?)", "%"+request.Search+"%").
+            Or("lower(first_name) LIKE lower(?)", "%"+request.Search+"%").
+            Or("lower(dni) LIKE lower(?)", "%"+request.Search+"%").
+            Limit(5).Find(&teachers).Error; err != nil {
+            return err
+        }
+    }
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    customTeachers,
+		Data:    teachers,
 	})
 }
 
@@ -376,6 +371,14 @@ func SetTempUploadTeacher(c echo.Context) error {
 				currentProgram = uint(u)
 			}
 
+			// Create model teacherPrograms
+            teacherPrograms := make([]institutemodel.TeacherProgram,0)
+            teacherPrograms = append(teacherPrograms, institutemodel.TeacherProgram{
+                ProgramID: currentProgram,
+                Type: "career",
+            })
+
+            // Create AND Append model Teacher
 			teachers = append(teachers, institutemodel.Teacher{
 				DNI:              strings.TrimSpace(row[0]),
 				LastName:         strings.TrimSpace(row[1]),
@@ -386,6 +389,7 @@ func SetTempUploadTeacher(c echo.Context) error {
 				WorkConditions:   strings.TrimSpace(row[7]),
 				EducationLevel:   strings.TrimSpace(row[8]),
 				Specialty:        strings.TrimSpace(row[11]),
+				TeacherPrograms: teacherPrograms,
 			})
 		}
 	}
@@ -403,7 +407,7 @@ func SetTempUploadTeacher(c echo.Context) error {
 
 		// New Account
 		userAccount := models.User{
-			UserName: teacher.DNI,
+			UserName: teacher.DNI + "TA",
 			Password: pwd,
 			RoleID:   3,
 		}
@@ -439,18 +443,13 @@ func SetTempUploadTeacher(c echo.Context) error {
 }
 
 func ExportAllTeachers(c echo.Context) error {
-	// Get user token authenticate
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
-
 	// Get connection
 	db := config.GetConnection()
 	defer db.Close()
 
 	// Query in database
 	teachers := make([]institutemodel.Teacher, 0)
-	if err := db.Where("program_id = ?", currentUser.DefaultProgramID).Order("id asc").Find(&teachers).Error; err != nil {
+	if err := db.Order("id asc").Find(&teachers).Error; err != nil {
 		return err
 	}
 

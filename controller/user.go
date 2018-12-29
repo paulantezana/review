@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
-	"github.com/paulantezana/review/models"
+    "github.com/dgrijalva/jwt-go"
+    "github.com/paulantezana/review/models"
 	"html/template"
 	"io"
 	"math/rand"
@@ -211,6 +212,11 @@ func ForgotChange(c echo.Context) error {
 
 // GetUsers function get all users
 func GetUsers(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
@@ -229,7 +235,7 @@ func GetUsers(c echo.Context) error {
 	users := make([]models.User, 0)
 
 	// Find users
-	if err := db.Where("user_name LIKE ?", "%"+request.Search+"%").
+	if err := db.Where("user_name LIKE ? AND role_id >= ?", "%"+request.Search+"%",currentUser.RoleID).
 		Order("id asc").Offset(offset).Limit(request.Limit).Find(&users).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return err

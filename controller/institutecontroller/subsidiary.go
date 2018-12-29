@@ -92,12 +92,11 @@ func CreateSubsidiary(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
-	defer db.Close()
+	DB := config.GetConnection()
+	defer DB.Close()
 
 	// Create new subsidiary
-	if err := db.Create(&subsidiary).Error; err != nil {
-		db.Rollback()
+	if err := DB.Create(&subsidiary).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 

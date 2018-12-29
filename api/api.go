@@ -52,6 +52,11 @@ func ProtectedApi(e *echo.Echo) {
 	ar.DELETE("/subsidiary/delete", institutecontroller.DeleteSubsidiary)
 
 	// Program
+	ar.POST("/subsidiary/user/all/by/user", institutecontroller.GetSubsidiariesUserByUserID)
+	ar.POST("/subsidiary/user/all/by/user/license", institutecontroller.GetSubsidiariesUserByUserIDLicense)
+	ar.PUT("/subsidiary/user/update", institutecontroller.UpdateSubsidiariesUserByUserID)
+
+	// Program
 	ar.POST("/program/all", institutecontroller.GetPrograms)
 	ar.POST("/program/create", institutecontroller.CreateProgram)
 	ar.PUT("/program/update", institutecontroller.UpdateProgram)
@@ -73,7 +78,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/student/detail/by/id", institutecontroller.GetStudentDetailByID)
 	ar.POST("/student/detail/by/dni", institutecontroller.GetStudentDetailByDNI)
 
-	// Student
+	// Teacher
 	ar.POST("/teacher/all", institutecontroller.GetTeachers)
 	ar.POST("/teacher/create", institutecontroller.CreateTeacher)
 	ar.PUT("/teacher/update", institutecontroller.UpdateTeacher)
@@ -82,6 +87,12 @@ func ProtectedApi(e *echo.Echo) {
 	ar.GET("/teacher/download/template", institutecontroller.GetTempUploadTeacher)
 	ar.POST("/teacher/upload/template", institutecontroller.SetTempUploadTeacher)
 	ar.GET("/teacher/export/all", institutecontroller.ExportAllTeachers)
+
+	// Teacher Program
+    ar.POST("/teacher/program/all", institutecontroller.GetTeacherProgramsByProgram)
+    ar.POST("/teacher/program/create", institutecontroller.CreateTeacherProgram)
+    ar.PUT("/teacher/program/update", institutecontroller.UpdateTeacherProgram)
+    ar.DELETE("/teacher/program/delete", institutecontroller.DeleteTeacherProgram)
 
 	// Module
 	ar.POST("/module/all", institutecontroller.GetModules)

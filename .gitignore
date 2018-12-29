@@ -19,3 +19,4 @@ static/books/*.png
 
 static/profiles/*.jpg
 static/profiles/*.png
+!temp/*.md

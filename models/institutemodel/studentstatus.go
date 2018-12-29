@@ -2,7 +2,7 @@ package institutemodel
 
 type StudentStatus struct {
 	ID   uint `json:"id" gorm:"primary_key"`
-	Name uint `json:"name"`
+	Name string `json:"name"`
 }
 
 // Set User's table name to be `profiles`

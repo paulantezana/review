@@ -25,6 +25,7 @@ func Migrate() {
 
 		// Institute
 		&institutemodel.Subsidiary{},
+		&institutemodel.SubsidiaryUser{},
 		&institutemodel.Program{},
 		&institutemodel.Semester{},
 		&institutemodel.Module{},
@@ -67,6 +68,8 @@ func Migrate() {
 	db.Model(&models.User{}).AddForeignKey("role_id", "roles(id)", "RESTRICT", "RESTRICT")
 
 	// Institutional
+	db.Model(&institutemodel.SubsidiaryUser{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	db.Model(&institutemodel.SubsidiaryUser{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "CASCADE", "CASCADE")
 	db.Model(&institutemodel.Program{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "RESTRICT", "RESTRICT")
 	db.Model(&institutemodel.Semester{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 	db.Model(&institutemodel.ModuleSemester{}).AddForeignKey("semester_id", "semesters(id)", "CASCADE", "CASCADE")
@@ -127,17 +130,37 @@ func Migrate() {
 
 	// Validate
 	if role.ID == 0 {
-		role1 := models.Role{Name: "sa"}
-		role2 := models.Role{Name: "admin"}
-		role3 := models.Role{Name: "teacher"}
-		role4 := models.Role{Name: "student"}
-		role5 := models.Role{Name: "coordinator"}
-		role6 := models.Role{Name: "invited"}
-		db.Save(&role1).Save(&role2).Save(&role3).Save(&role4).Save(&role5).Save(role6)
+		role1 := models.Role{Name: "owner"}     // Global Level
+		role2 := models.Role{Name: "sa"}        // Filial Level
+		role3 := models.Role{Name: "admin"}     // Program level
+		role4 := models.Role{Name: "teacher"}   // Teacher
+		role5 := models.Role{Name: "student"}   // Student
+		role6 := models.Role{Name: "invited"}   // Invited level
+		db.Create(&role1).Create(&role2).Create(&role3)
+		db.Create(&role4).Create(&role5).Create(&role6)
 	}
 
+    // -------------------------------------------------------------
+    // Insert State students ---------------------------------------
+    status := institutemodel.StudentStatus{}
+    db.First(&status)
+    if status.ID == 0 {
+        status1 := institutemodel.StudentStatus{ Name: "No asignado" }
+        status2 := institutemodel.StudentStatus{ Name: "Postulante" }
+        status3 := institutemodel.StudentStatus{ Name: "Exonerado" }
+        status4 := institutemodel.StudentStatus{ Name: "Trasladado" }
+        status5 := institutemodel.StudentStatus{ Name: "Rechazado" }
+        status6 := institutemodel.StudentStatus{ Name: "Aprobado" }
+        status7 := institutemodel.StudentStatus{ Name: "Prematriculado" }
+        status8 := institutemodel.StudentStatus{ Name: "Matriculado" }
+        status9 := institutemodel.StudentStatus{ Name: "Expulsado" }
+        status10 := institutemodel.StudentStatus{ Name: "Egresado" }
+        db.Create(&status1).Create(&status2).Create(&status3).Create(&status4).Create(&status5)
+        db.Create(&status6).Create(&status7).Create(&status8).Create(&status9).Create(&status10)
+    }
+
 	// -------------------------------------------------------------
-	// Insert user --------------------------------------------
+	// Insert user -------------------------------------------------
 	usr := models.User{}
 	db.First(&usr)
 

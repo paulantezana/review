@@ -222,24 +222,22 @@ func CreateStudent(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
-	defer db.Close()
+	DB := config.GetConnection()
+	defer DB.Close()
 
 	// start transaction
-	tx := db.Begin()
+	tx := DB.Begin()
 
 	// has password new user account
 	cc := sha256.Sum256([]byte(student.DNI + "ST"))
 	pwd := fmt.Sprintf("%x", cc)
 
-	// New Account
+    // Insert user in database
 	userAccount := models.User{
 		UserName: student.DNI + "ST",
 		Password: pwd,
-		RoleID:   6,
+		RoleID:   4,
 	}
-
-	// Insert user in database
 	if err := tx.Create(&userAccount).Error; err != nil {
 		tx.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{
@@ -250,6 +248,7 @@ func CreateStudent(c echo.Context) error {
 
 	// Insert student in database
 	student.UserID = userAccount.ID
+	student.StudentStatusID = 1
 	if err := tx.Create(&student).Error; err != nil {
 		tx.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{

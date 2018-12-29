@@ -15,13 +15,13 @@ import (
 )
 
 // GlobalSettings struct
-type GlobalSettings struct {
+type globalSettings struct {
 	Message string                 `json:"message"`
 	Success bool                   `json:"success"`
 	Roles   []models.Role          `json:"roles"`
 	Setting models.Setting         `json:"setting"`
 	User    models.User            `json:"user"`
-	Program institutemodel.Program `json:"program"`
+	//Program institutemodel.Program `json:"program"`
 }
 
 // GetGlobalSettings function
@@ -49,22 +49,15 @@ func GetGlobalSettings(c echo.Context) error {
 
 	// Find settings
 	roles := make([]models.Role, 0)
-	db.Find(&roles)
-
-	// Find program
-	var program institutemodel.Program
-	if user.DefaultProgramID > 0 {
-		if err := db.First(&program, user.DefaultProgramID).Error; err != nil {
-			return err
-		}
-	}
+    if err := db.Where("id >= ?", user.RoleID).Find(&roles).Error; err != nil {
+       return c.NoContent(http.StatusUnauthorized)
+    }
 
 	// Set object response
-	return c.JSON(http.StatusOK, GlobalSettings{
+	return c.JSON(http.StatusOK, globalSettings{
 		User:    user,
 		Setting: con,
 		Roles:   roles,
-		Program: program,
 		Success: true,
 		Message: "OK",
 	})
