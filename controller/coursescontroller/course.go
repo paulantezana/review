@@ -82,7 +82,6 @@ func CreateCourse(c echo.Context) error {
 	// Insert courses in database
 	if err := db.Create(&course).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("%s", err),
 		})
 	}

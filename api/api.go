@@ -9,7 +9,8 @@ import (
 	"github.com/paulantezana/review/controller/institutecontroller"
 	"github.com/paulantezana/review/controller/librarycontroller"
 	"github.com/paulantezana/review/controller/monitoringcontroller"
-	"github.com/paulantezana/review/utilities"
+    "github.com/paulantezana/review/controller/reviewcontroller"
+    "github.com/paulantezana/review/utilities"
 )
 
 // PublicApi function public urls
@@ -89,10 +90,10 @@ func ProtectedApi(e *echo.Echo) {
 	ar.GET("/teacher/export/all", institutecontroller.ExportAllTeachers)
 
 	// Teacher Program
-    ar.POST("/teacher/program/all", institutecontroller.GetTeacherProgramsByProgram)
-    ar.POST("/teacher/program/create", institutecontroller.CreateTeacherProgram)
-    ar.PUT("/teacher/program/update", institutecontroller.UpdateTeacherProgram)
-    ar.DELETE("/teacher/program/delete", institutecontroller.DeleteTeacherProgram)
+	ar.POST("/teacher/program/all", institutecontroller.GetTeacherProgramsByProgram)
+	ar.POST("/teacher/program/create", institutecontroller.CreateTeacherProgram)
+	ar.PUT("/teacher/program/update", institutecontroller.UpdateTeacherProgram)
+	ar.DELETE("/teacher/program/delete", institutecontroller.DeleteTeacherProgram)
 
 	// Module
 	ar.POST("/module/all", institutecontroller.GetModules)
@@ -102,24 +103,24 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/module/search", institutecontroller.GetModuleSearch)
 
 	// Company
-	ar.POST("/company/all", controller.GetCompanies)
-	ar.POST("/company/create", controller.CreateCompany)
-	ar.PUT("/company/update", controller.UpdateCompany)
-	ar.DELETE("/company/delete", controller.DeleteCompany)
-	ar.DELETE("/company/delete/multiple", controller.MultipleDeleteCompany)
-	ar.POST("/company/search", controller.GetCompanySearch)
-	ar.GET("/company/download/template", controller.GetTempUploadCompany)
-	ar.POST("/company/upload/template", controller.SetTempUploadCompany)
-	ar.GET("/company/export/all", controller.ExportAllCompanies)
+	ar.POST("/company/all", reviewcontroller.GetCompanies)
+	ar.POST("/company/create", reviewcontroller.CreateCompany)
+	ar.PUT("/company/update", reviewcontroller.UpdateCompany)
+	ar.DELETE("/company/delete", reviewcontroller.DeleteCompany)
+	ar.DELETE("/company/delete/multiple", reviewcontroller.MultipleDeleteCompany)
+	ar.POST("/company/search", reviewcontroller.GetCompanySearch)
+	ar.GET("/company/download/template", reviewcontroller.GetTempUploadCompany)
+	ar.POST("/company/upload/template", reviewcontroller.SetTempUploadCompany)
+	ar.GET("/company/export/all", reviewcontroller.ExportAllCompanies)
 
 	// Review
-	ar.POST("/review/all", controller.GetReviews)
-	ar.POST("/review/create", controller.CreateReview)
-	ar.PUT("/review/update", controller.UpdateReview)
-	ar.DELETE("/review/delete", controller.DeleteReview)
-	ar.POST("/review/acta", controller.GetActaReview)
-	ar.POST("/review/cons", controller.GetConstReview)
-	ar.POST("/review/consolidate", controller.GetConsolidateReview)
+	ar.POST("/review/all", reviewcontroller.GetReviews)
+	ar.POST("/review/create", reviewcontroller.CreateReview)
+	ar.PUT("/review/update", reviewcontroller.UpdateReview)
+	ar.DELETE("/review/delete", reviewcontroller.DeleteReview)
+	ar.POST("/review/acta", reviewcontroller.GetActaReview)
+	ar.POST("/review/cons", reviewcontroller.GetConstReview)
+	ar.POST("/review/consolidate", reviewcontroller.GetConsolidateReview)
 
 	// User
 	ar.POST("/user/all", controller.GetUsers)
@@ -136,8 +137,8 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/statistic/top/student/whit/reviews", controller.TopStudentsWithReview)
 
 	// Review Detail
-	ar.POST("/reviewDetail/by/review", controller.GetReviewsDetailByReview)
-	ar.DELETE("/reviewDetail/delete", controller.DeleteReviewDetail)
+	ar.POST("/reviewDetail/by/review", reviewcontroller.GetReviewsDetailByReview)
+	ar.DELETE("/reviewDetail/delete", reviewcontroller.DeleteReviewDetail)
 
 	// ---------------------------------------------------------------------------
 	//      Certificate routes ----------------------------------------------------

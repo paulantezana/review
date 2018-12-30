@@ -1,21 +1,23 @@
 package controller
 
 import (
-	"bytes"
-	"crypto/sha256"
-	"fmt"
+    "bytes"
+    "crypto/sha256"
+    "fmt"
     "github.com/dgrijalva/jwt-go"
     "github.com/paulantezana/review/models"
-	"html/template"
-	"io"
-	"math/rand"
-	"net/http"
-	"os"
-	"path/filepath"
+    "github.com/paulantezana/review/models/messengermodel"
+    "html/template"
+    "io"
+    "math/rand"
+    "net/http"
+    "os"
+    "path/filepath"
+    "time"
 
-	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/utilities"
+    "github.com/labstack/echo"
+    "github.com/paulantezana/review/config"
+    "github.com/paulantezana/review/utilities"
 )
 
 type loginDataResponse struct {
@@ -32,8 +34,8 @@ func Login(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
-	defer db.Close()
+	DB := config.GetConnection()
+	defer DB.Close()
 
 	// Hash password
 	cc := sha256.Sum256([]byte(user.Password))
@@ -42,8 +44,8 @@ func Login(c echo.Context) error {
 	// Validate user and email
 	if user.RoleID == 0 {
 		// login without using the profile
-		if db.Where("user_name = ? and password = ?", user.UserName, pwd).First(&user).RecordNotFound() {
-			if db.Where("email = ? and password = ?", user.UserName, pwd).First(&user).RecordNotFound() {
+		if DB.Where("user_name = ? and password = ?", user.UserName, pwd).First(&user).RecordNotFound() {
+			if DB.Where("email = ? and password = ?", user.UserName, pwd).First(&user).RecordNotFound() {
 				return c.JSON(http.StatusOK, utilities.Response{
 					Message: "El nombre de usuario o contraseña es incorecta",
 				})
@@ -51,8 +53,8 @@ func Login(c echo.Context) error {
 		}
 	} else {
 		// login with profile
-		if db.Where("user_name = ? and password = ? and role_id = ?", user.UserName, pwd, user.RoleID).First(&user).RecordNotFound() {
-			if db.Where("email = ? and password = ? and role_id = ?", user.UserName, pwd, user.RoleID).First(&user).RecordNotFound() {
+		if DB.Where("user_name = ? and password = ? and role_id = ?", user.UserName, pwd, user.RoleID).First(&user).RecordNotFound() {
+			if DB.Where("email = ? and password = ? and role_id = ?", user.UserName, pwd, user.RoleID).First(&user).RecordNotFound() {
 				return c.JSON(http.StatusOK, utilities.Response{
 					Message: "El nombre de usuario o contraseña es incorecta",
 				})
@@ -67,6 +69,18 @@ func Login(c echo.Context) error {
 
 	// Prepare response data
 	user.Password = ""
+	user.Key = ""
+
+    // Insert new Session
+    session:= messengermodel.Session{
+        UserName: user.UserName,
+        LastActivity: time.Now(),
+    }
+    if err := DB.Create(&session).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{
+            Message: fmt.Sprintf("%s", err),
+        })
+    }
 
 	// get token key
 	token := utilities.GenerateJWT(user)
@@ -212,10 +226,10 @@ func ForgotChange(c echo.Context) error {
 
 // GetUsers function get all users
 func GetUsers(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
 	// Get data request
 	request := utilities.Request{}
@@ -235,7 +249,7 @@ func GetUsers(c echo.Context) error {
 	users := make([]models.User, 0)
 
 	// Find users
-	if err := db.Where("user_name LIKE ? AND role_id >= ?", "%"+request.Search+"%",currentUser.RoleID).
+	if err := db.Where("user_name LIKE ? AND role_id >= ?", "%"+request.Search+"%", currentUser.RoleID).
 		Order("id asc").Offset(offset).Limit(request.Limit).Find(&users).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return err

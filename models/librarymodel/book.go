@@ -16,4 +16,8 @@ type Book struct {
 	State            bool   `json:"state" gorm:"default:'true'"`
 
 	CategoryID uint `json:"category_id"`
+	
+	Comments []Comment `json:"comments"`
+	Readings []Reading `json:"readings"`
+	Likes []Like `json:"likes"`
 }

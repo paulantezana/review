@@ -41,7 +41,7 @@ func GetSubsidiariesTree(c echo.Context) error {
 	// Execute Query
 	subsidiariesTree := make([]SubsidiariesTree, 0)
 	if err := db.Table("subsidiaries").Select("id, name").
-	    Scan(&subsidiariesTree).Error; err != nil {
+		Scan(&subsidiariesTree).Error; err != nil {
 		return err
 	}
 

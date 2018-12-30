@@ -19,7 +19,7 @@ func GetPrograms(c echo.Context) error {
 	}
 
 	// Get connection
-    DB := config.GetConnection()
+	DB := config.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -44,7 +44,7 @@ func GetProgramByID(c echo.Context) error {
 	}
 
 	// Get connection
-    DB := config.GetConnection()
+	DB := config.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -91,7 +91,7 @@ func CreateProgram(c echo.Context) error {
 	}
 	// Create new program
 	if err := TR.Create(&program).Error; err != nil {
-        TR.Rollback()
+		TR.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -104,11 +104,11 @@ func CreateProgram(c echo.Context) error {
 		Password:         pwd,
 		Email:            request.Email,
 		DefaultProgramID: program.ID,
-		RoleID:           2,
+		RoleID:           3,
 		Freeze:           true,
 	}
 	if err := TR.Create(&user).Error; err != nil {
-        TR.Rollback()
+		TR.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -120,7 +120,7 @@ func CreateProgram(c echo.Context) error {
 		UserID:           user.ID,
 	}
 	if err := TR.Create(&teacher).Error; err != nil {
-        TR.Rollback()
+		TR.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -128,15 +128,15 @@ func CreateProgram(c echo.Context) error {
 	teacherProgram := institutemodel.TeacherProgram{
 		ProgramID: program.ID,
 		TeacherID: teacher.ID,
-		Type: "career",
+		Type:      "career",
 		ByDefault: true,
 	}
 	if err := TR.Create(&teacherProgram).Error; err != nil {
-        TR.Rollback()
+		TR.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-    TR.Commit()
+	TR.Commit()
 	// ------------------------------------
 	// End Transaction
 	// ------------------------------------

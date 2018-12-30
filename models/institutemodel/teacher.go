@@ -25,11 +25,11 @@ type Teacher struct {
 	//TeachingMonths uint `json:"teaching_months"`
 	Specialty string `json:"specialty"`
 
-	UserID           uint `json:"user_id"`
+	UserID uint `json:"user_id"`
 
 	// Only in REQUEST OR RESPONSE JSON
-	Type string `json:"type" gorm:"-"`
-	DefaultProgramID uint `json:"default_program_id" gorm:"-"`
+	Type             string `json:"type" gorm:"-"`
+	DefaultProgramID uint   `json:"default_program_id" gorm:"-"`
 
 	TeacherPrograms []TeacherProgram `json:"teacher_programs"`
 }

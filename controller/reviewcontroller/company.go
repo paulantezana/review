@@ -1,4 +1,4 @@
-package controller
+package reviewcontroller
 
 import (
 	"fmt"

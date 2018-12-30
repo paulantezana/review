@@ -232,11 +232,11 @@ func CreateStudent(c echo.Context) error {
 	cc := sha256.Sum256([]byte(student.DNI + "ST"))
 	pwd := fmt.Sprintf("%x", cc)
 
-    // Insert user in database
+	// Insert user in database
 	userAccount := models.User{
 		UserName: student.DNI + "ST",
 		Password: pwd,
-		RoleID:   4,
+		RoleID:   5,
 	}
 	if err := tx.Create(&userAccount).Error; err != nil {
 		tx.Rollback()
@@ -446,6 +446,7 @@ func SetTempUploadStudent(c echo.Context) error {
 				AdmissionYear:    admissionYear,
 				PromotionYear:    promotionYear,
 				DefaultProgramID: currentProgram,
+				StudentStatusID: 1,
 			})
 		}
 	}
@@ -466,7 +467,7 @@ func SetTempUploadStudent(c echo.Context) error {
 		userAccount := models.User{
 			UserName: student.DNI + "ST",
 			Password: pwd,
-			RoleID:   4,
+			RoleID:   5,
 		}
 
 		// Insert user in database
