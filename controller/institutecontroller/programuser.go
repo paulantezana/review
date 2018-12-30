@@ -2,6 +2,7 @@ package institutecontroller
 
 import (
     "fmt"
+    "github.com/dgrijalva/jwt-go"
     "github.com/labstack/echo"
     "github.com/paulantezana/review/config"
     "github.com/paulantezana/review/models/institutemodel"
@@ -66,7 +67,7 @@ func GetProgramsUserByUserID(c echo.Context) error {
         Joins("INNER JOIN programs ON programs.id = program_users.program_id").
         Where("program_users.user_id = ? AND programs.subsidiary_id = ?", request.UserID,request.SubsidiaryID).
         Scan(&programUsers).Error; err != nil {
-        return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
     }
 
     // Response data
@@ -77,11 +78,9 @@ func GetProgramsUserByUserID(c echo.Context) error {
 }
 
 func GetProgramsUserByUserIDLicense(c echo.Context) error {
-    // Get data request
-    request := programUserRequest{}
-    if err := c.Bind(&request); err != nil {
-        return err
-    }
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
 
     // get connection
     DB := config.GetConnection()
@@ -92,9 +91,9 @@ func GetProgramsUserByUserIDLicense(c echo.Context) error {
     if err := DB.Table("program_users").
         Select("program_users.id, program_users.user_id, program_users.program_id, program_users.license, programs.name").
         Joins("INNER JOIN programs ON programs.id = program_users.program_id").
-        Where("program_users.user_id = ? AND programs.subsidiary_id = ? AND license = TRUE", request.UserID,request.SubsidiaryID).
+        Where("program_users.user_id = ? AND license = TRUE", currentUser.ID).
         Scan(&programUsers).Error; err != nil {
-        return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
     }
 
     // Response data

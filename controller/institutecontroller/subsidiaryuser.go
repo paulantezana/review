@@ -2,7 +2,8 @@ package institutecontroller
 
 import (
 	"fmt"
-	"github.com/labstack/echo"
+    "github.com/dgrijalva/jwt-go"
+    "github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/models/institutemodel"
@@ -74,11 +75,9 @@ func GetSubsidiariesUserByUserID(c echo.Context) error {
 
 // Get subsidiaries license by user id
 func GetSubsidiariesUserByUserIDLicense(c echo.Context) error {
-	// Get data request
-	user := models.User{}
-	if err := c.Bind(&user); err != nil {
-		return err
-	}
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
 
 	// get connection
 	DB := config.GetConnection()
@@ -89,7 +88,7 @@ func GetSubsidiariesUserByUserIDLicense(c echo.Context) error {
 	if err := DB.Table("subsidiary_users").
 		Select("subsidiary_users.id, subsidiary_users.user_id, subsidiary_users.subsidiary_id, subsidiary_users.license, subsidiaries.name").
 		Joins("INNER JOIN subsidiaries ON subsidiaries.id = subsidiary_users.subsidiary_id").
-		Where("subsidiary_users.user_id = ? AND license = TRUE", user.ID).
+		Where("subsidiary_users.user_id = ? AND license = TRUE", currentUser.ID).
 		Scan(&subsidiaryUsers).Error; err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	}

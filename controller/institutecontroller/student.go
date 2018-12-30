@@ -50,7 +50,7 @@ func GetStudents(c echo.Context) error {
 			Order("id asc").
 			Offset(offset).Limit(request.Limit).Find(&students).
 			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-			return err
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	} else {
 		// Query in database
@@ -59,7 +59,7 @@ func GetStudents(c echo.Context) error {
 			Order("id asc").
 			Offset(offset).Limit(request.Limit).Find(&students).
 			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-			return err
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	}
 
@@ -122,7 +122,7 @@ func GetStudentDetailByID(c echo.Context) error {
 
 	// Execute instructions
 	if err := db.First(&student, student.ID).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Find quotations in database by RequirementID  ========== Quotations, Providers, Users
@@ -185,7 +185,7 @@ func GetStudentSearch(c echo.Context) error {
 	if err := db.Where("lower(full_name) LIKE lower(?)", "%"+request.Search+"%").
 		Or("dni LIKE ?", "%"+request.Search+"%").
 		Limit(10).Find(&students).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	customStudents := make([]institutemodel.Student, 0)
@@ -240,10 +240,7 @@ func CreateStudent(c echo.Context) error {
 	}
 	if err := tx.Create(&userAccount).Error; err != nil {
 		tx.Rollback()
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Insert student in database
@@ -251,10 +248,7 @@ func CreateStudent(c echo.Context) error {
 	student.StudentStatusID = 1
 	if err := tx.Create(&student).Error; err != nil {
 		tx.Rollback()
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Commit transaction
@@ -282,10 +276,7 @@ func UpdateStudent(c echo.Context) error {
 	// Update student in database
 	rows := db.Model(&student).Update(student).RowsAffected
 	if rows == 0 {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", student.ID),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", "No se pudo actualizar")})
 	}
 
 	// Return response
@@ -309,10 +300,7 @@ func DeleteStudent(c echo.Context) error {
 
 	// Delete student in database
 	if err := db.Delete(&student).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -473,17 +461,13 @@ func SetTempUploadStudent(c echo.Context) error {
 		// Insert user in database
 		if err := tr.Create(&userAccount).Error; err != nil {
 			tr.Rollback()
-			return c.JSON(http.StatusOK, utilities.Response{
-				Success: false,
-				Message: fmt.Sprintf("%s", err),
-			})
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
 		student.UserID = userAccount.ID
 		if err := tr.Create(&student).Error; err != nil {
 			tr.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{
-				Success: false,
 				Message: fmt.Sprintf("Ocurrió un error al insertar el alumno %s con "+
 					"DNI: %s es posible que este alumno ya este en la base de datos o los datos son incorrectos, "+
 					"Error: %s, no se realizo ninguna cambio en la base de datos", student.FullName, student.DNI, err),

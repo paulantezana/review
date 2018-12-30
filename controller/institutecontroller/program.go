@@ -26,7 +26,7 @@ func GetPrograms(c echo.Context) error {
 	programs := make([]institutemodel.Program, 0)
 	if err := DB.Where("subsidiary_id = ?", program.SubsidiaryID).Find(&programs).Order("id desc").
 		Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response

@@ -20,9 +20,25 @@ import (
     "github.com/paulantezana/review/utilities"
 )
 
+type loginProgramLicense struct {
+    ID           uint `json:"id"`
+    Name         string `json:"name"`
+}
+
+type loginSubsidiaryLicense struct {
+    ID           uint `json:"id"`
+    Name         string `json:"name"`
+}
+
+type loginLicenses struct {
+    Programs []loginProgramLicense `json:"programs"`
+    Subsidiaries []loginSubsidiaryLicense `json:"subsidiaries"`
+} 
+
 type loginDataResponse struct {
 	User  interface{} `json:"user"`
 	Token interface{} `json:"token"`
+	Licenses loginLicenses `json:"licenses"`
 }
 
 // Login login app
@@ -71,6 +87,24 @@ func Login(c echo.Context) error {
 	user.Password = ""
 	user.Key = ""
 
+	// Query licenses
+	loginProgramLicenses := make([]loginProgramLicense,0)
+    if err := DB.Table("program_users").
+        Select("programs.id, programs.name").
+        Joins("INNER JOIN programs on program_users.program_id = programs.id").
+        Where("program_users.user_id = ? AND program_users.license = true", user.ID).
+        Scan(&loginProgramLicenses).Error; err != nil {
+        return c.NoContent(http.StatusInternalServerError)
+    }
+    loginSubsidiaryLicenses := make([]loginSubsidiaryLicense,0)
+    if err := DB.Table("subsidiary_users").
+        Select("subsidiaries.id, subsidiaries.name").
+        Joins("INNER JOIN subsidiaries on subsidiary_users.subsidiary_id = subsidiaries.id").
+        Where("subsidiary_users.user_id = ? AND subsidiary_users.license = true", user.ID).
+        Scan(&loginSubsidiaryLicenses).Error; err != nil {
+        return c.NoContent(http.StatusInternalServerError)
+    }
+
     // Insert new Session
     session:= messengermodel.Session{
         UserName: user.UserName,
@@ -92,6 +126,10 @@ func Login(c echo.Context) error {
 		Data: loginDataResponse{
 			User:  user,
 			Token: token,
+			Licenses: loginLicenses{
+			    Programs: loginProgramLicenses,
+			    Subsidiaries: loginSubsidiaryLicenses,
+            },
 		},
 	})
 }

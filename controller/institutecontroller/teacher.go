@@ -49,7 +49,7 @@ func GetTeachers(c echo.Context) error {
 			Order("id asc").
 			Offset(offset).Limit(request.Limit).Find(&teachers).
 			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-			return err
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	} else {
 		// Query in database
@@ -59,7 +59,7 @@ func GetTeachers(c echo.Context) error {
 			Order("id asc").
 			Offset(offset).Limit(request.Limit).Find(&teachers).
 			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-			return err
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	}
 
@@ -109,7 +109,7 @@ func GetTeacherSearch(c echo.Context) error {
 			Or("lower(first_name) LIKE lower(?)", "%"+request.Search+"%").
 			Or("lower(dni) LIKE lower(?)", "%"+request.Search+"%").
 			Limit(5).Find(&teachers).Error; err != nil {
-			return err
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	}
 
@@ -157,9 +157,7 @@ func CreateTeacher(c echo.Context) error {
 	}
 	if err := TR.Create(&userAccount).Error; err != nil {
 		TR.Rollback()
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Insert teachers in database
@@ -174,9 +172,7 @@ func CreateTeacher(c echo.Context) error {
 	teacher.TeacherPrograms = teacherPrograms
 	if err := TR.Create(&teacher).Error; err != nil {
 		TR.Rollback()
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Commit transaction

@@ -1,7 +1,8 @@
 package controller
 
 import (
-	"github.com/dgrijalva/jwt-go"
+    "fmt"
+    "github.com/dgrijalva/jwt-go"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/models/institutemodel"
 	"net/http"
@@ -31,7 +32,7 @@ func TopUsers(c echo.Context) error {
 		Order("top desc").
 		Limit(15).
 		Scan(&userTops).Error; err != nil {
-		return err
+		return c.JSON(http.StatusOK,utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Total registers
@@ -68,13 +69,13 @@ func TopStudentsWithReview(c echo.Context) error {
 	// All modules
 	var countModules uint
 	if err := db.Model(&institutemodel.Module{}).Where("program_id = ?", currentUser.DefaultProgramID).Count(&countModules).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK,utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// All students
 	var countStudents uint
 	if err := db.Model(&institutemodel.Student{}).Where("program_id = ?", currentUser.DefaultProgramID).Count(&countStudents).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK,utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// All revisions
@@ -82,7 +83,7 @@ func TopStudentsWithReview(c echo.Context) error {
 	var countReviews uint
 	if err := db.Table("reviews").Joins("INNER JOIN students on reviews.student_id = students.id").
 		Where("students.program_id = ?", currentUser.DefaultProgramID).Count(&countReviews).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK,utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	percentageP := uint(0)
