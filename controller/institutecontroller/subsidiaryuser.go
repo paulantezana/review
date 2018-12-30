@@ -18,6 +18,7 @@ type subsidiaryUserResponse struct {
 	License      bool   `json:"license"`
 }
 
+// get all subsidiaries by user id
 func GetSubsidiariesUserByUserID(c echo.Context) error {
 	// Get data request
 	user := models.User{}
@@ -71,6 +72,7 @@ func GetSubsidiariesUserByUserID(c echo.Context) error {
 	})
 }
 
+// Get subsidiaries license by user id
 func GetSubsidiariesUserByUserIDLicense(c echo.Context) error {
 	// Get data request
 	user := models.User{}
@@ -99,6 +101,7 @@ func GetSubsidiariesUserByUserIDLicense(c echo.Context) error {
 	})
 }
 
+// Update license By subsidiary users
 func UpdateSubsidiariesUserByUserID(c echo.Context) error {
 	// Get data request
 	subsidiaryUsers := make([]institutemodel.SubsidiaryUser, 0)

@@ -112,6 +112,17 @@ func CreateProgram(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
+	// Create program user - relation
+	programUser := institutemodel.ProgramUser{
+	    UserID: user.ID,
+	    ProgramID: program.ID,
+	    License: true,
+    }
+    if err := TR.Create(&programUser).Error; err != nil {
+        TR.Rollback()
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
 	// Create teacher
 	teacher := institutemodel.Teacher{
 		DNI:              request.DNI,

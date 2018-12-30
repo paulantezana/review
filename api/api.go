@@ -44,7 +44,7 @@ func ProtectedApi(e *echo.Echo) {
 
 	// ============================================================================
 	//   Institutional controller api
-	// Program
+	// subsidiary
 	ar.POST("/subsidiary/all", institutecontroller.GetSubsidiaries)
 	ar.POST("/subsidiary/all/tree", institutecontroller.GetSubsidiariesTree)
 	ar.POST("/subsidiary/by/id", institutecontroller.GetSubsidiaryByID)
@@ -52,7 +52,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/subsidiary/update", institutecontroller.UpdateSubsidiary)
 	ar.DELETE("/subsidiary/delete", institutecontroller.DeleteSubsidiary)
 
-	// Program
+	// subsidiary - user
 	ar.POST("/subsidiary/user/all/by/user", institutecontroller.GetSubsidiariesUserByUserID)
 	ar.POST("/subsidiary/user/all/by/user/license", institutecontroller.GetSubsidiariesUserByUserIDLicense)
 	ar.PUT("/subsidiary/user/update", institutecontroller.UpdateSubsidiariesUserByUserID)
@@ -62,7 +62,12 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/program/create", institutecontroller.CreateProgram)
 	ar.PUT("/program/update", institutecontroller.UpdateProgram)
 
-	// Program
+    // Program - user
+    ar.POST("/program/user/all/by/user", institutecontroller.GetProgramsUserByUserID)
+    ar.POST("/program/user/all/by/user/license", institutecontroller.GetProgramsUserByUserIDLicense)
+    ar.PUT("/program/user/update", institutecontroller.UpdateProgramsUserByUserID)
+
+    // Program
 	ar.POST("/semester/all", institutecontroller.GetSemesters)
 	ar.POST("/semester/create", institutecontroller.CreateSemester)
 	ar.PUT("/semester/update", institutecontroller.UpdateSemester)
