@@ -104,11 +104,11 @@ func GetStudentSettings(c echo.Context) error {
 	}
 
 	// find program
-	if err := db.First(&program, student.DefaultProgramID).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("%s", err),
-		})
-	}
+	//if err := db.First(&program, student.DefaultProgramID).Error; err != nil {
+	//	return c.JSON(http.StatusOK, utilities.Response{
+	//		Message: fmt.Sprintf("%s", err),
+	//	})
+	//}
 
 	// Find settings
 	db.First(&setting)

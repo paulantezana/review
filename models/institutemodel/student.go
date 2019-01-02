@@ -14,10 +14,7 @@ type Student struct {
 	Gender   string `json:"gender"`
 
 	BirthDate     time.Time `json:"birth_date"`
-	AdmissionYear uint      `json:"admission_year"`
-	PromotionYear uint      `json:"promotion_year"`
 
-	DefaultProgramID uint `json:"default_program_id"`
 	UserID           uint `json:"user_id"`
 	StudentStatusID  uint `json:"student_status_id"`
 

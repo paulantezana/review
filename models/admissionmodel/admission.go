@@ -13,4 +13,5 @@ type Admission struct {
 
 	StudentID uint `json:"student_id"`
 	ProgramID uint `json:"program_id"`
+	UserID uint `json:"user_id"`
 }

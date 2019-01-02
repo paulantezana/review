@@ -206,9 +206,9 @@ func GetStudentSearch(c echo.Context) error {
 
 func CreateStudent(c echo.Context) error {
 	// Get user token authenticate
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
+	//user := c.Get("user").(*jwt.Token)
+	//claims := user.Claims.(*utilities.Claim)
+	//currentUser := claims.User
 
 	// Get data request
 	student := institutemodel.Student{}
@@ -217,10 +217,6 @@ func CreateStudent(c echo.Context) error {
 	}
 
 	// Set program ID
-	if student.DefaultProgramID == 0 {
-		student.DefaultProgramID = currentUser.DefaultProgramID
-	}
-
 	// get connection
 	DB := config.GetConnection()
 	defer DB.Close()
@@ -421,19 +417,19 @@ func SetTempUploadStudent(c echo.Context) error {
 				currentProgram = uint(u)
 			}
 
-			ay, _ := strconv.ParseUint(strings.TrimSpace(row[3]), 0, 32)
-			py, _ := strconv.ParseUint(strings.TrimSpace(row[4]), 0, 32)
+			//ay, _ := strconv.ParseUint(strings.TrimSpace(row[3]), 0, 32)
+			//py, _ := strconv.ParseUint(strings.TrimSpace(row[4]), 0, 32)
 
-			admissionYear := uint(ay)
-			promotionYear := uint(py)
+			//admissionYear := uint(ay)
+			//promotionYear := uint(py)
 
 			students = append(students, institutemodel.Student{
 				DNI:              strings.TrimSpace(row[0]),
 				FullName:         strings.TrimSpace(row[1]),
 				Phone:            strings.TrimSpace(row[2]),
-				AdmissionYear:    admissionYear,
-				PromotionYear:    promotionYear,
-				DefaultProgramID: currentProgram,
+				//AdmissionYear:    admissionYear,
+				//PromotionYear:    promotionYear,
+				//DefaultProgramID: currentProgram,
 				StudentStatusID: 1,
 			})
 		}

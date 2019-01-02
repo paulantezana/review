@@ -1,14 +1,15 @@
 package api
 
 import (
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/controller"
-	"github.com/paulantezana/review/controller/coursescontroller"
-	"github.com/paulantezana/review/controller/institutecontroller"
-	"github.com/paulantezana/review/controller/librarycontroller"
-	"github.com/paulantezana/review/controller/monitoringcontroller"
+    "github.com/labstack/echo"
+    "github.com/labstack/echo/middleware"
+    "github.com/paulantezana/review/config"
+    "github.com/paulantezana/review/controller"
+    "github.com/paulantezana/review/controller/admissioncontroller"
+    "github.com/paulantezana/review/controller/coursescontroller"
+    "github.com/paulantezana/review/controller/institutecontroller"
+    "github.com/paulantezana/review/controller/librarycontroller"
+    "github.com/paulantezana/review/controller/monitoringcontroller"
     "github.com/paulantezana/review/controller/reviewcontroller"
     "github.com/paulantezana/review/utilities"
 )
@@ -196,6 +197,20 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/library/book/by/id", librarycontroller.GetBookByID)
 	ar.POST("/library/book/upload/avatar", librarycontroller.UploadAvatarBook)
 	ar.POST("/library/book/upload/pdf", librarycontroller.UploadPdfBook)
+
+
+    // ---------------------------------------------------------------------------
+    //      Admission routes -----------------------------------------------------
+    // Admission
+    ar.POST("/admission/admission/paginate", admissioncontroller.GetAdmissionsPaginate)
+    ar.POST("/admission/admission/create", admissioncontroller.CreateAdmission)
+    ar.PUT("/admission/admission/update", admissioncontroller.CreateAdmission)
+
+
+    // ---------------------------------------------------------------------------
+    //      External api -----------------------------------------------------
+    // RENIEC
+    ar.POST("/external/reniec", controller.Reniec)
 
 	// Web Site services
 	ar.POST("/web/setting/by/student", controller.GetStudentSettings)

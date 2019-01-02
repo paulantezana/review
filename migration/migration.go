@@ -112,6 +112,7 @@ func Migrate() {
 	// Admission ===============================================================
 	db.Model(&admissionmodel.Admission{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
 	db.Model(&admissionmodel.Admission{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&admissionmodel.Admission{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 	db.Model(&admissionmodel.AdmissionPayment{}).AddForeignKey("admission_id", "admissions(id)", "RESTRICT", "RESTRICT")
 	db.Model(&admissionmodel.Payment{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "RESTRICT", "RESTRICT")
 
