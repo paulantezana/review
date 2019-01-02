@@ -14,24 +14,85 @@ import (
     "time"
 )
 
+type admissionsPaginateResponse struct {
+    ID            uint      `json:"id" gorm:"primary_key"`
+    Observation   string    `json:"observation"`
+    Exonerated    bool      `json:"exonerated"`
+    AdmissionDate time.Time `json:"admission_date"`
+    Year          uint      `json:"year"`
+
+    StudentID uint `json:"student_id"`
+    ProgramID uint `json:"program_id"`
+    UserID uint `json:"user_id"`
+    
+    DNI string `json:"dni"`
+    FullName string `json:"full_name"`
+    Email string `json:"email"`
+    Avatar string `json:"avatar"`
+}
+
+type admissionsPaginateRequest struct {
+    Search      string `json:"search"`
+    CurrentPage uint   `json:"current_page"`
+    Limit       uint   `json:"limit"`
+    Year uint `json:"year"`
+    ProgramID uint `json:"program_id"`
+}
+
+func (r *admissionsPaginateRequest) validate() uint {
+    con := config.GetConfig()
+    if r.Limit == 0 {
+        r.Limit = con.Global.Paginate
+    }
+    if r.CurrentPage == 0 {
+        r.CurrentPage = 1
+    }
+    offset := r.Limit*r.CurrentPage - r.Limit
+    return offset
+}
+
+
 func GetAdmissionsPaginate(c echo.Context) error {
     // Get user token authenticate
     //user := c.Get("user").(*jwt.Token)
     //claims := user.Claims.(*utilities.Claim)
     //currentUser := claims.User
 
+    // Get data request
+    request := admissionsPaginateRequest{}
+    if err := c.Bind(&request); err != nil {
+        return err
+    }
+
+    // Pagination calculate
+    offset := request.validate()
+
     // Get connection
     DB := config.GetConnection()
     defer DB.Close()
 
     // Execute instructions
-    admissions := make([]admissionmodel.Admission, 0)
-    DB.Find(&admissions)
+    var total uint
+    admissionsPaginateResponses := make([]admissionsPaginateResponse, 0)
+    if err := DB.Debug().Table("admissions").
+        Select("admissions.id, admissions.observation, admissions.exonerated, admissions.admission_date, admissions.year, admissions.student_id, admissions.program_id, students.dni , students.full_name, users.id as user_id, users.email, users.avatar").
+        Joins("INNER JOIN students ON admissions.student_id = students.id").
+        Joins("INNER JOIN users on students.user_id = users.id").
+        Where("students.dni LIKE ? AND admissions.year = ? AND admissions.program_id = ?","%"+request.Search+"%",request.Year, request.ProgramID).
+        Or("lower(students.full_name) LIKE lower(?) AND admissions.year = ? AND admissions.program_id = ?","%"+request.Search+"%",request.Year, request.ProgramID).
+        Order("admissions.id asc").
+        Offset(offset).Limit(request.Limit).Scan(&admissionsPaginateResponses).
+        Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+        return c.NoContent(http.StatusInternalServerError)
+    }
 
     // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
+    return c.JSON(http.StatusOK, utilities.ResponsePaginate{
         Success: true,
-        Data:    admissions,
+        Data:    admissionsPaginateResponses,
+        Total:       total,
+        CurrentPage: request.CurrentPage,
+        Limit:       request.Limit,
     })
 }
 
@@ -58,35 +119,64 @@ func CreateAdmission(c echo.Context) error {
     // start transaction
     TX := DB.Begin()
 
-    // has password new user account
-    cc := sha256.Sum256([]byte(request.Student.DNI + "ST"))
-    pwd := fmt.Sprintf("%x", cc)
-
-    // Insert user in database
-    userAccount := models.User{
-        UserName: request.Student.DNI + "ST",
-        Password: pwd,
-        RoleID:   5,
-    }
-    if err := TX.Create(&userAccount).Error; err != nil {
-        TX.Rollback()
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    // Validation
+    st := institutemodel.Student{}
+    if err := DB.First(&st,institutemodel.Student{DNI: request.Student.DNI}).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err)} )
     }
 
-    // Insert student in database
-    request.Student.UserID = userAccount.ID
-    request.Student.StudentStatusID = 2
-    if err := TX.Create(&request.Student).Error; err != nil {
-        TX.Rollback()
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    if st.ID == 0 {
+        // has password new user account
+        cc := sha256.Sum256([]byte(request.Student.DNI + "ST"))
+        pwd := fmt.Sprintf("%x", cc)
+
+        // Insert user in database
+        userAccount := models.User{
+            UserName: request.Student.DNI + "ST",
+            Password: pwd,
+            RoleID:   5,
+        }
+        if err := TX.Create(&userAccount).Error; err != nil {
+            TX.Rollback()
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+        }
+
+        // Insert student in database
+        request.Student.UserID = userAccount.ID
+        request.Student.StudentStatusID = 2
+        if err := TX.Create(&request.Student).Error; err != nil {
+            TX.Rollback()
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+        }
+        // Set new student ID
+        request.Admission.StudentID = request.Student.ID
+    }else {
+        // Set current student ID
+        request.Admission.StudentID = st.ID
+        request.Student.ID = st.ID
+
+        // Update data
+        rows := TX.Model(&request.Admission).Update(request.Admission).RowsAffected
+        if rows == 0 {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", "No se pudo actualizar")})
+        }
     }
 
     // Insert admission
-    request.Admission.StudentID = request.Student.ID
     request.Admission.AdmissionDate = time.Now()
     request.Admission.Year = uint(time.Now().Year())
     request.Admission.UserID = currentUser.ID
     if err := TX.Create(&request.Admission).Error; err != nil {
+        TX.Rollback()
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Insert new Relation program and student
+    studentProgram := institutemodel.StudentProgram{
+        StudentID: request.Student.ID,
+        ProgramID: request.Admission.ProgramID,
+    }
+    if err := TX.Create(&studentProgram).Error; err != nil {
         TX.Rollback()
         return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
     }

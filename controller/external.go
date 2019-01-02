@@ -3,6 +3,9 @@ package controller
 import (
     "fmt"
     "github.com/labstack/echo"
+    "github.com/paulantezana/review/config"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/models/institutemodel"
     "github.com/paulantezana/review/utilities"
     "io/ioutil"
     "net/http"
@@ -14,10 +17,9 @@ type reniecRequest struct {
 }
 
 type reniecResponse struct {
-    DNI string `json:"dni"`
-    FirstName string `json:"first_name"`
-    LastName string `json:"last_name"`
-    FullName string `json:"full_name"`
+    Student institutemodel.Student `json:"student"`
+    User models.User `json:"user"`
+    Exist bool `json:"exist"`
 } 
 
 func Reniec(c echo.Context) error {
@@ -26,25 +28,48 @@ func Reniec(c echo.Context) error {
         return err
     }
 
-    url := "http://aplicaciones007.jne.gob.pe/srop_publico/Consulta/Afiliado/GetNombresCiudadano?DNI=" + request.DNI
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
 
-    req, _ := http.NewRequest("GET", url, nil)
-
-    //req.Header.Add("cache-control", "no-cache")
-    //req.Header.Add("postman-token", "077270b3-72f2-29c0-2875-741a4d6cabd3")
-
-    res, _ := http.DefaultClient.Do(req)
-
-    defer res.Body.Close()
-    body, _ := ioutil.ReadAll(res.Body)
-
-    data := strings.Split(strings.ToLower(string(body)),"|")
-    lastName := strings.ToUpper(fmt.Sprintf("%s %s",data[0],data[1]))
+    // Search student
+    student := institutemodel.Student{}
+    if err := DB.First(&student,institutemodel.Student{DNI: request.DNI}).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err)} )
+    }
     reniecResponse := reniecResponse{
-        DNI: request.DNI,
-        FirstName: strings.Title(data[2]),
-        LastName: lastName,
-        FullName: fmt.Sprintf("%s, %s",lastName,strings.Title(data[2])),
+        Student: student,
+    }
+
+    // Validation
+    if student.ID == 0 {
+        url := "http://aplicaciones007.jne.gob.pe/srop_publico/Consulta/Afiliado/GetNombresCiudadano?DNI=" + request.DNI
+
+        req, _ := http.NewRequest("GET", url, nil)
+        res, _ := http.DefaultClient.Do(req)
+
+        defer res.Body.Close()
+        body, _ := ioutil.ReadAll(res.Body)
+
+        // Split string
+        data := strings.Split(strings.ToLower(string(body)),"|")
+        lastName := strings.ToUpper(fmt.Sprintf("%s %s",data[0],data[1]))
+        firstName := strings.Title(data[2])
+
+        // fill data
+        reniecResponse.Student.DNI = request.DNI
+        reniecResponse.Student.FullName = fmt.Sprintf("%s, %s",lastName,firstName)
+    }else {
+        // Find User
+        user:= models.User{}
+        if err := DB.First(&user,student.UserID).Error; err != nil {
+            return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err)} )
+        }
+        user.Password = ""
+        user.Key = ""
+
+        reniecResponse.Exist = true
+        reniecResponse.User = user
     }
 
     return c.JSON(http.StatusOK,utilities.Response{
