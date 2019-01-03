@@ -24,6 +24,8 @@ type admissionsPaginateResponse struct {
     StudentID uint `json:"student_id"`
     ProgramID uint `json:"program_id"`
     UserID uint `json:"user_id"`
+
+    State    bool   `json:"state"`
     
     DNI string `json:"dni"`
     FullName string `json:"full_name"`
@@ -75,7 +77,7 @@ func GetAdmissionsPaginate(c echo.Context) error {
     var total uint
     admissionsPaginateResponses := make([]admissionsPaginateResponse, 0)
     if err := DB.Debug().Table("admissions").
-        Select("admissions.id, admissions.observation, admissions.exonerated, admissions.admission_date, admissions.year, admissions.student_id, admissions.program_id, students.dni , students.full_name, users.id as user_id, users.email, users.avatar").
+        Select("admissions.id, admissions.observation, admissions.exonerated, admissions.admission_date, admissions.year, admissions.student_id, admissions.program_id, admissions.state, students.dni , students.full_name, users.id as user_id, users.email, users.avatar").
         Joins("INNER JOIN students ON admissions.student_id = students.id").
         Joins("INNER JOIN users on students.user_id = users.id").
         Where("students.dni LIKE ? AND admissions.year = ? AND admissions.program_id = ?","%"+request.Search+"%",request.Year, request.ProgramID).
@@ -156,7 +158,7 @@ func CreateAdmission(c echo.Context) error {
         request.Student.ID = st.ID
 
         // Update data
-        rows := TX.Model(&request.Admission).Update(request.Admission).RowsAffected
+        rows := TX.Model(&request.Student).Update(request.Student).RowsAffected
         if rows == 0 {
             return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", "No se pudo actualizar")})
         }
@@ -201,5 +203,30 @@ func CreateAdmission(c echo.Context) error {
         Success: true,
         Data:    request.Student.ID,
         Message: fmt.Sprintf("El estudiante %s se registro correctamente", request.Student.FullName),
+    })
+}
+
+
+func CancelAdmission(c echo.Context) error {
+    // Get data request
+    admission := admissionmodel.Admission{}
+    if err := c.Bind(&admission); err != nil {
+        return err
+    }
+
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Execute query
+    if err := DB.Model(admission).UpdateColumn("state", false).Error; err != nil {
+        return err
+    }
+
+    // Return response
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        Data:    admission.ID,
+        Message: fmt.Sprintf("Se anuló la admision con el id %d",admission.ID),
     })
 }
