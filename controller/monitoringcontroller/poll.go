@@ -1,21 +1,20 @@
 package monitoringcontroller
 
 import (
-	"fmt"
-	"github.com/paulantezana/review/models/monitoringmodel"
-	"net/http"
+    "fmt"
+    "github.com/paulantezana/review/models/monitoringmodel"
+    "net/http"
 
-	"github.com/dgrijalva/jwt-go"
-	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/utilities"
+    "github.com/labstack/echo"
+    "github.com/paulantezana/review/config"
+    "github.com/paulantezana/review/utilities"
 )
 
 func GetPollsPaginate(c echo.Context) error {
 	// Get user token authenticate
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
+	//user := c.Get("user").(*jwt.Token)
+	//claims := user.Claims.(*utilities.Claim)
+	//currentUser := claims.User
 
 	// Get data request
 	request := utilities.Request{}
@@ -35,7 +34,7 @@ func GetPollsPaginate(c echo.Context) error {
 	companies := make([]monitoringmodel.Poll, 0)
 
 	// Query in database
-	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
+	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ID).
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&companies).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
@@ -77,9 +76,9 @@ func GetPollByID(c echo.Context) error {
 
 func CreatePoll(c echo.Context) error {
 	// Get user token authenticate
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
+	//user := c.Get("user").(*jwt.Token)
+	//claims := user.Claims.(*utilities.Claim)
+	//currentUser := claims.User
 
 	// Get data request
 	poll := monitoringmodel.Poll{}
@@ -88,7 +87,7 @@ func CreatePoll(c echo.Context) error {
 	}
 
 	// set current programID
-	poll.ProgramID = currentUser.DefaultProgramID
+	//poll.ProgramID = currentUser.DefaultProgramID
 
 	// get connection
 	db := config.GetConnection()

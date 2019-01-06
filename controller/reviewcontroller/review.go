@@ -40,9 +40,9 @@ type getReviewsResponse struct {
 // GetReviews functions get all reviews
 func GetReviews(c echo.Context) error {
 	// Get user token authenticate
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
+	//user := c.Get("user").(*jwt.Token)
+	//claims := user.Claims.(*utilities.Claim)
+	//currentUser := claims.User
 
 	// Get data request
 	student := institutemodel.Student{}
@@ -69,9 +69,9 @@ func GetReviews(c echo.Context) error {
 	// validation
 	allReviews := len(reviewsResponses) // all review count
 	var allModules uint                 // all modules count
-	if err := db.Model(&institutemodel.Module{}).Where("program_id = ?", currentUser.DefaultProgramID).Count(&allModules).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
-	}
+	//if err := db.Model(&institutemodel.Module{}).Where("program_id = ?", currentUser.DefaultProgramID).Count(&allModules).Error; err != nil {
+	//	return c.NoContent(http.StatusInternalServerError)
+	//}
 
 	reviewEnablesResponse := reviewEnablesResponse{}
 

@@ -101,6 +101,7 @@ func GetAdmissionsPaginate(c echo.Context) error {
 type createAdmissionRequest struct {
     Student institutemodel.Student `json:"student"`
     Admission admissionmodel.Admission `json:"admission"`
+    User models.User `json:"user"`
 }
 func CreateAdmission(c echo.Context) error {
     // Get user token authenticate
@@ -123,9 +124,7 @@ func CreateAdmission(c echo.Context) error {
 
     // Validation
     st := institutemodel.Student{}
-    if err := DB.First(&st,institutemodel.Student{DNI: request.Student.DNI}).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err)} )
-    }
+    DB.First(&st,institutemodel.Student{DNI: request.Student.DNI})
 
     if st.ID == 0 {
         // has password new user account
@@ -133,18 +132,17 @@ func CreateAdmission(c echo.Context) error {
         pwd := fmt.Sprintf("%x", cc)
 
         // Insert user in database
-        userAccount := models.User{
-            UserName: request.Student.DNI + "ST",
-            Password: pwd,
-            RoleID:   5,
-        }
-        if err := TX.Create(&userAccount).Error; err != nil {
+        request.User.UserName = request.Student.DNI + "ST"
+        request.User.Password = pwd
+        request.User.RoleID = 5
+
+        if err := TX.Create(&request.User).Error; err != nil {
             TX.Rollback()
             return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
         }
 
         // Insert student in database
-        request.Student.UserID = userAccount.ID
+        request.Student.UserID = request.User.ID
         request.Student.StudentStatusID = 2
         if err := TX.Create(&request.Student).Error; err != nil {
             TX.Rollback()
@@ -198,14 +196,17 @@ func CreateAdmission(c echo.Context) error {
     // Commit transaction
     TX.Commit()
 
+    // Reset Keys and fields
+    request.User.Password = ""
+    request.User.Key = ""
+
     // Return response
     return c.JSON(http.StatusCreated, utilities.Response{
         Success: true,
-        Data:    request.Student.ID,
+        Data:    request,
         Message: fmt.Sprintf("El estudiante %s se registro correctamente", request.Student.FullName),
     })
 }
-
 
 func CancelAdmission(c echo.Context) error {
     // Get data request

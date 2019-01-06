@@ -54,8 +54,8 @@ func GetStudents(c echo.Context) error {
 		}
 	} else {
 		// Query in database
-		if err := db.Where("lower(full_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
-			Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
+		if err := db.Where("lower(full_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ID).
+			Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", request.ID).
 			Order("id asc").
 			Offset(offset).Limit(request.Limit).Find(&students).
 			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
@@ -63,25 +63,7 @@ func GetStudents(c echo.Context) error {
 		}
 	}
 
-	// Type response
-	// 0 = all data
-	// 1 = minimal data
-	if request.Type == 1 {
-		customStudent := make([]institutemodel.Student, 0)
-		for _, student := range students {
-			customStudent = append(customStudent, institutemodel.Student{
-				ID:       student.ID,
-				FullName: student.FullName,
-			})
-		}
-		return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
-			Success:     true,
-			Data:        customStudent,
-			Total:       total,
-			CurrentPage: request.CurrentPage,
-		})
-	}
-	// Return response
+    // Return response
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
 		Success:     true,
 		Data:        students,
@@ -357,10 +339,10 @@ func GetTempUploadStudent(c echo.Context) error {
 
 // SetTempUploadStudent set upload student
 func SetTempUploadStudent(c echo.Context) error {
-	// Get user token authenticate
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
+	//// Get user token authenticate
+	//user := c.Get("user").(*jwt.Token)
+	//claims := user.Claims.(*utilities.Claim)
+	//currentUser := claims.User
 
 	// Source
 	file, err := c.FormFile("file")
@@ -410,7 +392,7 @@ func SetTempUploadStudent(c echo.Context) error {
 
 			// program id
 			var currentProgram uint
-			currentProgram = currentUser.DefaultProgramID
+			//currentProgram = currentUser.DefaultProgramID
 
 			if currentProgram == 0 {
 				u, _ := strconv.ParseUint(strings.TrimSpace(row[5]), 0, 32)

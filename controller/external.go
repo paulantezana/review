@@ -34,9 +34,7 @@ func Reniec(c echo.Context) error {
 
     // Search student
     student := institutemodel.Student{}
-    if err := DB.First(&student,institutemodel.Student{DNI: request.DNI}).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err)} )
-    }
+    DB.First(&student,institutemodel.Student{DNI: request.DNI})
     reniecResponse := reniecResponse{
         Student: student,
     }
@@ -44,11 +42,14 @@ func Reniec(c echo.Context) error {
     // Validation
     if student.ID == 0 {
         url := "http://aplicaciones007.jne.gob.pe/srop_publico/Consulta/Afiliado/GetNombresCiudadano?DNI=" + request.DNI
-
         req, _ := http.NewRequest("GET", url, nil)
-        res, _ := http.DefaultClient.Do(req)
 
+        res, err := http.DefaultClient.Do(req)
+        if err != nil {
+            return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("Error en la consulta a la Reniec")} )
+        }
         defer res.Body.Close()
+
         body, _ := ioutil.ReadAll(res.Body)
 
         // Split string

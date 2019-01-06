@@ -134,6 +134,120 @@ func Login(c echo.Context) error {
 	})
 }
 
+type loginStudent struct {
+    User  interface{} `json:"user"`
+    Token interface{} `json:"token"`
+} 
+
+// Login by student
+func LoginStudent(c echo.Context) error {
+	// Get data request
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return err
+	}
+
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
+
+	// Hash password
+	cc := sha256.Sum256([]byte(user.Password))
+	pwd := fmt.Sprintf("%x", cc)
+
+    // Validate user and email
+    if DB.Where("user_name = ? and password = ? and role_id = ?", user.UserName, pwd, 5).First(&user).RecordNotFound() {
+        if DB.Where("email = ? and password = ? and role_id = ?", user.UserName, pwd, 5).First(&user).RecordNotFound() {
+            return c.JSON(http.StatusOK, utilities.Response{
+                Message: fmt.Sprintf("No lo sé rik parece falso"),
+            })
+        }
+    }
+
+	// Check state user
+	if !user.State {
+		return c.NoContent(http.StatusForbidden)
+	}
+
+	// Prepare response data
+	user.Password = ""
+	user.Key = ""
+
+	// Query student
+    //student := institutemodel.Student{}
+    //DB.First(&student,institutemodel.Student{UserID: user.ID})
+
+    // Query program by student
+    //programs := make([]institutemodel.Program,0)
+    //if err := DB.Table("student_programs").
+    //    Select("programs.id, programs.name").
+    //    Joins("INNER JOIN programs on student_programs.program_id = programs.id").
+    //    Where("student_programs.student_id = ?", student.ID).
+    //    Scan(&programs).Error; err != nil {
+    //        return c.NoContent(http.StatusInternalServerError)
+    //}
+
+    // Insert new Session
+    session:= messengermodel.Session{
+        UserName: user.UserName,
+        LastActivity: time.Now(),
+    }
+    if err := DB.Create(&session).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{
+            Message: fmt.Sprintf("%s", err),
+        })
+    }
+
+	// get token key
+	token := utilities.GenerateJWT(user)
+
+	// Login success
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: fmt.Sprintf("Bienvenido al sistema %s", user.UserName),
+		Data: loginStudent{
+		    Token: token,
+		    User: user,
+        },
+	})
+}
+
+
+// Login login check
+func LoginCheck(c echo.Context) error {
+    // Get data request
+    user := models.User{}
+    if err := c.Bind(&user); err != nil {
+        return err
+    }
+
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Hash password
+    if DB.Where("id = ?", user.ID).First(&user).RecordNotFound() {
+        return c.NoContent(http.StatusForbidden)
+    }
+
+    // Check state user
+    if !user.State {
+        return c.NoContent(http.StatusForbidden)
+    }
+
+    // Prepare response data
+    user.Password = ""
+    user.Key = ""
+
+    // Login success
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        Message: fmt.Sprintf("Bienvenido al sistema %s", user.UserName),
+        Data: user,
+    })
+}
+
+
 // ForgotSearch function forgot user search
 func ForgotSearch(c echo.Context) error {
 	user := models.User{}

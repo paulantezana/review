@@ -17,7 +17,6 @@ type User struct {
 	Freeze   bool   `json:"-"`
 
 	RoleID           uint   `json:"role_id"`
-	DefaultProgramID uint   `json:"default_program_id"`
 	OldPassword      string `json:"old_password" gorm:"-"`
 
 	Students []institutemodel.Student `json:"students"`

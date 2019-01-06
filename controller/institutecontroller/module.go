@@ -1,13 +1,12 @@
 package institutecontroller
 
 import (
-	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models/institutemodel"
-	"github.com/paulantezana/review/utilities"
-	"net/http"
+    "fmt"
+    "github.com/labstack/echo"
+    "github.com/paulantezana/review/config"
+    "github.com/paulantezana/review/models/institutemodel"
+    "github.com/paulantezana/review/utilities"
+    "net/http"
 )
 
 func GetModules(c echo.Context) error {
@@ -46,10 +45,6 @@ func GetModules(c echo.Context) error {
 }
 
 func GetModuleSearch(c echo.Context) error {
-	// Get user token authenticate
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
 
 	// Get data request
 	request := utilities.Request{}
@@ -63,7 +58,7 @@ func GetModuleSearch(c echo.Context) error {
 
 	// Execute instructions
 	modules := make([]institutemodel.Module, 0)
-	if err := db.Where("name LIKE ? AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
+	if err := db.Where("name LIKE ? AND program_id = ?", "%"+request.Search+"%", request.ID).
 		Limit(5).Find(&modules).Error; err != nil {
 		return err
 	}

@@ -2,15 +2,11 @@ package utilities
 
 import "github.com/paulantezana/review/config"
 
-// Request Type
-// 2 = primordial
-// 1 = minimal
-// 0 = all
+// ID = cualquier id que se quiera enviar
 type Request struct {
 	Search      string `json:"search"`
 	CurrentPage uint   `json:"current_page"`
 	Limit       uint   `json:"limit"`
-	Type        uint   `json:"query"`
 	ID          uint   `json:"id"`
 }
 

@@ -18,9 +18,12 @@ import (
 func PublicApi(e *echo.Echo) {
 	pb := e.Group("/api/v1/public")
 	pb.POST("/user/login", controller.Login)
+	pb.POST("/user/login/student", controller.LoginStudent)
 	pb.POST("/user/forgot/search", controller.ForgotSearch)
 	pb.POST("/user/forgot/validate", controller.ForgotValidate)
 	pb.POST("/user/forgot/change", controller.ForgotChange)
+	pb.POST("/library/paginate", controller.ForgotChange)
+	pb.POST("/library/by/id", controller.ForgotChange)
 }
 
 // ProtectedApi function protected urls
@@ -33,6 +36,9 @@ func ProtectedApi(e *echo.Echo) {
 		SigningKey: []byte(config.GetConfig().Server.Key),
 	}
 	ar.Use(middleware.JWTWithConfig(con))
+
+	// Check Login
+	ar.POST("/login/check",controller.LoginCheck)
 
 	// Global settings
 	ar.POST("/setting/global", controller.GetGlobalSettings)

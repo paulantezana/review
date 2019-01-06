@@ -53,9 +53,9 @@ func GetTeachers(c echo.Context) error {
 		}
 	} else {
 		// Query in database
-		if err := db.Where("lower(first_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
-			Or("lower(last_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
-			Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", currentUser.DefaultProgramID).
+		if err := db.Where("lower(first_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ID).
+			Or("lower(last_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ID).
+			Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", request.ID).
 			Order("id asc").
 			Offset(offset).Limit(request.Limit).Find(&teachers).
 			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
@@ -122,9 +122,9 @@ func GetTeacherSearch(c echo.Context) error {
 
 func CreateTeacher(c echo.Context) error {
 	// Get user token authenticate
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
+	//user := c.Get("user").(*jwt.Token)
+	//claims := user.Claims.(*utilities.Claim)
+	//currentUser := claims.User
 
 	// Get data request
 	teacher := institutemodel.Teacher{}
@@ -133,9 +133,9 @@ func CreateTeacher(c echo.Context) error {
 	}
 
 	// Set program ID
-	if teacher.DefaultProgramID == 0 {
-		teacher.DefaultProgramID = currentUser.DefaultProgramID
-	}
+	//if teacher.DefaultProgramID == 0 {
+	//	teacher.DefaultProgramID = currentUser.DefaultProgramID
+	//}
 
 	// get connection
 	DB := config.GetConnection()
@@ -153,7 +153,6 @@ func CreateTeacher(c echo.Context) error {
 		UserName:         teacher.DNI + "TA",
 		Password:         pwd,
 		RoleID:           4,
-		DefaultProgramID: teacher.DefaultProgramID,
 	}
 	if err := TR.Create(&userAccount).Error; err != nil {
 		TR.Rollback()
@@ -323,9 +322,9 @@ func GetTempUploadTeacher(c echo.Context) error {
 
 func SetTempUploadTeacher(c echo.Context) error {
 	// Get user token authenticate
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
+	//user := c.Get("user").(*jwt.Token)
+	//claims := user.Claims.(*utilities.Claim)
+	//currentUser := claims.User
 
 	// Source
 	file, err := c.FormFile("file")
@@ -375,7 +374,7 @@ func SetTempUploadTeacher(c echo.Context) error {
 
 			// program id
 			var currentProgram uint
-			currentProgram = currentUser.DefaultProgramID
+			//currentProgram = currentUser.DefaultProgramID
 
 			if currentProgram == 0 {
 				u, _ := strconv.ParseUint(strings.TrimSpace(row[12]), 0, 32)

@@ -90,18 +90,18 @@ func GetStudentSettings(c echo.Context) error {
 	defer db.Close()
 
 	// find user
-	if err := db.First(&user, user.ID).Error; err != nil {
-		return c.NoContent(http.StatusUnauthorized)
-	}
-	user.Password = ""
-	user.Key = ""
+	//if err := db.First(&user, user.ID).Error; err != nil {
+	//	return c.NoContent(http.StatusUnauthorized)
+	//}
+	//user.Password = ""
+	//user.Key = ""
 
 	// find student
-	if err := db.First(&student, "user_id = ?", user.ID).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("%s", err),
-		})
-	}
+	//if err := db.First(&student, "user_id = ?", user.ID).Error; err != nil {
+	//	return c.JSON(http.StatusOK, utilities.Response{
+	//		Message: fmt.Sprintf("%s", err),
+	//	})
+	//}
 
 	// find program
 	//if err := db.First(&program, student.DefaultProgramID).Error; err != nil {

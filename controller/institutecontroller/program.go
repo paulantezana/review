@@ -103,7 +103,6 @@ func CreateProgram(c echo.Context) error {
 		UserName:         request.UserName,
 		Password:         pwd,
 		Email:            request.Email,
-		DefaultProgramID: program.ID,
 		RoleID:           3,
 		Freeze:           true,
 	}
