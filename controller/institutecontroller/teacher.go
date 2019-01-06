@@ -49,7 +49,7 @@ func GetTeachers(c echo.Context) error {
 			Order("id asc").
 			Offset(offset).Limit(request.Limit).Find(&teachers).
 			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	} else {
 		// Query in database
@@ -59,7 +59,7 @@ func GetTeachers(c echo.Context) error {
 			Order("id asc").
 			Offset(offset).Limit(request.Limit).Find(&teachers).
 			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	}
 
@@ -109,7 +109,7 @@ func GetTeacherSearch(c echo.Context) error {
 			Or("lower(first_name) LIKE lower(?)", "%"+request.Search+"%").
 			Or("lower(dni) LIKE lower(?)", "%"+request.Search+"%").
 			Limit(5).Find(&teachers).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	}
 
@@ -150,13 +150,13 @@ func CreateTeacher(c echo.Context) error {
 
 	// Insert user in database
 	userAccount := models.User{
-		UserName:         teacher.DNI + "TA",
-		Password:         pwd,
-		RoleID:           4,
+		UserName: teacher.DNI + "TA",
+		Password: pwd,
+		RoleID:   4,
 	}
 	if err := TR.Create(&userAccount).Error; err != nil {
 		TR.Rollback()
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Insert teachers in database
@@ -171,7 +171,7 @@ func CreateTeacher(c echo.Context) error {
 	teacher.TeacherPrograms = teacherPrograms
 	if err := TR.Create(&teacher).Error; err != nil {
 		TR.Rollback()
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Commit transaction
@@ -266,13 +266,13 @@ func GetTempUploadTeacher(c echo.Context) error {
 
 	// Return file sa
 	if currentUser.RoleID == 2 || currentUser.RoleID == 1 {
-        // Get data request
-        subsidiary := institutemodel.Subsidiary{}
-        if err := c.Bind(&subsidiary); err != nil {
-            return err
-        }
+		// Get data request
+		subsidiary := institutemodel.Subsidiary{}
+		if err := c.Bind(&subsidiary); err != nil {
+			return err
+		}
 
-        // Get template excel
+		// Get template excel
 		fileDir := "templates/templateTeacherSA.xlsx"
 		xlsx, err := excelize.OpenFile(fileDir)
 		if err != nil {
@@ -286,21 +286,21 @@ func GetTempUploadTeacher(c echo.Context) error {
 
 		// Execute instructions
 		programs := make([]institutemodel.Program, 0)
-		if err := db.Find(&programs,institutemodel.Program{ SubsidiaryID:subsidiary.ID }).
-		    Order("id desc").Error; err != nil {
-			    return err
+		if err := db.Find(&programs, institutemodel.Program{SubsidiaryID: subsidiary.ID}).
+			Order("id desc").Error; err != nil {
+			return err
 		}
 
 		xlsx.SetCellValue("ProgramIDS", "A1", "ID")
 		xlsx.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
 
 		// Clear cells
-        for i := 0; i < 100; i++ {
-            xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), "")
-            xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), "")
-        }
+		for i := 0; i < 100; i++ {
+			xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), "")
+			xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), "")
+		}
 
-        // Fill data in cells
+		// Fill data in cells
 		for i := 0; i < len(programs); i++ {
 			xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
 			xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)

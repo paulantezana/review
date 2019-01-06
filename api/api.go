@@ -1,17 +1,17 @@
 package api
 
 import (
-    "github.com/labstack/echo"
-    "github.com/labstack/echo/middleware"
-    "github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/controller"
-    "github.com/paulantezana/review/controller/admissioncontroller"
-    "github.com/paulantezana/review/controller/coursescontroller"
-    "github.com/paulantezana/review/controller/institutecontroller"
-    "github.com/paulantezana/review/controller/librarycontroller"
-    "github.com/paulantezana/review/controller/monitoringcontroller"
-    "github.com/paulantezana/review/controller/reviewcontroller"
-    "github.com/paulantezana/review/utilities"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/controller"
+	"github.com/paulantezana/review/controller/admissioncontroller"
+	"github.com/paulantezana/review/controller/coursescontroller"
+	"github.com/paulantezana/review/controller/institutecontroller"
+	"github.com/paulantezana/review/controller/librarycontroller"
+	"github.com/paulantezana/review/controller/monitoringcontroller"
+	"github.com/paulantezana/review/controller/reviewcontroller"
+	"github.com/paulantezana/review/utilities"
 )
 
 // PublicApi function public urls
@@ -38,7 +38,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.Use(middleware.JWTWithConfig(con))
 
 	// Check Login
-	ar.POST("/login/check",controller.LoginCheck)
+	ar.POST("/login/check", controller.LoginCheck)
 
 	// Global settings
 	ar.POST("/setting/global", controller.GetGlobalSettings)
@@ -69,12 +69,12 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/program/create", institutecontroller.CreateProgram)
 	ar.PUT("/program/update", institutecontroller.UpdateProgram)
 
-    // Program - user
-    ar.POST("/program/user/all/by/user", institutecontroller.GetProgramsUserByUserID)
-    ar.POST("/program/user/all/by/user/license", institutecontroller.GetProgramsUserByUserIDLicense)
-    ar.PUT("/program/user/update", institutecontroller.UpdateProgramsUserByUserID)
+	// Program - user
+	ar.POST("/program/user/all/by/user", institutecontroller.GetProgramsUserByUserID)
+	ar.POST("/program/user/all/by/user/license", institutecontroller.GetProgramsUserByUserIDLicense)
+	ar.PUT("/program/user/update", institutecontroller.UpdateProgramsUserByUserID)
 
-    // Program
+	// Program
 	ar.POST("/semester/all", institutecontroller.GetSemesters)
 	ar.POST("/semester/create", institutecontroller.CreateSemester)
 	ar.PUT("/semester/update", institutecontroller.UpdateSemester)
@@ -204,20 +204,19 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/library/book/upload/avatar", librarycontroller.UploadAvatarBook)
 	ar.POST("/library/book/upload/pdf", librarycontroller.UploadPdfBook)
 
+	// ---------------------------------------------------------------------------
+	//      Admission routes -----------------------------------------------------
+	// Admission
+	ar.POST("/admission/admission/paginate", admissioncontroller.GetAdmissionsPaginate)
+	ar.POST("/admission/admission/paginate/exam", admissioncontroller.GetAdmissionsPaginateExam)
+	ar.POST("/admission/admission/create", admissioncontroller.CreateAdmission)
+	ar.POST("/admission/admission/cancel", admissioncontroller.CancelAdmission)
+	ar.PUT("/admission/admission/update", admissioncontroller.UpdateAdmission)
 
-    // ---------------------------------------------------------------------------
-    //      Admission routes -----------------------------------------------------
-    // Admission
-    ar.POST("/admission/admission/paginate", admissioncontroller.GetAdmissionsPaginate)
-    ar.POST("/admission/admission/create", admissioncontroller.CreateAdmission)
-    ar.POST("/admission/admission/cancel", admissioncontroller.CancelAdmission)
-    ar.PUT("/admission/admission/update", admissioncontroller.CreateAdmission)
-
-
-    // ---------------------------------------------------------------------------
-    //      External api -----------------------------------------------------
-    // RENIEC
-    ar.POST("/external/reniec", controller.Reniec)
+	// ---------------------------------------------------------------------------
+	//      External api -----------------------------------------------------
+	// RENIEC
+	ar.POST("/external/reniec", controller.Reniec)
 
 	// Web Site services
 	ar.POST("/web/setting/by/student", controller.GetStudentSettings)

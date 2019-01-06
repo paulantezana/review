@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
-    "github.com/paulantezana/review/models/admissionmodel"
-    "github.com/paulantezana/review/models/coursemodel"
+	"github.com/paulantezana/review/models/admissionmodel"
+	"github.com/paulantezana/review/models/coursemodel"
 	"github.com/paulantezana/review/models/institutemodel"
 	"github.com/paulantezana/review/models/librarymodel"
-    "github.com/paulantezana/review/models/messengermodel"
-    "github.com/paulantezana/review/models/monitoringmodel"
+	"github.com/paulantezana/review/models/messengermodel"
+	"github.com/paulantezana/review/models/monitoringmodel"
 	"github.com/paulantezana/review/models/reviewmodel"
 )
 
@@ -150,14 +150,14 @@ func Migrate() {
 	db.Model(&librarymodel.Like{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
 	db.Model(&librarymodel.Like{}).AddForeignKey("book_id", "books(id)", "CASCADE", "CASCADE")
 
-    // Messenger ===========================================================
-    db.Model(&messengermodel.MessageRecipient{}).AddForeignKey("recipient_id", "users(id)", "RESTRICT", "RESTRICT")
-    db.Model(&messengermodel.MessageRecipient{}).AddForeignKey("recipient_group_id", "user_groups(id)", "RESTRICT", "RESTRICT")
-    db.Model(&messengermodel.MessageRecipient{}).AddForeignKey("message_id", "messages(id)", "RESTRICT", "RESTRICT")
-    db.Model(&messengermodel.UserGroup{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
-    db.Model(&messengermodel.UserGroup{}).AddForeignKey("group_id", "groups(id)", "RESTRICT", "RESTRICT")
-    db.Model(&messengermodel.Message{}).AddForeignKey("creator_id", "users(id)", "RESTRICT", "RESTRICT")
-    db.Model(&messengermodel.Message{}).AddForeignKey("reminder_frequency_id", "reminder_frequencies(id)", "RESTRICT", "RESTRICT")
+	// Messenger ===========================================================
+	db.Model(&messengermodel.MessageRecipient{}).AddForeignKey("recipient_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&messengermodel.MessageRecipient{}).AddForeignKey("recipient_group_id", "user_groups(id)", "RESTRICT", "RESTRICT")
+	db.Model(&messengermodel.MessageRecipient{}).AddForeignKey("message_id", "messages(id)", "RESTRICT", "RESTRICT")
+	db.Model(&messengermodel.UserGroup{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&messengermodel.UserGroup{}).AddForeignKey("group_id", "groups(id)", "RESTRICT", "RESTRICT")
+	db.Model(&messengermodel.Message{}).AddForeignKey("creator_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&messengermodel.Message{}).AddForeignKey("reminder_frequency_id", "reminder_frequencies(id)", "RESTRICT", "RESTRICT")
 
 	// -------------------------------------------------------------
 	// INSERT FIST DATA --------------------------------------------

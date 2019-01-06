@@ -13,10 +13,10 @@ type Student struct {
 	Phone    string `json:"phone" gorm:"type:varchar(32)"`
 	Gender   string `json:"gender"`
 
-	BirthDate     time.Time `json:"birth_date"`
+	BirthDate time.Time `json:"birth_date"`
 
-	UserID           uint `json:"user_id"`
-	StudentStatusID  uint `json:"student_status_id"`
+	UserID          uint `json:"user_id"`
+	StudentStatusID uint `json:"student_status_id"`
 
 	Reviews []reviewmodel.Review `json:"reviews"`
 }

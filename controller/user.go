@@ -1,43 +1,43 @@
 package controller
 
 import (
-    "bytes"
-    "crypto/sha256"
-    "fmt"
-    "github.com/dgrijalva/jwt-go"
-    "github.com/paulantezana/review/models"
-    "github.com/paulantezana/review/models/messengermodel"
-    "html/template"
-    "io"
-    "math/rand"
-    "net/http"
-    "os"
-    "path/filepath"
-    "time"
+	"bytes"
+	"crypto/sha256"
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/models/messengermodel"
+	"html/template"
+	"io"
+	"math/rand"
+	"net/http"
+	"os"
+	"path/filepath"
+	"time"
 
-    "github.com/labstack/echo"
-    "github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/utilities"
+	"github.com/labstack/echo"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/utilities"
 )
 
 type loginProgramLicense struct {
-    ID           uint `json:"id"`
-    Name         string `json:"name"`
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
 }
 
 type loginSubsidiaryLicense struct {
-    ID           uint `json:"id"`
-    Name         string `json:"name"`
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
 }
 
 type loginLicenses struct {
-    Programs []loginProgramLicense `json:"programs"`
-    Subsidiaries []loginSubsidiaryLicense `json:"subsidiaries"`
-} 
+	Programs     []loginProgramLicense    `json:"programs"`
+	Subsidiaries []loginSubsidiaryLicense `json:"subsidiaries"`
+}
 
 type loginDataResponse struct {
-	User  interface{} `json:"user"`
-	Token interface{} `json:"token"`
+	User     interface{}   `json:"user"`
+	Token    interface{}   `json:"token"`
 	Licenses loginLicenses `json:"licenses"`
 }
 
@@ -88,33 +88,33 @@ func Login(c echo.Context) error {
 	user.Key = ""
 
 	// Query licenses
-	loginProgramLicenses := make([]loginProgramLicense,0)
-    if err := DB.Table("program_users").
-        Select("programs.id, programs.name").
-        Joins("INNER JOIN programs on program_users.program_id = programs.id").
-        Where("program_users.user_id = ? AND program_users.license = true", user.ID).
-        Scan(&loginProgramLicenses).Error; err != nil {
-        return c.NoContent(http.StatusInternalServerError)
-    }
-    loginSubsidiaryLicenses := make([]loginSubsidiaryLicense,0)
-    if err := DB.Table("subsidiary_users").
-        Select("subsidiaries.id, subsidiaries.name").
-        Joins("INNER JOIN subsidiaries on subsidiary_users.subsidiary_id = subsidiaries.id").
-        Where("subsidiary_users.user_id = ? AND subsidiary_users.license = true", user.ID).
-        Scan(&loginSubsidiaryLicenses).Error; err != nil {
-        return c.NoContent(http.StatusInternalServerError)
-    }
+	loginProgramLicenses := make([]loginProgramLicense, 0)
+	if err := DB.Table("program_users").
+		Select("programs.id, programs.name").
+		Joins("INNER JOIN programs on program_users.program_id = programs.id").
+		Where("program_users.user_id = ? AND program_users.license = true", user.ID).
+		Scan(&loginProgramLicenses).Error; err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	loginSubsidiaryLicenses := make([]loginSubsidiaryLicense, 0)
+	if err := DB.Table("subsidiary_users").
+		Select("subsidiaries.id, subsidiaries.name").
+		Joins("INNER JOIN subsidiaries on subsidiary_users.subsidiary_id = subsidiaries.id").
+		Where("subsidiary_users.user_id = ? AND subsidiary_users.license = true", user.ID).
+		Scan(&loginSubsidiaryLicenses).Error; err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
-    // Insert new Session
-    session:= messengermodel.Session{
-        UserName: user.UserName,
-        LastActivity: time.Now(),
-    }
-    if err := DB.Create(&session).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("%s", err),
-        })
-    }
+	// Insert new Session
+	session := messengermodel.Session{
+		UserName:     user.UserName,
+		LastActivity: time.Now(),
+	}
+	if err := DB.Create(&session).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("%s", err),
+		})
+	}
 
 	// get token key
 	token := utilities.GenerateJWT(user)
@@ -127,17 +127,17 @@ func Login(c echo.Context) error {
 			User:  user,
 			Token: token,
 			Licenses: loginLicenses{
-			    Programs: loginProgramLicenses,
-			    Subsidiaries: loginSubsidiaryLicenses,
-            },
+				Programs:     loginProgramLicenses,
+				Subsidiaries: loginSubsidiaryLicenses,
+			},
 		},
 	})
 }
 
 type loginStudent struct {
-    User  interface{} `json:"user"`
-    Token interface{} `json:"token"`
-} 
+	User  interface{} `json:"user"`
+	Token interface{} `json:"token"`
+}
 
 // Login by student
 func LoginStudent(c echo.Context) error {
@@ -155,14 +155,14 @@ func LoginStudent(c echo.Context) error {
 	cc := sha256.Sum256([]byte(user.Password))
 	pwd := fmt.Sprintf("%x", cc)
 
-    // Validate user and email
-    if DB.Where("user_name = ? and password = ? and role_id = ?", user.UserName, pwd, 5).First(&user).RecordNotFound() {
-        if DB.Where("email = ? and password = ? and role_id = ?", user.UserName, pwd, 5).First(&user).RecordNotFound() {
-            return c.JSON(http.StatusOK, utilities.Response{
-                Message: fmt.Sprintf("No lo sé rik parece falso"),
-            })
-        }
-    }
+	// Validate user and email
+	if DB.Where("user_name = ? and password = ? and role_id = ?", user.UserName, pwd, 5).First(&user).RecordNotFound() {
+		if DB.Where("email = ? and password = ? and role_id = ?", user.UserName, pwd, 5).First(&user).RecordNotFound() {
+			return c.JSON(http.StatusOK, utilities.Response{
+				Message: fmt.Sprintf("No lo sé rik parece falso"),
+			})
+		}
+	}
 
 	// Check state user
 	if !user.State {
@@ -174,29 +174,29 @@ func LoginStudent(c echo.Context) error {
 	user.Key = ""
 
 	// Query student
-    //student := institutemodel.Student{}
-    //DB.First(&student,institutemodel.Student{UserID: user.ID})
+	//student := institutemodel.Student{}
+	//DB.First(&student,institutemodel.Student{UserID: user.ID})
 
-    // Query program by student
-    //programs := make([]institutemodel.Program,0)
-    //if err := DB.Table("student_programs").
-    //    Select("programs.id, programs.name").
-    //    Joins("INNER JOIN programs on student_programs.program_id = programs.id").
-    //    Where("student_programs.student_id = ?", student.ID).
-    //    Scan(&programs).Error; err != nil {
-    //        return c.NoContent(http.StatusInternalServerError)
-    //}
+	// Query program by student
+	//programs := make([]institutemodel.Program,0)
+	//if err := DB.Table("student_programs").
+	//    Select("programs.id, programs.name").
+	//    Joins("INNER JOIN programs on student_programs.program_id = programs.id").
+	//    Where("student_programs.student_id = ?", student.ID).
+	//    Scan(&programs).Error; err != nil {
+	//        return c.NoContent(http.StatusInternalServerError)
+	//}
 
-    // Insert new Session
-    session:= messengermodel.Session{
-        UserName: user.UserName,
-        LastActivity: time.Now(),
-    }
-    if err := DB.Create(&session).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("%s", err),
-        })
-    }
+	// Insert new Session
+	session := messengermodel.Session{
+		UserName:     user.UserName,
+		LastActivity: time.Now(),
+	}
+	if err := DB.Create(&session).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("%s", err),
+		})
+	}
 
 	// get token key
 	token := utilities.GenerateJWT(user)
@@ -206,47 +206,45 @@ func LoginStudent(c echo.Context) error {
 		Success: true,
 		Message: fmt.Sprintf("Bienvenido al sistema %s", user.UserName),
 		Data: loginStudent{
-		    Token: token,
-		    User: user,
-        },
+			Token: token,
+			User:  user,
+		},
 	})
 }
 
-
 // Login login check
 func LoginCheck(c echo.Context) error {
-    // Get data request
-    user := models.User{}
-    if err := c.Bind(&user); err != nil {
-        return err
-    }
+	// Get data request
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Hash password
-    if DB.Where("id = ?", user.ID).First(&user).RecordNotFound() {
-        return c.NoContent(http.StatusForbidden)
-    }
+	// Hash password
+	if DB.Where("id = ?", user.ID).First(&user).RecordNotFound() {
+		return c.NoContent(http.StatusForbidden)
+	}
 
-    // Check state user
-    if !user.State {
-        return c.NoContent(http.StatusForbidden)
-    }
+	// Check state user
+	if !user.State {
+		return c.NoContent(http.StatusForbidden)
+	}
 
-    // Prepare response data
-    user.Password = ""
-    user.Key = ""
+	// Prepare response data
+	user.Password = ""
+	user.Key = ""
 
-    // Login success
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Message: fmt.Sprintf("Bienvenido al sistema %s", user.UserName),
-        Data: user,
-    })
+	// Login success
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: fmt.Sprintf("Bienvenido al sistema %s", user.UserName),
+		Data:    user,
+	})
 }
-
 
 // ForgotSearch function forgot user search
 func ForgotSearch(c echo.Context) error {

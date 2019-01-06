@@ -1,13 +1,13 @@
 package controller
 
 import (
-    "fmt"
-    "github.com/paulantezana/review/models"
-    "net/http"
+	"fmt"
+	"github.com/paulantezana/review/models"
+	"net/http"
 
-    "github.com/labstack/echo"
-    "github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/utilities"
+	"github.com/labstack/echo"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/utilities"
 )
 
 type userTop struct {
@@ -30,7 +30,7 @@ func TopUsers(c echo.Context) error {
 		Order("top desc").
 		Limit(15).
 		Scan(&userTops).Error; err != nil {
-		return c.JSON(http.StatusOK,utilities.Response{Message: fmt.Sprintf("%s", err)})
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Total registers
@@ -59,39 +59,39 @@ func TopStudentsWithReview(c echo.Context) error {
 	//user := c.Get("user").(*jwt.Token)
 	//claims := user.Claims.(*utilities.Claim)
 	//currentUser := claims.User
-    //
+	//
 	//// Get connection
 	//db := config.GetConnection()
 	//defer db.Close()
-    //
+	//
 	//// All modules
 	//var countModules uint
 	//if err := db.Model(&institutemodel.Module{}).Where("program_id = ?", currentUser.DefaultProgramID).Count(&countModules).Error; err != nil {
-    //    return c.JSON(http.StatusOK,utilities.Response{Message: fmt.Sprintf("%s", err)})
+	//    return c.JSON(http.StatusOK,utilities.Response{Message: fmt.Sprintf("%s", err)})
 	//}
-    //
+	//
 	//// All students
 	//var countStudents uint
 	//if err := db.Model(&institutemodel.Student{}).Where("program_id = ?", currentUser.DefaultProgramID).Count(&countStudents).Error; err != nil {
-    //    return c.JSON(http.StatusOK,utilities.Response{Message: fmt.Sprintf("%s", err)})
+	//    return c.JSON(http.StatusOK,utilities.Response{Message: fmt.Sprintf("%s", err)})
 	//}
-    //
+	//
 	//// All revisions
 	//countAllRevisions := countModules * countStudents
 	//var countReviews uint
 	//if err := db.Table("reviews").Joins("INNER JOIN students on reviews.student_id = students.id").
 	//	Where("students.program_id = ?", currentUser.DefaultProgramID).Count(&countReviews).Error; err != nil {
-    //    return c.JSON(http.StatusOK,utilities.Response{Message: fmt.Sprintf("%s", err)})
+	//    return c.JSON(http.StatusOK,utilities.Response{Message: fmt.Sprintf("%s", err)})
 	//}
-    //
+	//
 	//percentageP := uint(0)
 	//percentageN := uint(0)
-    //
+	//
 	//if countAllRevisions > 0 {
 	//	percentageP = uint((countReviews * 100) / countAllRevisions)
 	//	percentageN = uint(100 - percentageP)
 	//}
-    //
+	//
 	//return c.JSON(http.StatusOK, studentsWithReviewResponse{
 	//	Success:                   true,
 	//	Students:                  countStudents,
@@ -99,5 +99,5 @@ func TopStudentsWithReview(c echo.Context) error {
 	//	PercentagePositiveReviews: percentageP,
 	//	PercentageNegativeReviews: percentageN,
 	//})
-	return c.JSON(http.StatusOK,utilities.Response{Success: true})
+	return c.JSON(http.StatusOK, utilities.Response{Success: true})
 }

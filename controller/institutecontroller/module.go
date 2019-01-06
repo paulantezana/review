@@ -1,12 +1,12 @@
 package institutecontroller
 
 import (
-    "fmt"
-    "github.com/labstack/echo"
-    "github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/models/institutemodel"
-    "github.com/paulantezana/review/utilities"
-    "net/http"
+	"fmt"
+	"github.com/labstack/echo"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/models/institutemodel"
+	"github.com/paulantezana/review/utilities"
+	"net/http"
 )
 
 func GetModules(c echo.Context) error {

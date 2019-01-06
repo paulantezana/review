@@ -13,7 +13,7 @@ type Admission struct {
 
 	StudentID uint `json:"student_id"`
 	ProgramID uint `json:"program_id"`
-	UserID uint `json:"user_id"`
+	UserID    uint `json:"user_id"`
 
-    State    bool   `json:"state" gorm:"default:'true'"`
+	State bool `json:"state" gorm:"default:'true'"`
 }

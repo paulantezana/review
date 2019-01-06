@@ -1,13 +1,13 @@
 package monitoringcontroller
 
 import (
-    "fmt"
-    "github.com/paulantezana/review/models/monitoringmodel"
-    "net/http"
+	"fmt"
+	"github.com/paulantezana/review/models/monitoringmodel"
+	"net/http"
 
-    "github.com/labstack/echo"
-    "github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/utilities"
+	"github.com/labstack/echo"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/utilities"
 )
 
 func GetPollsPaginate(c echo.Context) error {

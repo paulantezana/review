@@ -16,8 +16,8 @@ type User struct {
 	Email    string `json:"email" gorm:"type:varchar(64)"`
 	Freeze   bool   `json:"-"`
 
-	RoleID           uint   `json:"role_id"`
-	OldPassword      string `json:"old_password" gorm:"-"`
+	RoleID      uint   `json:"role_id"`
+	OldPassword string `json:"old_password" gorm:"-"`
 
 	Students []institutemodel.Student `json:"students"`
 	Teachers []institutemodel.Teacher `json:"teachers"`

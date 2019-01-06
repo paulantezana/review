@@ -26,7 +26,7 @@ func GetPrograms(c echo.Context) error {
 	programs := make([]institutemodel.Program, 0)
 	if err := DB.Where("subsidiary_id = ?", program.SubsidiaryID).Find(&programs).Order("id desc").
 		Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -100,11 +100,11 @@ func CreateProgram(c echo.Context) error {
 	pwd := fmt.Sprintf("%x", cc)
 
 	user := models.User{
-		UserName:         request.UserName,
-		Password:         pwd,
-		Email:            request.Email,
-		RoleID:           3,
-		Freeze:           true,
+		UserName: request.UserName,
+		Password: pwd,
+		Email:    request.Email,
+		RoleID:   3,
+		Freeze:   true,
 	}
 	if err := TR.Create(&user).Error; err != nil {
 		TR.Rollback()
@@ -113,14 +113,14 @@ func CreateProgram(c echo.Context) error {
 
 	// Create program user - relation
 	programUser := institutemodel.ProgramUser{
-	    UserID: user.ID,
-	    ProgramID: program.ID,
-	    License: true,
-    }
-    if err := TR.Create(&programUser).Error; err != nil {
-        TR.Rollback()
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+		UserID:    user.ID,
+		ProgramID: program.ID,
+		License:   true,
+	}
+	if err := TR.Create(&programUser).Error; err != nil {
+		TR.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Create teacher
 	teacher := institutemodel.Teacher{

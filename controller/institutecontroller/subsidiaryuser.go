@@ -2,8 +2,8 @@ package institutecontroller
 
 import (
 	"fmt"
-    "github.com/dgrijalva/jwt-go"
-    "github.com/labstack/echo"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/models/institutemodel"
@@ -75,9 +75,9 @@ func GetSubsidiariesUserByUserID(c echo.Context) error {
 
 // Get subsidiaries license by user id
 func GetSubsidiariesUserByUserIDLicense(c echo.Context) error {
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
 	// get connection
 	DB := config.GetConnection()
