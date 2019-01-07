@@ -208,6 +208,7 @@ func ProtectedApi(e *echo.Echo) {
 	//      Admission routes -----------------------------------------------------
 	// Admission
 	ar.POST("/admission/admission/paginate", admissioncontroller.GetAdmissionsPaginate)
+	ar.POST("/admission/admission/by/id", admissioncontroller.GetAdmissionsByID)
 	ar.POST("/admission/admission/paginate/exam", admissioncontroller.GetAdmissionsPaginateExam)
 	ar.POST("/admission/admission/create", admissioncontroller.CreateAdmission)
 	ar.POST("/admission/admission/cancel", admissioncontroller.CancelAdmission)

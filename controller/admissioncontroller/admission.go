@@ -81,7 +81,7 @@ func GetAdmissionsPaginate(c echo.Context) error {
 		Joins("INNER JOIN users on students.user_id = users.id").
 		Where("students.dni LIKE ? AND admissions.year = ? AND admissions.program_id = ?", "%"+request.Search+"%", request.Year, request.ProgramID).
 		Or("lower(students.full_name) LIKE lower(?) AND admissions.year = ? AND admissions.program_id = ?", "%"+request.Search+"%", request.Year, request.ProgramID).
-		Order("admissions.id asc").
+		Order("admissions.id desc").
 		Offset(offset).Limit(request.Limit).Scan(&admissionsPaginateResponses).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return c.NoContent(http.StatusInternalServerError)
@@ -117,6 +117,39 @@ type admissionsPaginateExamResponse struct {
 	Avatar   string `json:"avatar"`
 }
 
+func GetAdmissionsByID(c echo.Context) error {
+	// Get data request
+	admission := admissionmodel.Admission{}
+	if err := c.Bind(&admission); err != nil {
+		return err
+	}
+
+	// Get connection
+	DB := config.GetConnection()
+	defer DB.Close()
+
+	// Query admission
+	DB.First(&admission)
+
+	// Query Student
+	student := institutemodel.Student{}
+	DB.First(&student, institutemodel.Student{ID: admission.StudentID})
+
+	// Query user
+	user := models.User{}
+	DB.First(&user, models.User{ID: student.UserID})
+
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data: createAdmissionRequest{
+			Student:   student,
+			Admission: admission,
+			User:      user,
+		},
+	})
+}
+
 func GetAdmissionsPaginateExam(c echo.Context) error {
 	// Get user token authenticate
 	//user := c.Get("user").(*jwt.Token)
@@ -145,7 +178,7 @@ func GetAdmissionsPaginateExam(c echo.Context) error {
 		Joins("INNER JOIN users on students.user_id = users.id").
 		Where("students.dni LIKE ? AND admissions.year = ? AND admissions.program_id = ?", "%"+request.Search+"%", request.Year, request.ProgramID).
 		Or("lower(students.full_name) LIKE lower(?) AND admissions.year = ? AND admissions.program_id = ?", "%"+request.Search+"%", request.Year, request.ProgramID).
-		Order("admissions.id asc").
+		Order("admissions.id desc").
 		Offset(offset).Limit(request.Limit).Scan(&admissionsPaginateExamResponses).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return c.NoContent(http.StatusInternalServerError)
@@ -167,6 +200,10 @@ type createAdmissionRequest struct {
 	User      models.User              `json:"user"`
 }
 
+type countValidate struct {
+    Count uint
+}
+
 func CreateAdmission(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
@@ -183,6 +220,22 @@ func CreateAdmission(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
+	// Init vars
+	currentYear := uint(time.Now().Year())
+
+	// Validation
+
+    countV := countValidate{}
+    if err := DB.Debug().Raw("SELECT count(*) as count FROM admissions WHERE student_id IN (SELECT id FROM students WHERE dni = ?) AND year = ?", request.Student.DNI,currentYear).
+        Scan(&countV).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+    if countV.Count >= 1 {
+        return c.JSON(http.StatusOK,utilities.Response{
+            Message: fmt.Sprintf("El estudiante %s ya esta registrado en el proceso de admision del año %d",request.Student.FullName,currentYear),
+        })
+    }
+
 	// start transaction
 	TX := DB.Begin()
 
@@ -190,7 +243,7 @@ func CreateAdmission(c echo.Context) error {
 	st := institutemodel.Student{}
 	DB.First(&st, institutemodel.Student{DNI: request.Student.DNI})
 
-    // Validate if exist student
+	// Validate if exist student
 	if st.ID == 0 {
 		// has password new user account
 		cc := sha256.Sum256([]byte(request.Student.DNI + "ST"))
@@ -233,12 +286,12 @@ func CreateAdmission(c echo.Context) error {
 		}
 
 		// Query data user
-		DB.First(&request.User,models.User{ID:request.User.ID})
+		DB.First(&request.User, models.User{ID: request.User.ID})
 	}
 
 	// Insert admission
 	request.Admission.AdmissionDate = time.Now()
-	request.Admission.Year = uint(time.Now().Year())
+	request.Admission.Year = currentYear
 	request.Admission.UserID = currentUser.ID
 	if err := TX.Create(&request.Admission).Error; err != nil {
 		TX.Rollback()
@@ -283,55 +336,55 @@ func CreateAdmission(c echo.Context) error {
 }
 
 func UpdateAdmission(c echo.Context) error {
-    // Get user token authenticate
-    //user := c.Get("user").(*jwt.Token)
-    //claims := user.Claims.(*utilities.Claim)
-    //currentUser := claims.User
+	// Get user token authenticate
+	//user := c.Get("user").(*jwt.Token)
+	//claims := user.Claims.(*utilities.Claim)
+	//currentUser := claims.User
 
-    // Get data request
-    request := createAdmissionRequest{}
-    if err := c.Bind(&request); err != nil {
-        return err
-    }
+	// Get data request
+	request := createAdmissionRequest{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
 
-    // get connection
-    db := config.GetConnection()
-    defer db.Close()
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
 
-    // Update student
-    rows := db.Model(&request.Student).Update(request.Student).RowsAffected
-    if rows == 0 {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", request.Student.ID),
-        })
-    }
+	// Update student
+	rows := db.Model(&request.Student).Update(request.Student).RowsAffected
+	if rows == 0 {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", request.Student.ID),
+		})
+	}
 
-    // Update student
-    rows = db.Model(&request.User).Update(request.User).RowsAffected
-    if rows == 0 {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", request.User.ID),
-        })
-    }
+	// Update student
+	rows = db.Model(&request.User).Update(request.User).RowsAffected
+	if rows == 0 {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", request.User.ID),
+		})
+	}
 
-    // Update admission
-    rows = db.Model(&request.Admission).Update(request.Admission).RowsAffected
-    if rows == 0 {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", request.Admission.ID),
-        })
-    }
+	// Update admission
+	rows = db.Model(&request.Admission).Update(request.Admission).RowsAffected
+	if rows == 0 {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", request.Admission.ID),
+		})
+	}
 
-    // Query student
-    db.First(&request.Student,institutemodel.Student{ID:request.Student.ID})
-    db.First(&request.Admission,admissionmodel.Admission{ID: request.Admission.ID})
+	// Query student
+	db.First(&request.Student, institutemodel.Student{ID: request.Student.ID})
+	db.First(&request.Admission, admissionmodel.Admission{ID: request.Admission.ID})
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    request,
-        Message: fmt.Sprintf("Los datos del admision %d se actualizaron correctamente", request.Admission.ID),
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    request,
+		Message: fmt.Sprintf("Los datos del admision %d se actualizaron correctamente", request.Admission.ID),
+	})
 }
 
 func CancelAdmission(c echo.Context) error {
@@ -359,31 +412,31 @@ func CancelAdmission(c echo.Context) error {
 }
 
 func UpdateExamAdmission(c echo.Context) error {
-    // Get data request
-    admission := admissionmodel.Admission{}
-    if err := c.Bind(&admission); err != nil {
-        return err
-    }
+	// Get data request
+	admission := admissionmodel.Admission{}
+	if err := c.Bind(&admission); err != nil {
+		return err
+	}
 
-    // get connection
-    db := config.GetConnection()
-    defer db.Close()
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
 
-    // Set current time now
-    admission.ExamDate = time.Now()
+	// Set current time now
+	admission.ExamDate = time.Now()
 
-    // Update module in database
-    rows := db.Model(&admission).Update(admission).RowsAffected
-    if rows == 0 {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", admission.ID),
-        })
-    }
+	// Update module in database
+	rows := db.Model(&admission).Update(admission).RowsAffected
+	if rows == 0 {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", admission.ID),
+		})
+	}
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    admission.ID,
-        Message: fmt.Sprintf("Los datos del modulo %d se actualizaron correctamente", admission.ID),
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    admission.ID,
+		Message: fmt.Sprintf("Los datos del modulo %d se actualizaron correctamente", admission.ID),
+	})
 }
