@@ -20,11 +20,11 @@ import (
 )
 
 // GetStudents function get all students
-func GetStudents(c echo.Context) error {
+func GetStudentsPaginate(c echo.Context) error {
 	// Get user token authenticate
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
+	//user := c.Get("user").(*jwt.Token)
+	//claims := user.Claims.(*utilities.Claim)
+	//currentUser := claims.User
 
 	// Get data request
 	request := utilities.Request{}
@@ -43,25 +43,53 @@ func GetStudents(c echo.Context) error {
 	var total uint
 	students := make([]institutemodel.Student, 0)
 
-	if currentUser.RoleID == 1 {
-		// Query in database
-		if err := db.Where("lower(full_name) LIKE lower(?)", "%"+request.Search+"%").
-			Or("dni LIKE ?", "%"+request.Search+"%").
-			Order("id asc").
-			Offset(offset).Limit(request.Limit).Find(&students).
-			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-		}
-	} else {
-		// Query in database
-		if err := db.Where("lower(full_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ID).
-			Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", request.ID).
-			Order("id asc").
-			Offset(offset).Limit(request.Limit).Find(&students).
-			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-		}
+    // Query in database
+    if err := db.Where("lower(full_name) LIKE lower(?)", "%"+request.Search+"%").
+        Or("dni LIKE ?", "%"+request.Search+"%").
+        Order("id asc").
+        Offset(offset).Limit(request.Limit).Find(&students).
+        Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
+		Success:     true,
+		Data:        students,
+		Total:       total,
+		CurrentPage: request.CurrentPage,
+		Limit:       request.Limit,
+	})
+}
+
+func GetStudentsPaginateByProgram(c echo.Context) error {
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
 	}
+
+	// Get connection
+	DB := config.GetConnection()
+	defer DB.Close()
+
+	// Pagination calculate
+	offset := request.Validate()
+
+	// Execute instructions
+	var total uint
+	students := make([]institutemodel.Student, 0)
+
+    // Query in database
+    DB.Debug().Raw("SELECT * FROM students " +
+    "WHERE id IN (SELECT student_id FROM student_programs WHERE program_id = ?) " +
+    "AND (lower(full_name) LIKE lower(?) OR dni LIKE ?) " +
+    "OFFSET ? LIMIT ?", request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%",offset,request.Limit).Scan(&students)
+
+	// Query students count total
+    DB.Raw("SELECT count(*) FROM students " +
+    "WHERE id IN (SELECT student_id FROM student_programs WHERE program_id = ?) " +
+    "AND (lower(full_name) LIKE lower(?) OR dni LIKE ?)", request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%").Scan(&total)
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{

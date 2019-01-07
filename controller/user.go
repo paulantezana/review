@@ -400,7 +400,7 @@ func GetUsers(c echo.Context) error {
 
 	// Find users
 	if err := db.Where("user_name LIKE ? AND role_id >= ?", "%"+request.Search+"%", currentUser.RoleID).
-		Order("id asc").Offset(offset).Limit(request.Limit).Find(&users).
+		Order("id desc").Offset(offset).Limit(request.Limit).Find(&users).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return err
 	}

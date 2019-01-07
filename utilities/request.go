@@ -8,6 +8,8 @@ type Request struct {
 	CurrentPage uint   `json:"current_page"`
 	Limit       uint   `json:"limit"`
 	ID          uint   `json:"id"`
+	ProgramID uint `json:"program_id"`
+	SubsidiaryID uint `json:"subsidiary_id"`
 }
 
 func (r *Request) Validate() uint {
