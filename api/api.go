@@ -66,6 +66,7 @@ func ProtectedApi(e *echo.Echo) {
 
 	// Program
 	ar.POST("/program/all", institutecontroller.GetPrograms)
+	ar.POST("/program/by/id", institutecontroller.GetProgramByID)
 	ar.POST("/program/create", institutecontroller.CreateProgram)
 	ar.PUT("/program/update", institutecontroller.UpdateProgram)
 
@@ -215,7 +216,13 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/admission/admission/update", admissioncontroller.UpdateAdmission)
 	ar.PUT("/admission/admission/update/exam", admissioncontroller.UpdateExamAdmission)
 
-	// ---------------------------------------------------------------------------
+    // Payment
+    ar.POST("/admission/payment/all", admissioncontroller.GetPayments)
+    ar.POST("/admission/payment/create", admissioncontroller.CreatePayment)
+    ar.PUT("/admission/payment/update", admissioncontroller.UpdatePayment)
+    ar.DELETE("/admission/payment/delete", admissioncontroller.DeletePayment)
+
+    // ---------------------------------------------------------------------------
 	//      External api -----------------------------------------------------
 	// RENIEC
 	ar.POST("/external/reniec", controller.Reniec)
