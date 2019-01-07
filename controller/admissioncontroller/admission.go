@@ -75,7 +75,7 @@ func GetAdmissionsPaginate(c echo.Context) error {
 	// Execute instructions
 	var total uint
 	admissionsPaginateResponses := make([]admissionsPaginateResponse, 0)
-	if err := DB.Debug().Table("admissions").
+	if err := DB.Table("admissions").
 		Select("admissions.id, admissions.observation, admissions.exonerated, admissions.admission_date, admissions.year, admissions.student_id, admissions.program_id, admissions.state, students.dni , students.full_name, users.id as user_id, users.email, users.avatar").
 		Joins("INNER JOIN students ON admissions.student_id = students.id").
 		Joins("INNER JOIN users on students.user_id = users.id").
@@ -139,7 +139,7 @@ func GetAdmissionsPaginateExam(c echo.Context) error {
 	// Execute instructions
 	var total uint
 	admissionsPaginateExamResponses := make([]admissionsPaginateExamResponse, 0)
-	if err := DB.Debug().Table("admissions").
+	if err := DB.Table("admissions").
 		Select("admissions.id, admissions.observation, admissions.exam_note, admissions.exam_date, admissions.exonerated, admissions.admission_date, admissions.year, admissions.student_id, admissions.program_id, admissions.state, students.dni , students.full_name, users.id as user_id, users.email, users.avatar").
 		Joins("INNER JOIN students ON admissions.student_id = students.id").
 		Joins("INNER JOIN users on students.user_id = users.id").
@@ -186,10 +186,11 @@ func CreateAdmission(c echo.Context) error {
 	// start transaction
 	TX := DB.Begin()
 
-	// Validation
+	// find if exist student
 	st := institutemodel.Student{}
 	DB.First(&st, institutemodel.Student{DNI: request.Student.DNI})
 
+    // Validate if exist student
 	if st.ID == 0 {
 		// has password new user account
 		cc := sha256.Sum256([]byte(request.Student.DNI + "ST"))
@@ -222,7 +223,7 @@ func CreateAdmission(c echo.Context) error {
 		// Update data
 		rows := TX.Model(&request.Student).Update(request.Student).RowsAffected
 		if rows == 0 {
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", "No se pudo actualizar")})
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", "No se pudo actualizar los datos del es")})
 		}
 	}
 
