@@ -212,6 +212,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/admission/admission/create", admissioncontroller.CreateAdmission)
 	ar.POST("/admission/admission/cancel", admissioncontroller.CancelAdmission)
 	ar.PUT("/admission/admission/update", admissioncontroller.UpdateAdmission)
+	ar.PUT("/admission/admission/update/exam", admissioncontroller.UpdateExamAdmission)
 
 	// ---------------------------------------------------------------------------
 	//      External api -----------------------------------------------------

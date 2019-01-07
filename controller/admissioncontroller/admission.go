@@ -219,12 +219,21 @@ func CreateAdmission(c echo.Context) error {
 		// Set current student ID
 		request.Admission.StudentID = st.ID
 		request.Student.ID = st.ID
+		request.Student.UserID = st.UserID
+		request.User.ID = st.UserID
 
 		// Update data
 		rows := TX.Model(&request.Student).Update(request.Student).RowsAffected
 		if rows == 0 {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", "No se pudo actualizar los datos del es")})
 		}
+		rows = TX.Model(&request.User).Update(request.User).RowsAffected
+		if rows == 0 {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", "No se pudo actualizar los datos del es")})
+		}
+
+		// Query data user
+		DB.First(&request.User,models.User{ID:request.User.ID})
 	}
 
 	// Insert admission
@@ -273,6 +282,58 @@ func CreateAdmission(c echo.Context) error {
 	})
 }
 
+func UpdateAdmission(c echo.Context) error {
+    // Get user token authenticate
+    //user := c.Get("user").(*jwt.Token)
+    //claims := user.Claims.(*utilities.Claim)
+    //currentUser := claims.User
+
+    // Get data request
+    request := createAdmissionRequest{}
+    if err := c.Bind(&request); err != nil {
+        return err
+    }
+
+    // get connection
+    db := config.GetConnection()
+    defer db.Close()
+
+    // Update student
+    rows := db.Model(&request.Student).Update(request.Student).RowsAffected
+    if rows == 0 {
+        return c.JSON(http.StatusOK, utilities.Response{
+            Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", request.Student.ID),
+        })
+    }
+
+    // Update student
+    rows = db.Model(&request.User).Update(request.User).RowsAffected
+    if rows == 0 {
+        return c.JSON(http.StatusOK, utilities.Response{
+            Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", request.User.ID),
+        })
+    }
+
+    // Update admission
+    rows = db.Model(&request.Admission).Update(request.Admission).RowsAffected
+    if rows == 0 {
+        return c.JSON(http.StatusOK, utilities.Response{
+            Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", request.Admission.ID),
+        })
+    }
+
+    // Query student
+    db.First(&request.Student,institutemodel.Student{ID:request.Student.ID})
+    db.First(&request.Admission,admissionmodel.Admission{ID: request.Admission.ID})
+
+    // Return response
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        Data:    request,
+        Message: fmt.Sprintf("Los datos del admision %d se actualizaron correctamente", request.Admission.ID),
+    })
+}
+
 func CancelAdmission(c echo.Context) error {
 	// Get data request
 	admission := admissionmodel.Admission{}
@@ -297,7 +358,7 @@ func CancelAdmission(c echo.Context) error {
 	})
 }
 
-func UpdateAdmission(c echo.Context) error {
+func UpdateExamAdmission(c echo.Context) error {
     // Get data request
     admission := admissionmodel.Admission{}
     if err := c.Bind(&admission); err != nil {
