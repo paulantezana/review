@@ -20,9 +20,9 @@ import (
 
 func GetTeachers(c echo.Context) error {
 	// Get user token authenticate
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
+	//user := c.Get("user").(*jwt.Token)
+	//claims := user.Claims.(*utilities.Claim)
+	//currentUser := claims.User
 
 	// Get data request
 	request := utilities.Request{}
@@ -41,27 +41,14 @@ func GetTeachers(c echo.Context) error {
 	var total uint
 	teachers := make([]institutemodel.Teacher, 0)
 
-	if currentUser.RoleID == 1 {
-		// Query in database
-		if err := db.Where("lower(first_name) LIKE lower(?)", "%"+request.Search+"%").
-			Or("lower(last_name) LIKE lower(?)", "%"+request.Search+"%").
-			Or("dni LIKE ?", "%"+request.Search+"%").
-			Order("id asc").
-			Offset(offset).Limit(request.Limit).Find(&teachers).
-			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-		}
-	} else {
-		// Query in database
-		if err := db.Where("lower(first_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ID).
-			Or("lower(last_name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ID).
-			Or("dni LIKE ? AND program_id = ?", "%"+request.Search+"%", request.ID).
-			Order("id asc").
-			Offset(offset).Limit(request.Limit).Find(&teachers).
-			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-		}
-	}
+    if err := db.Where("lower(first_name) LIKE lower(?)", "%"+request.Search+"%").
+        Or("lower(last_name) LIKE lower(?)", "%"+request.Search+"%").
+        Or("dni LIKE ?", "%"+request.Search+"%").
+        Order("id asc").
+        Offset(offset).Limit(request.Limit).Find(&teachers).
+        Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
 
 	// Get type teacher
 	for k, teacher := range teachers {
@@ -131,11 +118,6 @@ func CreateTeacher(c echo.Context) error {
 	if err := c.Bind(&teacher); err != nil {
 		return err
 	}
-
-	// Set program ID
-	//if teacher.DefaultProgramID == 0 {
-	//	teacher.DefaultProgramID = currentUser.DefaultProgramID
-	//}
 
 	// get connection
 	DB := config.GetConnection()

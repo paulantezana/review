@@ -46,7 +46,7 @@ func GetStudentsPaginate(c echo.Context) error {
     // Query in database
     if err := db.Where("lower(full_name) LIKE lower(?)", "%"+request.Search+"%").
         Or("dni LIKE ?", "%"+request.Search+"%").
-        Order("id asc").
+        Order("id desc").
         Offset(offset).Limit(request.Limit).Find(&students).
         Offset(-1).Limit(-1).Count(&total).Error; err != nil {
         return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -81,7 +81,7 @@ func GetStudentsPaginateByProgram(c echo.Context) error {
 	students := make([]institutemodel.Student, 0)
 
     // Query in database
-    DB.Debug().Raw("SELECT * FROM students " +
+    DB.Raw("SELECT * FROM students " +
     "WHERE id IN (SELECT student_id FROM student_programs WHERE program_id = ?) " +
     "AND (lower(full_name) LIKE lower(?) OR dni LIKE ?) " +
     "OFFSET ? LIMIT ?", request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%",offset,request.Limit).Scan(&students)
@@ -214,6 +214,12 @@ func GetStudentSearch(c echo.Context) error {
 	})
 }
 
+type customStudentRequest struct {
+    Student institutemodel.Student `json:"student"`
+    User models.User `json:"user"`
+    ProgramID uint `json:"program_id"`
+}
+
 func CreateStudent(c echo.Context) error {
 	// Get user token authenticate
 	//user := c.Get("user").(*jwt.Token)
@@ -221,8 +227,8 @@ func CreateStudent(c echo.Context) error {
 	//currentUser := claims.User
 
 	// Get data request
-	student := institutemodel.Student{}
-	if err := c.Bind(&student); err != nil {
+	request := customStudentRequest{}
+	if err := c.Bind(&request); err != nil {
 		return err
 	}
 
@@ -232,39 +238,51 @@ func CreateStudent(c echo.Context) error {
 	defer DB.Close()
 
 	// start transaction
-	tx := DB.Begin()
+	TX := DB.Begin()
 
 	// has password new user account
-	cc := sha256.Sum256([]byte(student.DNI + "ST"))
+	cc := sha256.Sum256([]byte(request.Student.DNI + "ST"))
 	pwd := fmt.Sprintf("%x", cc)
 
 	// Insert user in database
 	userAccount := models.User{
-		UserName: student.DNI + "ST",
+		UserName: request.Student.DNI + "ST",
 		Password: pwd,
 		RoleID:   5,
 	}
-	if err := tx.Create(&userAccount).Error; err != nil {
-		tx.Rollback()
+	if err := TX.Create(&userAccount).Error; err != nil {
+        TX.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Insert student in database
-	student.UserID = userAccount.ID
-	student.StudentStatusID = 1
-	if err := tx.Create(&student).Error; err != nil {
-		tx.Rollback()
+	request.Student.UserID = userAccount.ID
+	request.Student.StudentStatusID = 1
+	if err := TX.Create(&request.Student).Error; err != nil {
+        TX.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
+	// Create relations
+    if request.ProgramID >= 1 {
+        studentProgram := institutemodel.StudentProgram{
+            StudentID: request.Student.ID,
+            ProgramID: request.ProgramID,
+        }
+        if err := TX.Create(&studentProgram).Error; err != nil {
+            TX.Rollback()
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+        }
+    }
+
 	// Commit transaction
-	tx.Commit()
+    TX.Commit()
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    student.ID,
-		Message: fmt.Sprintf("El estudiante %s se registro correctamente", student.FullName),
+		Data:    request.Student.ID,
+		Message: fmt.Sprintf("El estudiante %s se registro correctamente", request.Student.FullName),
 	})
 }
 

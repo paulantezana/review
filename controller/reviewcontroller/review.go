@@ -57,27 +57,27 @@ func GetReviews(c echo.Context) error {
 	// Query in database
 	reviewsResponses := make([]reviewsResponse, 0)
 	if err := db.Table("reviews").
-		Select("reviews.id, reviews.approbation_date, modules.id as module_id, modules.name, modules.semester, modules.sequence, teachers.id as teacher_id, teachers.first_name as teacher_first_name, teachers.last_name as teacher_last_name").
-		Joins("INNER JOIN modules on reviews.module_id = modules.id").
-		Joins("INNER JOIN teachers on reviews.teacher_id = teachers.id").
-		Order("reviews.id asc").
+		Select("reviews.id, reviews.approbation_date, reviews.module_id, modules.name, modules.sequence, reviews.teacher_id, teachers.first_name as teacher_first_name, teachers.last_name as teacher_last_name").
+		Joins("INNER JOIN modules ON reviews.module_id = modules.id").
+		Joins("INNER JOIN teachers ON reviews.teacher_id = teachers.id").
+		Order("reviews.id desc").
 		Where("reviews.student_id = ?", student.ID).
 		Scan(&reviewsResponses).Error; err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	// validation
-	allReviews := len(reviewsResponses) // all review count
-	var allModules uint                 // all modules count
+	//allReviews := len(reviewsResponses) // all review count
+	//var allModules uint                 // all modules count
 	//if err := db.Model(&institutemodel.Module{}).Where("program_id = ?", currentUser.DefaultProgramID).Count(&allModules).Error; err != nil {
 	//	return c.NoContent(http.StatusInternalServerError)
 	//}
 
 	reviewEnablesResponse := reviewEnablesResponse{}
 
-	if allModules == uint(allReviews) && allModules != 0 {
-		reviewEnablesResponse.Consolidate = true
-	}
+	//if allModules == uint(allReviews) && allModules != 0 {
+	//	reviewEnablesResponse.Consolidate = true
+	//}
 
 	// Return response
 	return c.JSON(http.StatusCreated, getReviewsResponse{
