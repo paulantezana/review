@@ -112,14 +112,8 @@ type StudentDetail struct {
 	Note           uint      `json:"note"`
 }
 
-// StudentDetailResponse response struct
-type StudentDetailResponse struct {
-	StudentDetail []StudentDetail        `json:"student_detail"`
-	Student       institutemodel.Student `json:"student"`
-}
-
 // GetStudentDetailByID get student detail
-func GetStudentDetailByID(c echo.Context) error {
+func GetStudentByID(c echo.Context) error {
 	// Get data request
 	student := institutemodel.Student{}
 	if err := c.Bind(&student); err != nil {
@@ -135,19 +129,6 @@ func GetStudentDetailByID(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	// Find quotations in database by RequirementID  ========== Quotations, Providers, Users
-	//StudentDetails := make([]StudentDetail, 0)
-	//if err := db.Table("reviews").
-	//	Select("companies.nombre_o_razon_social as company_name, modules.name as module_name, modules.sequence as module_sequence, review_details.start_date, review_details.end_date, review_details.note, review_details.hours").
-	//	Joins("INNER JOIN review_details on reviews.id = review_details.review_id").
-	//	Joins("INNER JOIN companies on review_details.company_id = companies.id").
-	//	Joins("INNER JOIN modules on reviews.module_id = modules.id").
-	//	Order("modules.sequence asc").
-	//	Where("reviews.student_id = ?", student.ID).
-	//	Scan(&StudentDetails).Error; err != nil {
-	//		return c.NoContent(http.StatusInternalServerError)
-	//}
-
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
@@ -156,7 +137,7 @@ func GetStudentDetailByID(c echo.Context) error {
 }
 
 // GetStudentDetailByID get student detail
-func GetStudentDetailByDNI(c echo.Context) error {
+func GetStudentByDNI(c echo.Context) error {
 	// Get data request
 	student := institutemodel.Student{}
 	if err := c.Bind(&student); err != nil {
@@ -333,6 +314,28 @@ func DeleteStudent(c echo.Context) error {
 		Data:    student.ID,
 		Message: fmt.Sprintf("El estudiante %s se elimino correctamente", student.FullName),
 	})
+}
+
+func GetStudentHistory(c echo.Context) error {
+    // Get data request
+    student := institutemodel.Student{}
+    if err := c.Bind(&student); err != nil {
+        return err
+    }
+
+    // get connection
+    db := config.GetConnection()
+    defer db.Close()
+
+    // Find history
+    studentHistory := make([]institutemodel.StudentHistory,0)
+    db.Find(&studentHistory,institutemodel.StudentHistory{StudentID:student.ID})
+
+    // Return response
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        Data:    studentHistory,
+    })
 }
 
 // GetTempUploadStudent dowloand template
