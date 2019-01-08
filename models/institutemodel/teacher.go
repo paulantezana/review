@@ -29,7 +29,7 @@ type Teacher struct {
 
 	// Only in REQUEST OR RESPONSE JSON
 	Type             string `json:"type" gorm:"-"`
-	DefaultProgramID uint   `json:"default_program_id" gorm:"-"`
+	ProgramID uint `json:"program_id" gorm:"-"`
 
 	TeacherPrograms []TeacherProgram `json:"teacher_programs"`
 }

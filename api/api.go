@@ -96,16 +96,18 @@ func ProtectedApi(e *echo.Echo) {
 
 	// Teacher
 	ar.POST("/teacher/all", institutecontroller.GetTeachers)
+    ar.POST("/teacher/paginate/program", institutecontroller.GetTeachersPaginateByProgram)
 	ar.POST("/teacher/create", institutecontroller.CreateTeacher)
 	ar.PUT("/teacher/update", institutecontroller.UpdateTeacher)
 	ar.DELETE("/teacher/delete", institutecontroller.DeleteTeacher)
 	ar.POST("/teacher/search", institutecontroller.GetTeacherSearch)
+	ar.POST("/teacher/search/program", institutecontroller.GetTeacherSearchProgram)
 	ar.GET("/teacher/download/template", institutecontroller.GetTempUploadTeacher)
 	ar.POST("/teacher/upload/template", institutecontroller.SetTempUploadTeacher)
 	ar.GET("/teacher/export/all", institutecontroller.ExportAllTeachers)
 
 	// Teacher Program
-	ar.POST("/teacher/program/all", institutecontroller.GetTeacherProgramsByProgram)
+	ar.POST("/teacher/program/all", institutecontroller.GetTeacherProgramByProgram)
 	ar.POST("/teacher/program/create", institutecontroller.CreateTeacherProgram)
 	ar.PUT("/teacher/program/update", institutecontroller.UpdateTeacherProgram)
 	ar.DELETE("/teacher/program/delete", institutecontroller.DeleteTeacherProgram)

@@ -21,7 +21,7 @@ type teacherProgramResponse struct {
 	FirstName string `json:"first_name"`
 }
 
-func GetTeacherProgramsByProgram(c echo.Context) error {
+func GetTeacherProgramByProgram(c echo.Context) error {
 	// Get data request
 	teacherProgram := institutemodel.TeacherProgram{}
 	if err := c.Bind(&teacherProgram); err != nil {

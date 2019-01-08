@@ -126,7 +126,7 @@ func CreateProgram(c echo.Context) error {
 	teacher := institutemodel.Teacher{
 		DNI:              request.DNI,
 		FirstName:        request.FirstName,
-		DefaultProgramID: program.ID,
+		ProgramID: program.ID,
 		UserID:           user.ID,
 	}
 	if err := TR.Create(&teacher).Error; err != nil {

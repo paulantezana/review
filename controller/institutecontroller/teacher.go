@@ -57,7 +57,7 @@ func GetTeachers(c echo.Context) error {
 			TeacherID: teacher.ID,
 		})
 		teachers[k].Type = teacherProgram.Type
-		teachers[k].DefaultProgramID = teacherProgram.ProgramID
+		teachers[k].ProgramID = teacherProgram.ProgramID
 	}
 
 	// Return response
@@ -69,6 +69,59 @@ func GetTeachers(c echo.Context) error {
 		Limit:       request.Limit,
 	})
 }
+
+
+func GetTeachersPaginateByProgram(c echo.Context) error {
+    // Get data request
+    request := utilities.Request{}
+    if err := c.Bind(&request); err != nil {
+        return err
+    }
+
+    // Get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Pagination calculate
+    offset := request.Validate()
+
+    // Execute instructions
+    total := utilities.Counter{}
+    teachers := make([]institutemodel.Teacher, 0)
+
+    // Query in database
+    DB.Raw("SELECT * FROM teachers " +
+        "WHERE id IN (SELECT teacher_id FROM teacher_programs where program_id = ?) " +
+        "AND (lower(first_name) LIKE lower(?) OR lower(last_name) LIKE lower(?) OR dni LIKE ?) ORDER BY id desc " +
+        "OFFSET ? LIMIT ?",
+        request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%", "%"+request.Search+"%",offset,request.Limit).Scan(&teachers)
+
+    // Query students count total
+    DB.Raw("SELECT * FROM teachers " +
+        "WHERE id IN (SELECT teacher_id FROM teacher_programs where program_id = ?) " +
+        "AND (lower(first_name) LIKE lower(?) OR lower(last_name) LIKE lower(?) OR dni LIKE ?) ",
+        request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%", "%"+request.Search+"%").Scan(&total)
+
+    // Get type teacher
+    for k, teacher := range teachers {
+        teacherProgram := institutemodel.TeacherProgram{}
+        DB.First(&teacherProgram, institutemodel.TeacherProgram{
+            TeacherID: teacher.ID,
+        })
+        teachers[k].Type = teacherProgram.Type
+        teachers[k].ProgramID = teacherProgram.ProgramID
+    }
+
+    // Return response
+    return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
+        Success:     true,
+        Data:        teachers,
+        Total:       total.Count,
+        CurrentPage: request.CurrentPage,
+        Limit:       request.Limit,
+    })
+}
+
 
 type teacherSearchResponse struct {
 	ID        uint   `json:"id"`
@@ -105,6 +158,36 @@ func GetTeacherSearch(c echo.Context) error {
 		Success: true,
 		Data:    teachers,
 	})
+}
+
+func GetTeacherSearchProgram(c echo.Context) error {
+    // Get data request
+    request := utilities.Request{}
+    if err := c.Bind(&request); err != nil {
+        return err
+    }
+
+    // Get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Execute instructions
+    teachers := make([]teacherSearchResponse, 0)
+
+    // Search teachers
+    if request.Search != "" {
+        DB.Raw("SELECT * FROM teachers " +
+            "WHERE id IN (SELECT teacher_id FROM teacher_programs where program_id = ?) " +
+            "AND (lower(first_name) LIKE lower(?) OR lower(last_name) LIKE lower(?) OR dni LIKE ?) ORDER BY id desc " +
+            "LIMIT 5",
+            request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%", "%"+request.Search+"%").Scan(&teachers)
+    }
+
+    // Return response
+    return c.JSON(http.StatusCreated, utilities.Response{
+        Success: true,
+        Data:    teachers,
+    })
 }
 
 func CreateTeacher(c echo.Context) error {
@@ -144,7 +227,7 @@ func CreateTeacher(c echo.Context) error {
 	// Insert teachers in database
 	teacherPrograms := make([]institutemodel.TeacherProgram, 0)
 	teacherPrograms = append(teacherPrograms, institutemodel.TeacherProgram{
-		ProgramID: teacher.DefaultProgramID,
+		ProgramID: teacher.ProgramID,
 		Type:      teacher.Type,
 		ByDefault: true,
 	})
@@ -191,7 +274,7 @@ func UpdateTeacher(c echo.Context) error {
 
 	// Update teacher program
 	teacherProgram := institutemodel.TeacherProgram{
-		ProgramID: teacher.DefaultProgramID,
+		ProgramID: teacher.ProgramID,
 		Type:      teacher.Type,
 	}
 	if err := TR.Debug().Model(&institutemodel.TeacherProgram{}).Where("teacher_id = ? AND by_default = true", teacher.ID).

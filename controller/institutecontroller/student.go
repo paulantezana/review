@@ -77,13 +77,13 @@ func GetStudentsPaginateByProgram(c echo.Context) error {
 	offset := request.Validate()
 
 	// Execute instructions
-	var total uint
+    total := utilities.Counter{}
 	students := make([]institutemodel.Student, 0)
 
     // Query in database
     DB.Raw("SELECT * FROM students " +
     "WHERE id IN (SELECT student_id FROM student_programs WHERE program_id = ?) " +
-    "AND (lower(full_name) LIKE lower(?) OR dni LIKE ?) " +
+    "AND (lower(full_name) LIKE lower(?) OR dni LIKE ?) ORDER BY id desc " +
     "OFFSET ? LIMIT ?", request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%",offset,request.Limit).Scan(&students)
 
 	// Query students count total
@@ -95,7 +95,7 @@ func GetStudentsPaginateByProgram(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
 		Success:     true,
 		Data:        students,
-		Total:       total,
+		Total:       total.Count,
 		CurrentPage: request.CurrentPage,
 		Limit:       request.Limit,
 	})
