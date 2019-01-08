@@ -34,7 +34,7 @@ func GetPollsPaginate(c echo.Context) error {
 	companies := make([]monitoringmodel.Poll, 0)
 
 	// Query in database
-	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ID).
+	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ProgramID).
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&companies).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {

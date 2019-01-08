@@ -58,7 +58,7 @@ func GetModuleSearch(c echo.Context) error {
 
 	// Execute instructions
 	modules := make([]institutemodel.Module, 0)
-	if err := db.Where("name LIKE ? AND program_id = ?", "%"+request.Search+"%", request.ID).
+	if err := db.Where("name LIKE ? AND program_id = ?", "%"+request.Search+"%", request.ProgramID).
 		Limit(5).Find(&modules).Error; err != nil {
 		return err
 	}
