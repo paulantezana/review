@@ -139,6 +139,10 @@ func GetAdmissionsByID(c echo.Context) error {
 	user := models.User{}
 	DB.First(&user, models.User{ID: student.UserID})
 
+	// Reset response
+	user.Password = ""
+	user.Key = ""
+
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,

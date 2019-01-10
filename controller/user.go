@@ -603,7 +603,7 @@ func UploadAvatarUser(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    user.ID,
+		Data:    user,
 		Message: fmt.Sprintf("El avatar del usuario %s, se subió correctamente", user.UserName),
 	})
 }
