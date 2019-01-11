@@ -18,5 +18,7 @@ type Student struct {
 	UserID          uint `json:"user_id"`
 	StudentStatusID uint `json:"student_status_id"`
 
+    ProgramID uint `json:"program_id" gorm:"-"` // Only use in JSON
+
 	Reviews []reviewmodel.Review `json:"reviews"`
 }

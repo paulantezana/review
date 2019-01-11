@@ -201,11 +201,6 @@ type customStudentRequest struct {
 }
 
 func CreateStudent(c echo.Context) error {
-	// Get user token authenticate
-	//user := c.Get("user").(*jwt.Token)
-	//claims := user.Claims.(*utilities.Claim)
-	//currentUser := claims.User
-
 	// Get data request
 	request := customStudentRequest{}
 	if err := c.Bind(&request); err != nil {
