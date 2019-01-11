@@ -1,21 +1,20 @@
 package institutecontroller
 
 import (
-	"crypto/sha256"
-	"fmt"
-	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/models/institutemodel"
-	"io"
-	"net/http"
-	"os"
-	"strconv"
-	"strings"
+    "crypto/sha256"
+    "fmt"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/models/institutemodel"
+    "io"
+    "net/http"
+    "os"
+    "strconv"
+    "strings"
 
-	"github.com/360EntSecGroup-Skylar/excelize"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/utilities"
+    "github.com/360EntSecGroup-Skylar/excelize"
+    "github.com/labstack/echo"
+    "github.com/paulantezana/review/config"
+    "github.com/paulantezana/review/utilities"
 )
 
 func GetTeachers(c echo.Context) error {
@@ -324,66 +323,60 @@ func DeleteTeacher(c echo.Context) error {
 }
 
 func GetTempUploadTeacher(c echo.Context) error {
-	// Get user token authenticate
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
+    // Get data request
+    request := utilities.Request{}
+    if err := c.Bind(&request); err != nil {
+        return err
+    }
 
-	// Return file sa
-	if currentUser.RoleID == 2 || currentUser.RoleID == 1 {
-		// Get data request
-		subsidiary := institutemodel.Subsidiary{}
-		if err := c.Bind(&subsidiary); err != nil {
-			return err
-		}
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
 
-		// Get template excel
-		fileDir := "templates/templateTeacherSA.xlsx"
-		xlsx, err := excelize.OpenFile(fileDir)
-		if err != nil {
-			fmt.Println(err)
-		}
-		xlsx.NewSheet("ProgramIDS")
+    // Execute instructions
+    programs := make([]institutemodel.Program, 0)
+    if err := DB.Find(&programs,institutemodel.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
+        return err
+    }
 
-		// get connection
-		db := config.GetConnection()
-		defer db.Close()
+    // Get template excel
+    fileDir := "templates/templateTeacherSA.xlsx"
+    xlsx, err := excelize.OpenFile(fileDir)
+    if err != nil {
+        fmt.Println(err)
+    }
+    xlsx.DeleteSheet("ProgramIDS") // Delete sheet
+    xlsx.NewSheet("ProgramIDS") // Create new sheet
 
-		// Execute instructions
-		programs := make([]institutemodel.Program, 0)
-		if err := db.Find(&programs, institutemodel.Program{SubsidiaryID: subsidiary.ID}).
-			Order("id desc").Error; err != nil {
-			return err
-		}
+    xlsx.SetCellValue("ProgramIDS", "A1", "ID")
+    xlsx.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
 
-		xlsx.SetCellValue("ProgramIDS", "A1", "ID")
-		xlsx.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
+    // Set styles
+    xlsx.SetColWidth("ProgramIDS","B","B",35)
+    xlsx.SetCellStyle("ProgramIDS","A1","B1",2)
 
-		// Clear cells
-		for i := 0; i < 100; i++ {
-			xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), "")
-			xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), "")
-		}
+    // Set data
+    for i := 0; i < len(programs); i++ {
+        xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
+        xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)
+    }
+    xlsx.SetActiveSheet(1)
 
-		// Fill data in cells
-		for i := 0; i < len(programs); i++ {
-			xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
-			xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)
-		}
-		xlsx.SetActiveSheet(1)
+    // Save xlsx file by the given path.
+    err = xlsx.SaveAs(fileDir)
+    if err != nil {
+        fmt.Println(err)
+    }
 
-		// Save xlsx file by the given path.
-		err = xlsx.SaveAs(fileDir)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		return c.File(fileDir)
-	}
-
-	// Return file admin
-	return c.File("templates/templateTeacher.xlsx")
+    // Return file excel
+    return c.File(fileDir)
 }
+
+func GetTempUploadTeacherByProgram(c echo.Context) error {
+    // Return file excel
+    return c.File("templates/templateTeacher.xlsx")
+}
+
 
 func SetTempUploadTeacher(c echo.Context) error {
 	// Get user token authenticate

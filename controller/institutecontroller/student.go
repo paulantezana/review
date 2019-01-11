@@ -384,10 +384,12 @@ func GetTempUploadStudentBySubsidiary(c echo.Context) error {
         fmt.Println(err)
     }
 
+    // Return file excel
     return c.File(fileDir)
 }
 
 func GetTempUploadStudentByProgram(c echo.Context) error {
+    // Return file excel
     return c.File("templates/templateStudent.xlsx")
 }
 
