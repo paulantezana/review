@@ -230,7 +230,7 @@ func CreateAdmission(c echo.Context) error {
 	// Validation
 
     countV := countValidate{}
-    if err := DB.Debug().Raw("SELECT count(*) as count FROM admissions WHERE student_id IN (SELECT id FROM students WHERE dni = ?) AND year = ?", request.Student.DNI,currentYear).
+    if err := DB.Raw("SELECT count(*) as count FROM admissions WHERE student_id IN (SELECT id FROM students WHERE dni = ?) AND year = ? AND state = true", request.Student.DNI,currentYear).
         Scan(&countV).Error; err != nil {
         return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
     }
@@ -318,6 +318,7 @@ func CreateAdmission(c echo.Context) error {
 		UserID:      currentUser.ID,
 		Description: fmt.Sprintf("Admision"),
 		Date:        time.Now(),
+		Type: 1,
 	}
 	if err := TX.Create(&studentHistory).Error; err != nil {
 		TX.Rollback()
@@ -392,7 +393,12 @@ func UpdateAdmission(c echo.Context) error {
 }
 
 func CancelAdmission(c echo.Context) error {
-	// Get data request
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
+    // Get data request
 	admission := admissionmodel.Admission{}
 	if err := c.Bind(&admission); err != nil {
 		return err
@@ -402,10 +408,33 @@ func CancelAdmission(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
+    // start transaction
+    TX := DB.Begin()
+
 	// Execute query
-	if err := DB.Model(admission).UpdateColumn("state", false).Error; err != nil {
-		return err
+	if err := TX.Model(admission).UpdateColumn("state", false).Error; err != nil {
+	    TX.Rollback()
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
+
+	// Find admission details
+    TX.First(&admission)
+
+	// Insert new state student
+    studentHistory := institutemodel.StudentHistory{
+	    Description: "Admisión anulada",
+	    StudentID: admission.StudentID,
+	    UserID: currentUser.ID,
+	    Date: time.Now(),
+	    Type: 2,
+    }
+    if err := TX.Create(&studentHistory).Error; err != nil {
+        TX.Rollback()
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Commit transaction
+    TX.Commit()
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{

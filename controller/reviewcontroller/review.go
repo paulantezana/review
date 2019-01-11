@@ -135,6 +135,7 @@ func CreateReview(c echo.Context) error {
         UserID:      currentUser.ID,
         Description: fmt.Sprintf("Revisón de prácticas del modulo %d",review.ModuleId),
         Date:        time.Now(),
+        Type: 1,
     }
     if err := TX.Create(&studentHistory).Error; err != nil {
         TX.Rollback()
