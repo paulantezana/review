@@ -338,7 +338,7 @@ func GetStudentHistory(c echo.Context) error {
 }
 
 // GetTempUploadStudent dowloand template
-func GetTempUploadStudent(c echo.Context) error {
+func GetTempUploadStudentBySubsidiary(c echo.Context) error {
     // Get data request
     request := utilities.Request{}
     if err := c.Bind(&request); err != nil {
@@ -387,8 +387,12 @@ func GetTempUploadStudent(c echo.Context) error {
     return c.File(fileDir)
 }
 
+func GetTempUploadStudentByProgram(c echo.Context) error {
+    return c.File("templates/templateStudent.xlsx")
+}
+
 // SetTempUploadStudent set upload student
-func SetTempUploadStudent(c echo.Context) error {
+func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 	// Source
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -503,3 +507,121 @@ func SetTempUploadStudent(c echo.Context) error {
 		Message: fmt.Sprintf("Se guardo %d registros en la base de datos", counter),
 	})
 }
+
+// SetTempUploadStudent set upload student
+func SetTempUploadStudentByProgram(c echo.Context) error {
+    // Source
+    file, err := c.FormFile("file")
+    if err != nil {
+        return err
+    }
+    src, err := file.Open()
+    if err != nil {
+        return err
+    }
+    defer src.Close()
+
+    // Destination
+    auxDir := "temp/" + file.Filename
+    dst, err := os.Create(auxDir)
+    if err != nil {
+        return err
+    }
+    defer dst.Close()
+
+    // Copy
+    if _, err = io.Copy(dst, src); err != nil {
+        return err
+    }
+
+    // ---------------------
+    // Read File whit Excel
+    // ---------------------
+    xlsx, err := excelize.OpenFile(auxDir)
+    if err != nil {
+        return err
+    }
+
+    // GET CONNECTION DATABASE
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Prepare
+    ignoreCols := 1
+    counter := 0
+    TX := DB.Begin()
+
+    // Get all the rows in the student.
+    rows := xlsx.GetRows("student")
+    for k, row := range rows {
+
+        if k >= ignoreCols {
+            // Validate required fields
+            if row[0] == "" || row[1] == "" {
+                break
+            }
+
+            // program id
+            //u, _ := strconv.ParseUint(strings.TrimSpace(row[0]), 0, 32)
+            //currentProgram := uint(u)
+
+            // DATABASE MODELS
+            // Create model student
+            student := institutemodel.Student{
+                DNI:      strings.TrimSpace(row[1]),
+                FullName: strings.TrimSpace(row[2]),
+                Phone:    strings.TrimSpace(row[3]),
+                Gender:    strings.TrimSpace(row[4]),
+                StudentStatusID: 1,
+            }
+
+            // has password new user account
+            cc := sha256.Sum256([]byte(student.DNI + "ST"))
+            pwd := fmt.Sprintf("%x", cc)
+
+            // New Account
+            userAccount := models.User{
+                UserName: student.DNI + "ST",
+                Password: pwd,
+                RoleID:   5,
+            }
+
+            // Insert user in database
+            if err := TX.Create(&userAccount).Error; err != nil {
+                TX.Rollback()
+                return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+            }
+            student.UserID = userAccount.ID // Set new user id
+
+            if err := TX.Create(&student).Error; err != nil {
+                TX.Rollback()
+                return c.JSON(http.StatusOK, utilities.Response{
+                    Message: fmt.Sprintf("Ocurrió un error al insertar el alumno %s con "+
+                        "DNI: %s es posible que este alumno ya este en la base de datos o los datos son incorrectos, "+
+                        "Error: %s, no se realizo ninguna cambio en la base de datos", student.FullName, student.DNI, err),
+                })
+            }
+
+            // Relation student
+            //studentProgram := institutemodel.StudentProgram{
+            //    ProgramID: currentProgram,
+            //    StudentID: student.ID,
+            //}
+            //if err := TX.Create(&studentProgram).Error; err != nil {
+            //    TX.Rollback()
+            //    return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+            //}
+
+            // Counter total operations success
+            counter++
+        }
+    }
+    TX.Commit()
+
+    // Response success
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        Message: fmt.Sprintf("Se guardo %d registros en la base de datos", counter),
+    })
+}
+
