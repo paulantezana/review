@@ -303,10 +303,14 @@ func CreateAdmission(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
+	//  Update relations   StudentProgram by default
+    TX.Exec("UPDATE student_programs SET by_default = false WHERE student_id = ?",request.Student.ID)
+
 	// Insert new Relation program and student
 	studentProgram := institutemodel.StudentProgram{
 		StudentID: request.Student.ID,
 		ProgramID: request.Admission.ProgramID,
+		ByDefault: true,
 	}
 	if err := TX.Create(&studentProgram).Error; err != nil {
 		TX.Rollback()

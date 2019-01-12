@@ -53,11 +53,20 @@ func CreateCourseStudent(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
-	defer db.Close()
+	DB := config.GetConnection()
+	defer DB.Close()
 
-	// Insert courseStudents in database
-	if err := db.Create(&courseStudent).Error; err != nil {
+    // Validation
+    VCStudent := coursemodel.CourseStudent{}
+    DB.First(&VCStudent,coursemodel.CourseStudent{DNI:courseStudent.DNI,CourseID:courseStudent.CourseID})
+    if VCStudent.ID != 0 {
+        return c.JSON(http.StatusOK,utilities.Response{
+            Message: fmt.Sprintf("El estudiante %s ya está matriculado en este curso",courseStudent.FullName),
+        })
+    }
+
+    // Insert courseStudents in database
+	if err := DB.Create(&courseStudent).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{
 			Success: false,
 			Message: fmt.Sprintf("%s", err),
