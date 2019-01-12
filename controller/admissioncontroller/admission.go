@@ -609,72 +609,53 @@ func ExportAdmission(c echo.Context) error {
     return c.File("temp/admission.xlsx")
 }
 
+func ExportAdmissionByIds(c echo.Context) error {
+   // Get data request
+   admissions := make([]admissionmodel.Admission,0)
+   if err := c.Bind(&admissions); err != nil {
+       return err
+   }
 
-//func ExportAdmissionByIds(c echo.Context) error {
-//    // Get data request
-//    admissions := make([]admissionmodel.Admission,0)
-//    if err := c.Bind(&admissions); err != nil {
-//        return err
-//    }
-//
-//    // get connection
-//    DB := config.GetConnection()
-//    defer DB.Close()
-//
-//
-//    // Query all students
-//    for _, admission := range admissions {
-//       // Query get admission all data --- current admission
-//       DB.First(&admission,admissionmodel.Admission{ID:admission.ID})
-//
-//       // Query get student all data
-//       student := institutemodel.Student{}
-//       DB.First(&student,institutemodel.Student{ID:admission.StudentID})
-//
-//       // Append array
-//       //students =  append(students, student)
-//    }
-//
-//    var total uint
-//    exportAdmissionModels := make([]exportAdmissionModel, 0)
-//    if err := DB.Table("admissions").
-//        Select("admissions.id, admissions.observation, admissions.exonerated, admissions.admission_date, admissions.year, admissions.student_id, admissions.program_id, admissions.state, students.dni , students.full_name, users.id as user_id, users.email, users.avatar").
-//        Joins("INNER JOIN students ON admissions.student_id = students.id").
-//        Joins("INNER JOIN users on students.user_id = users.id").
-//        Where("admissions.year >= ? AND admissions.year <= ? AND admissions.state = ?", request.From,request.To,request.State).
-//        Order("admissions.id asc").Scan(&exportAdmissionModels).
-//        Count(&total).Error; err != nil {
-//        return c.NoContent(http.StatusInternalServerError)
-//    }
-//
-//    // CREATE EXCEL FILE
-//    excel := excelize.NewFile()
-//
-//    // Create new sheet
-//    sheet1 := excel.NewSheet("Sheet1")
-//
-//    // Set header values
-//    excel.SetCellValue("Sheet1", "A1", "ID")
-//    excel.SetCellValue("Sheet1", "B1", "Apellidos y nombre")
-//    excel.SetCellValue("Sheet1", "C1", "Fecha de nacimiento")
-//    excel.SetCellValue("Sheet1", "D1", "Sexo")
-//    excel.SetCellValue("Sheet1", "E1", "Año")
-//
-//    //  Set values in excel file
-//    for i := 0; i < len(exportAdmissionModels); i++ {
-//        excel.SetCellValue("Sheet1", fmt.Sprintf("A%d", i+2), exportAdmissionModels[i].ID)
-//        excel.SetCellValue("Sheet1", fmt.Sprintf("B%d", i+2), exportAdmissionModels[i].FullName)
-//    }
-//
-//    // Default active sheet
-//    excel.SetActiveSheet(sheet1)
-//
-//    // save file
-//    err := excel.SaveAs("temp/admission.xlsx")
-//    if err != nil {
-//        fmt.Println(err)
-//    }
-//
-//    // Return object
-//    return c.File("temp/admission.xlsx")
-//}
+   // get connection
+   DB := config.GetConnection()
+   defer DB.Close()
+
+   // CREATE EXCEL FILE
+   excel := excelize.NewFile()
+
+   // Create new sheet
+   sheet1 := excel.NewSheet("Sheet1")
+
+   // Set header values
+   excel.SetCellValue("Sheet1", "A1", "ID")
+   excel.SetCellValue("Sheet1", "B1", "Apellidos y nombre")
+   excel.SetCellValue("Sheet1", "C1", "Fecha de nacimiento")
+   excel.SetCellValue("Sheet1", "D1", "Sexo")
+   excel.SetCellValue("Sheet1", "E1", "Año")
+
+    // Query all students
+    for key, admission := range admissions {
+        // Query get admission all data --- current admission
+        DB.First(&admission,admissionmodel.Admission{ID:admission.ID})
+
+        // Query get student all data
+        student := institutemodel.Student{}
+        DB.First(&student,institutemodel.Student{ID:admission.StudentID})
+
+        // Set values in excel file
+       excel.SetCellValue("Sheet1", fmt.Sprintf("A%d", key+2), admission.ID)
+       excel.SetCellValue("Sheet1", fmt.Sprintf("B%d", key+2), student.FullName)
+    }
+
+   // Default active sheet
+   excel.SetActiveSheet(sheet1)
+
+   // save file
+   err := excel.SaveAs("temp/admission.xlsx")
+   if err != nil {
+       fmt.Println(err)
+   }
+
+   // Return object
+   return c.File("temp/admission.xlsx")
+}
