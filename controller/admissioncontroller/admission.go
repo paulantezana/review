@@ -180,8 +180,8 @@ func GetAdmissionsPaginateExam(c echo.Context) error {
 		Select("admissions.id, admissions.observation, admissions.exam_note, admissions.exam_date, admissions.exonerated, admissions.admission_date, admissions.year, admissions.student_id, admissions.program_id, admissions.state, students.dni , students.full_name, users.id as user_id, users.email, users.avatar").
 		Joins("INNER JOIN students ON admissions.student_id = students.id").
 		Joins("INNER JOIN users on students.user_id = users.id").
-		Where("students.dni LIKE ? AND admissions.year = ? AND admissions.program_id = ?", "%"+request.Search+"%", request.Year, request.ProgramID).
-		Or("lower(students.full_name) LIKE lower(?) AND admissions.year = ? AND admissions.program_id = ?", "%"+request.Search+"%", request.Year, request.ProgramID).
+		Where("students.dni LIKE ? AND admissions.year = ? AND admissions.program_id = ? AND admissions.state = true", "%"+request.Search+"%", request.Year, request.ProgramID).
+		Or("lower(students.full_name) LIKE lower(?) AND admissions.year = ? AND admissions.program_id = ? AND admissions.state = true", "%"+request.Search+"%", request.Year, request.ProgramID).
 		Order("admissions.id desc").
 		Offset(offset).Limit(request.Limit).Scan(&admissionsPaginateExamResponses).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
@@ -383,6 +383,11 @@ func UpdateAdmission(c echo.Context) error {
 	// Query student
 	db.First(&request.Student, institutemodel.Student{ID: request.Student.ID})
 	db.First(&request.Admission, admissionmodel.Admission{ID: request.Admission.ID})
+	db.First(&request.User,models.User{ID: request.User.ID})
+
+    // Reset Keys and fields
+    request.User.Password = ""
+    request.User.Key = ""
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
@@ -472,4 +477,55 @@ func UpdateExamAdmission(c echo.Context) error {
 		Data:    admission.ID,
 		Message: fmt.Sprintf("Los datos del modulo %d se actualizaron correctamente", admission.ID),
 	})
+}
+
+type fileAdmissionResponse struct {
+    Students []institutemodel.Student `json:"students"`
+    Subsidiary institutemodel.Subsidiary `json:"subsidiary"`
+    Program institutemodel.Program `json:"program"`
+}
+
+func FileAdmission(c echo.Context) error {
+    // Get data request
+    admissions := make([]admissionmodel.Admission,0)
+    if err := c.Bind(&admissions); err != nil {
+        return err
+    }
+
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    students := make([]institutemodel.Student,0)
+
+    // Query all students
+    for _, admission := range admissions {
+        // Query get admission all data --- current admission
+        DB.First(&admission,admissionmodel.Admission{ID:admission.ID})
+
+        // Query get student all data
+        student := institutemodel.Student{}
+        DB.First(&student,institutemodel.Student{ID:admission.StudentID})
+
+        // Append array
+        students =  append(students, student)
+    }
+
+    // Query program
+    program := institutemodel.Program{}
+    subsidiary := institutemodel.Subsidiary{}
+    if len(admissions) >= 1 {
+        DB.First(&program,institutemodel.Program{ID:admissions[0].ProgramID})
+        DB.First(&subsidiary,institutemodel.Subsidiary{ID:program.SubsidiaryID})
+    }
+
+    // Response data
+    return c.JSON(http.StatusOK,utilities.Response{
+        Success: true,
+        Data: fileAdmissionResponse{
+          Students:students,
+          Subsidiary:subsidiary,
+          Program:program,
+        },
+    })
 }

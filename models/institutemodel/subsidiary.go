@@ -11,4 +11,5 @@ type Subsidiary struct {
 	AddressSubsidiary   string `json:"address_subsidiary"`
 	RegistrationAddress string `json:"registration_address"`
 	Address             string `json:"address"`
+	Phone string `json:"phone"`
 }

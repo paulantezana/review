@@ -172,7 +172,6 @@ func UploadLogoSetting(c echo.Context) error {
 	// Validation user exist
 	if db.First(&setting, "id = ?", idSetting).RecordNotFound() {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se encontró el registro con id %d", setting.ID),
 		})
 	}
@@ -225,7 +224,6 @@ func DownloadLogoSetting(c echo.Context) error {
 	setting := models.Setting{}
 	if db.First(&setting).RecordNotFound() {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se encontró el registro con id %d", setting.ID),
 		})
 	}
@@ -245,7 +243,6 @@ func UploadMinistrySetting(c echo.Context) error {
 	// Validation user exist
 	if db.First(&setting, "id = ?", idSetting).RecordNotFound() {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se encontró el registro con id %d", setting.ID),
 		})
 	}
@@ -298,11 +295,15 @@ func DownloadMinistrySetting(c echo.Context) error {
 	setting := models.Setting{}
 	if db.First(&setting).RecordNotFound() {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se encontró el registro con id %d", setting.ID),
 		})
 	}
 	return c.File(setting.Ministry)
+}
+
+// DownloadMinistrySmallSetting function dowloand logo settings
+func DownloadMinistrySmallSetting(c echo.Context) error {
+	return c.File("static/ministrySmall.jpg")
 }
 
 // DownloadNationalEmblemSetting function download logo settings
@@ -315,7 +316,6 @@ func DownloadNationalEmblemSetting(c echo.Context) error {
 	setting := models.Setting{}
 	if db.First(&setting).RecordNotFound() {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se encontró el registro con id %d", setting.ID),
 		})
 	}

@@ -12,8 +12,10 @@ type Student struct {
 	FullName string `json:"full_name" gorm:"type:varchar(250)"`
 	Phone    string `json:"phone" gorm:"type:varchar(32)"`
 	Gender   string `json:"gender"`
-
 	BirthDate time.Time `json:"birth_date"`
+    Address             string `json:"address"`
+    CivilStatus string `json:"civil_status"`
+	IsWork string `json:"is_work"` // 1 yes || 2 = no
 
 	UserID          uint `json:"user_id"`
 	StudentStatusID uint `json:"student_status_id"`

@@ -47,6 +47,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.GET("/setting/download/logo", controller.DownloadLogoSetting)
 	ar.POST("/setting/upload/ministry", controller.UploadMinistrySetting)
 	ar.GET("/setting/download/ministry", controller.DownloadMinistrySetting)
+	ar.GET("/setting/download/ministry/small", controller.DownloadMinistrySmallSetting)
 	ar.GET("/setting/download/national/emblem", controller.DownloadNationalEmblemSetting)
 
 	// ============================================================================
@@ -221,6 +222,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/admission/admission/cancel", admissioncontroller.CancelAdmission)
 	ar.PUT("/admission/admission/update", admissioncontroller.UpdateAdmission)
 	ar.PUT("/admission/admission/update/exam", admissioncontroller.UpdateExamAdmission)
+	ar.POST("/admission/admission/file", admissioncontroller.FileAdmission)
 
     // Payment
     ar.POST("/admission/payment/all", admissioncontroller.GetPayments)
