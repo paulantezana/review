@@ -5,6 +5,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models/coursemodel"
+	"github.com/paulantezana/review/models/institutemodel"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
@@ -56,16 +57,16 @@ func CreateCourseStudent(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
-    // Validation
-    VCStudent := coursemodel.CourseStudent{}
-    DB.First(&VCStudent,coursemodel.CourseStudent{DNI:courseStudent.DNI,CourseID:courseStudent.CourseID})
-    if VCStudent.ID != 0 {
-        return c.JSON(http.StatusOK,utilities.Response{
-            Message: fmt.Sprintf("El estudiante %s ya está matriculado en este curso",courseStudent.FullName),
-        })
-    }
+	// Validation
+	VCStudent := coursemodel.CourseStudent{}
+	DB.First(&VCStudent, coursemodel.CourseStudent{DNI: courseStudent.DNI, CourseID: courseStudent.CourseID})
+	if VCStudent.ID != 0 {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("El estudiante %s ya está matriculado en este curso", courseStudent.FullName),
+		})
+	}
 
-    // Insert courseStudents in database
+	// Insert courseStudents in database
 	if err := DB.Create(&courseStudent).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{
 			Success: false,
@@ -133,5 +134,56 @@ func DeleteCourseStudent(c echo.Context) error {
 		Success: true,
 		Data:    courseStudent.ID,
 		Message: fmt.Sprintf("La participante %s se elimino correctamente", courseStudent.FullName),
+	})
+}
+
+type actCourseStudentDetail struct {
+	Student coursemodel.CourseStudent `json:"student"`
+	Program institutemodel.Program    `json:"program"`
+}
+
+type actCourseStudentResponse struct {
+	Course   coursemodel.Course       `json:"course"`
+	Students []actCourseStudentDetail `json:"students"`
+}
+
+func ActCourseStudent(c echo.Context) error {
+	// Get data request
+	courseStudents := make([]coursemodel.CourseStudent, 0)
+	if err := c.Bind(&courseStudents); err != nil {
+		return err
+	}
+
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
+
+	// Prepare struct response
+	actCourseStudentDetails := make([]actCourseStudentDetail, 0)
+
+	// Query
+	for _, cStudent := range courseStudents {
+		// Query student
+		student := coursemodel.CourseStudent{}
+		DB.First(&student, coursemodel.CourseStudent{ID: cStudent.ID})
+
+		// Query program
+		program := institutemodel.Program{}
+		DB.First(&program, institutemodel.Program{ID: student.ProgramID})
+
+		// Set current student
+		actCourseStudentDetail := actCourseStudentDetail{
+			Student: student,
+			Program: program,
+		}
+		actCourseStudentDetails = append(actCourseStudentDetails, actCourseStudentDetail)
+	}
+
+	// Response data
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data: actCourseStudentResponse{
+			Students: actCourseStudentDetails,
+		},
 	})
 }

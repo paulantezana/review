@@ -38,8 +38,8 @@ type getReviewsResponse struct {
 }
 
 type getReviewsRequest struct {
-    StudentID uint `json:"student_id"`
-    ProgramID uint `json:"program_id"`
+	StudentID uint `json:"student_id"`
+	ProgramID uint `json:"program_id"`
 }
 
 // GetReviews functions get all reviews
@@ -73,12 +73,12 @@ func GetReviews(c echo.Context) error {
 
 	// validation
 	countReviews := len(reviewsResponses) // all review count
-    var allModules uint                 // all modules count
-    if err := db.Model(&institutemodel.Module{}).Where("program_id = ?", request.ProgramID).Count(&allModules).Error; err != nil {
-        return c.NoContent(http.StatusInternalServerError)
-    }
+	var allModules uint                   // all modules count
+	if err := db.Model(&institutemodel.Module{}).Where("program_id = ?", request.ProgramID).Count(&allModules).Error; err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
-    // Calculate validations
+	// Calculate validations
 	reviewEnablesResponse := reviewEnablesResponse{}
 	if allModules == uint(countReviews) && allModules != 0 {
 		reviewEnablesResponse.Consolidate = true
@@ -120,30 +120,30 @@ func CreateReview(c echo.Context) error {
 		})
 	}
 
-    // start transaction
-    TX := DB.Begin()
+	// start transaction
+	TX := DB.Begin()
 
 	// Insert reviews in database
 	if err := TX.Create(&review).Error; err != nil {
-        TX.Rollback()
+		TX.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Insert History student
-    studentHistory := institutemodel.StudentHistory{
-        StudentID:   review.StudentID,
-        UserID:      currentUser.ID,
-        Description: fmt.Sprintf("Revisón de prácticas del modulo %d",review.ModuleId),
-        Date:        time.Now(),
-        Type: 1,
-    }
-    if err := TX.Create(&studentHistory).Error; err != nil {
-        TX.Rollback()
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	studentHistory := institutemodel.StudentHistory{
+		StudentID:   review.StudentID,
+		UserID:      currentUser.ID,
+		Description: fmt.Sprintf("Revisón de prácticas del modulo %d", review.ModuleId),
+		Date:        time.Now(),
+		Type:        1,
+	}
+	if err := TX.Create(&studentHistory).Error; err != nil {
+		TX.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Commit transaction
-    TX.Commit()
+	// Commit transaction
+	TX.Commit()
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{

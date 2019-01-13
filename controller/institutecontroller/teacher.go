@@ -1,20 +1,20 @@
 package institutecontroller
 
 import (
-    "crypto/sha256"
-    "fmt"
-    "github.com/paulantezana/review/models"
-    "github.com/paulantezana/review/models/institutemodel"
-    "io"
-    "net/http"
-    "os"
-    "strconv"
-    "strings"
+	"crypto/sha256"
+	"fmt"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/models/institutemodel"
+	"io"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
 
-    "github.com/360EntSecGroup-Skylar/excelize"
-    "github.com/labstack/echo"
-    "github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/utilities"
+	"github.com/360EntSecGroup-Skylar/excelize"
+	"github.com/labstack/echo"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/utilities"
 )
 
 func GetTeachers(c echo.Context) error {
@@ -40,14 +40,14 @@ func GetTeachers(c echo.Context) error {
 	var total uint
 	teachers := make([]institutemodel.Teacher, 0)
 
-    if err := db.Where("lower(first_name) LIKE lower(?)", "%"+request.Search+"%").
-        Or("lower(last_name) LIKE lower(?)", "%"+request.Search+"%").
-        Or("dni LIKE ?", "%"+request.Search+"%").
-        Order("id asc").
-        Offset(offset).Limit(request.Limit).Find(&teachers).
-        Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	if err := db.Where("lower(first_name) LIKE lower(?)", "%"+request.Search+"%").
+		Or("lower(last_name) LIKE lower(?)", "%"+request.Search+"%").
+		Or("dni LIKE ?", "%"+request.Search+"%").
+		Order("id asc").
+		Offset(offset).Limit(request.Limit).Find(&teachers).
+		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Get type teacher
 	for k, teacher := range teachers {
@@ -69,58 +69,56 @@ func GetTeachers(c echo.Context) error {
 	})
 }
 
-
 func GetTeachersPaginateByProgram(c echo.Context) error {
-    // Get data request
-    request := utilities.Request{}
-    if err := c.Bind(&request); err != nil {
-        return err
-    }
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
 
-    // Get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// Get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Pagination calculate
-    offset := request.Validate()
+	// Pagination calculate
+	offset := request.Validate()
 
-    // Execute instructions
-    total := utilities.Counter{}
-    teachers := make([]institutemodel.Teacher, 0)
+	// Execute instructions
+	total := utilities.Counter{}
+	teachers := make([]institutemodel.Teacher, 0)
 
-    // Query in database
-    DB.Raw("SELECT * FROM teachers " +
-        "WHERE id IN (SELECT teacher_id FROM teacher_programs where program_id = ?) " +
-        "AND (lower(first_name) LIKE lower(?) OR lower(last_name) LIKE lower(?) OR dni LIKE ?) ORDER BY id desc " +
-        "OFFSET ? LIMIT ?",
-        request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%", "%"+request.Search+"%",offset,request.Limit).Scan(&teachers)
+	// Query in database
+	DB.Raw("SELECT * FROM teachers "+
+		"WHERE id IN (SELECT teacher_id FROM teacher_programs where program_id = ?) "+
+		"AND (lower(first_name) LIKE lower(?) OR lower(last_name) LIKE lower(?) OR dni LIKE ?) ORDER BY id desc "+
+		"OFFSET ? LIMIT ?",
+		request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%", "%"+request.Search+"%", offset, request.Limit).Scan(&teachers)
 
-    // Query students count total
-    DB.Raw("SELECT * FROM teachers " +
-        "WHERE id IN (SELECT teacher_id FROM teacher_programs where program_id = ?) " +
-        "AND (lower(first_name) LIKE lower(?) OR lower(last_name) LIKE lower(?) OR dni LIKE ?) ",
-        request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%", "%"+request.Search+"%").Scan(&total)
+	// Query students count total
+	DB.Raw("SELECT * FROM teachers "+
+		"WHERE id IN (SELECT teacher_id FROM teacher_programs where program_id = ?) "+
+		"AND (lower(first_name) LIKE lower(?) OR lower(last_name) LIKE lower(?) OR dni LIKE ?) ",
+		request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%", "%"+request.Search+"%").Scan(&total)
 
-    // Get type teacher
-    for k, teacher := range teachers {
-        teacherProgram := institutemodel.TeacherProgram{}
-        DB.First(&teacherProgram, institutemodel.TeacherProgram{
-            TeacherID: teacher.ID,
-        })
-        teachers[k].Type = teacherProgram.Type
-        teachers[k].ProgramID = teacherProgram.ProgramID
-    }
+	// Get type teacher
+	for k, teacher := range teachers {
+		teacherProgram := institutemodel.TeacherProgram{}
+		DB.First(&teacherProgram, institutemodel.TeacherProgram{
+			TeacherID: teacher.ID,
+		})
+		teachers[k].Type = teacherProgram.Type
+		teachers[k].ProgramID = teacherProgram.ProgramID
+	}
 
-    // Return response
-    return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
-        Success:     true,
-        Data:        teachers,
-        Total:       total.Count,
-        CurrentPage: request.CurrentPage,
-        Limit:       request.Limit,
-    })
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
+		Success:     true,
+		Data:        teachers,
+		Total:       total.Count,
+		CurrentPage: request.CurrentPage,
+		Limit:       request.Limit,
+	})
 }
-
 
 type teacherSearchResponse struct {
 	ID        uint   `json:"id"`
@@ -160,33 +158,33 @@ func GetTeacherSearch(c echo.Context) error {
 }
 
 func GetTeacherSearchProgram(c echo.Context) error {
-    // Get data request
-    request := utilities.Request{}
-    if err := c.Bind(&request); err != nil {
-        return err
-    }
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
 
-    // Get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// Get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Execute instructions
-    teachers := make([]teacherSearchResponse, 0)
+	// Execute instructions
+	teachers := make([]teacherSearchResponse, 0)
 
-    // Search teachers
-    if request.Search != "" {
-        DB.Raw("SELECT * FROM teachers " +
-            "WHERE id IN (SELECT teacher_id FROM teacher_programs where program_id = ?) " +
-            "AND (lower(first_name) LIKE lower(?) OR lower(last_name) LIKE lower(?) OR dni LIKE ?) ORDER BY id desc " +
-            "LIMIT 5",
-            request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%", "%"+request.Search+"%").Scan(&teachers)
-    }
+	// Search teachers
+	if request.Search != "" {
+		DB.Raw("SELECT * FROM teachers "+
+			"WHERE id IN (SELECT teacher_id FROM teacher_programs where program_id = ?) "+
+			"AND (lower(first_name) LIKE lower(?) OR lower(last_name) LIKE lower(?) OR dni LIKE ?) ORDER BY id desc "+
+			"LIMIT 5",
+			request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%", "%"+request.Search+"%").Scan(&teachers)
+	}
 
-    // Return response
-    return c.JSON(http.StatusCreated, utilities.Response{
-        Success: true,
-        Data:    teachers,
-    })
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    teachers,
+	})
 }
 
 func CreateTeacher(c echo.Context) error {
@@ -323,60 +321,59 @@ func DeleteTeacher(c echo.Context) error {
 }
 
 func GetTempUploadTeacher(c echo.Context) error {
-    // Get data request
-    request := utilities.Request{}
-    if err := c.Bind(&request); err != nil {
-        return err
-    }
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Execute instructions
-    programs := make([]institutemodel.Program, 0)
-    if err := DB.Find(&programs,institutemodel.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
-        return err
-    }
+	// Execute instructions
+	programs := make([]institutemodel.Program, 0)
+	if err := DB.Find(&programs, institutemodel.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
+		return err
+	}
 
-    // Get template excel
-    fileDir := "templates/templateTeacherSA.xlsx"
-    xlsx, err := excelize.OpenFile(fileDir)
-    if err != nil {
-        fmt.Println(err)
-    }
-    xlsx.DeleteSheet("ProgramIDS") // Delete sheet
-    xlsx.NewSheet("ProgramIDS") // Create new sheet
+	// Get template excel
+	fileDir := "templates/templateTeacherSA.xlsx"
+	xlsx, err := excelize.OpenFile(fileDir)
+	if err != nil {
+		fmt.Println(err)
+	}
+	xlsx.DeleteSheet("ProgramIDS") // Delete sheet
+	xlsx.NewSheet("ProgramIDS")    // Create new sheet
 
-    xlsx.SetCellValue("ProgramIDS", "A1", "ID")
-    xlsx.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
+	xlsx.SetCellValue("ProgramIDS", "A1", "ID")
+	xlsx.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
 
-    // Set styles
-    xlsx.SetColWidth("ProgramIDS","B","B",35)
-    xlsx.SetCellStyle("ProgramIDS","A1","B1",2)
+	// Set styles
+	xlsx.SetColWidth("ProgramIDS", "B", "B", 35)
+	xlsx.SetCellStyle("ProgramIDS", "A1", "B1", 2)
 
-    // Set data
-    for i := 0; i < len(programs); i++ {
-        xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
-        xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)
-    }
-    xlsx.SetActiveSheet(1)
+	// Set data
+	for i := 0; i < len(programs); i++ {
+		xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
+		xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)
+	}
+	xlsx.SetActiveSheet(1)
 
-    // Save xlsx file by the given path.
-    err = xlsx.SaveAs(fileDir)
-    if err != nil {
-        fmt.Println(err)
-    }
+	// Save xlsx file by the given path.
+	err = xlsx.SaveAs(fileDir)
+	if err != nil {
+		fmt.Println(err)
+	}
 
-    // Return file excel
-    return c.File(fileDir)
+	// Return file excel
+	return c.File(fileDir)
 }
 
 func GetTempUploadTeacherByProgram(c echo.Context) error {
-    // Return file excel
-    return c.File("templates/templateTeacher.xlsx")
+	// Return file excel
+	return c.File("templates/templateTeacher.xlsx")
 }
-
 
 func SetTempUploadTeacher(c echo.Context) error {
 	// Get user token authenticate

@@ -3,8 +3,8 @@ package admissioncontroller
 import (
 	"crypto/sha256"
 	"fmt"
-    "github.com/360EntSecGroup-Skylar/excelize"
-    "github.com/dgrijalva/jwt-go"
+	"github.com/360EntSecGroup-Skylar/excelize"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
@@ -206,7 +206,7 @@ type createAdmissionRequest struct {
 }
 
 type countValidate struct {
-    Count uint
+	Count uint
 }
 
 func CreateAdmission(c echo.Context) error {
@@ -230,16 +230,16 @@ func CreateAdmission(c echo.Context) error {
 
 	// Validation
 
-    countV := countValidate{}
-    if err := DB.Raw("SELECT count(*) as count FROM admissions WHERE student_id IN (SELECT id FROM students WHERE dni = ?) AND year = ? AND state = true", request.Student.DNI,currentYear).
-        Scan(&countV).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
-    if countV.Count >= 1 {
-        return c.JSON(http.StatusOK,utilities.Response{
-            Message: fmt.Sprintf("El estudiante %s ya esta registrado en el proceso de admision del año %d",request.Student.FullName,currentYear),
-        })
-    }
+	countV := countValidate{}
+	if err := DB.Raw("SELECT count(*) as count FROM admissions WHERE student_id IN (SELECT id FROM students WHERE dni = ?) AND year = ? AND state = true", request.Student.DNI, currentYear).
+		Scan(&countV).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+	if countV.Count >= 1 {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("El estudiante %s ya esta registrado en el proceso de admision del año %d", request.Student.FullName, currentYear),
+		})
+	}
 
 	// start transaction
 	TX := DB.Begin()
@@ -304,7 +304,7 @@ func CreateAdmission(c echo.Context) error {
 	}
 
 	//  Update relations   StudentProgram by default
-    TX.Exec("UPDATE student_programs SET by_default = false WHERE student_id = ?",request.Student.ID)
+	TX.Exec("UPDATE student_programs SET by_default = false WHERE student_id = ?", request.Student.ID)
 
 	// Insert new Relation program and student
 	studentProgram := institutemodel.StudentProgram{
@@ -323,7 +323,7 @@ func CreateAdmission(c echo.Context) error {
 		UserID:      currentUser.ID,
 		Description: fmt.Sprintf("Admision"),
 		Date:        time.Now(),
-		Type: 1,
+		Type:        1,
 	}
 	if err := TX.Create(&studentHistory).Error; err != nil {
 		TX.Rollback()
@@ -388,11 +388,11 @@ func UpdateAdmission(c echo.Context) error {
 	// Query student
 	db.First(&request.Student, institutemodel.Student{ID: request.Student.ID})
 	db.First(&request.Admission, admissionmodel.Admission{ID: request.Admission.ID})
-	db.First(&request.User,models.User{ID: request.User.ID})
+	db.First(&request.User, models.User{ID: request.User.ID})
 
-    // Reset Keys and fields
-    request.User.Password = ""
-    request.User.Key = ""
+	// Reset Keys and fields
+	request.User.Password = ""
+	request.User.Key = ""
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
@@ -403,12 +403,12 @@ func UpdateAdmission(c echo.Context) error {
 }
 
 func CancelAdmission(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
-    // Get data request
+	// Get data request
 	admission := admissionmodel.Admission{}
 	if err := c.Bind(&admission); err != nil {
 		return err
@@ -418,33 +418,33 @@ func CancelAdmission(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
-    // start transaction
-    TX := DB.Begin()
+	// start transaction
+	TX := DB.Begin()
 
 	// Execute query
 	if err := TX.Model(admission).UpdateColumn("state", false).Error; err != nil {
-	    TX.Rollback()
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		TX.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Find admission details
-    TX.First(&admission)
+	TX.First(&admission)
 
 	// Insert new state student
-    studentHistory := institutemodel.StudentHistory{
-	    Description: "Admisión anulada",
-	    StudentID: admission.StudentID,
-	    UserID: currentUser.ID,
-	    Date: time.Now(),
-	    Type: 2,
-    }
-    if err := TX.Create(&studentHistory).Error; err != nil {
-        TX.Rollback()
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	studentHistory := institutemodel.StudentHistory{
+		Description: "Admisión anulada",
+		StudentID:   admission.StudentID,
+		UserID:      currentUser.ID,
+		Date:        time.Now(),
+		Type:        2,
+	}
+	if err := TX.Create(&studentHistory).Error; err != nil {
+		TX.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Commit transaction
-    TX.Commit()
+	// Commit transaction
+	TX.Commit()
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
@@ -485,181 +485,182 @@ func UpdateExamAdmission(c echo.Context) error {
 }
 
 type fileAdmissionResponse struct {
-    Students []institutemodel.Student `json:"students"`
-    Subsidiary institutemodel.Subsidiary `json:"subsidiary"`
-    Program institutemodel.Program `json:"program"`
+	Students   []institutemodel.Student  `json:"students"`
+	Subsidiary institutemodel.Subsidiary `json:"subsidiary"`
+	Program    institutemodel.Program    `json:"program"`
 }
 
 func FileAdmission(c echo.Context) error {
-    // Get data request
-    admissions := make([]admissionmodel.Admission,0)
-    if err := c.Bind(&admissions); err != nil {
-        return err
-    }
+	// Get data request
+	admissions := make([]admissionmodel.Admission, 0)
+	if err := c.Bind(&admissions); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    students := make([]institutemodel.Student,0)
+	students := make([]institutemodel.Student, 0)
 
-    // Query all students
-    for _, admission := range admissions {
-        // Query get admission all data --- current admission
-        DB.First(&admission,admissionmodel.Admission{ID:admission.ID})
+	// Query all students
+	for _, admission := range admissions {
+		// Query get admission all data --- current admission
+		DB.First(&admission, admissionmodel.Admission{ID: admission.ID})
 
-        // Query get student all data
-        student := institutemodel.Student{}
-        DB.First(&student,institutemodel.Student{ID:admission.StudentID})
+		// Query get student all data
+		student := institutemodel.Student{}
+		DB.First(&student, institutemodel.Student{ID: admission.StudentID})
 
-        // Append array
-        students =  append(students, student)
-    }
+		// Append array
+		students = append(students, student)
+	}
 
-    // Query program
-    program := institutemodel.Program{}
-    subsidiary := institutemodel.Subsidiary{}
-    if len(admissions) >= 1 {
-        DB.First(&program,institutemodel.Program{ID:admissions[0].ProgramID})
-        DB.First(&subsidiary,institutemodel.Subsidiary{ID:program.SubsidiaryID})
-    }
+	// Query program
+	program := institutemodel.Program{}
+	subsidiary := institutemodel.Subsidiary{}
+	if len(admissions) >= 1 {
+		DB.First(&program, institutemodel.Program{ID: admissions[0].ProgramID})
+		DB.First(&subsidiary, institutemodel.Subsidiary{ID: program.SubsidiaryID})
+	}
 
-    // Response data
-    return c.JSON(http.StatusOK,utilities.Response{
-        Success: true,
-        Data: fileAdmissionResponse{
-          Students:students,
-          Subsidiary:subsidiary,
-          Program:program,
-        },
-    })
+	// Response data
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data: fileAdmissionResponse{
+			Students:   students,
+			Subsidiary: subsidiary,
+			Program:    program,
+		},
+	})
 }
 
 type exportAdmissionRequest struct {
-    From uint `json:"from"`
-    To uint `json:"to"`
-    State bool `json:"state"`
+	From  uint `json:"from"`
+	To    uint `json:"to"`
+	State bool `json:"state"`
 }
 type exportAdmissionModel struct {
-    ID            uint      `json:"id" gorm:"primary_key"`
-    Observation   string    `json:"observation"`
-    Exonerated    bool      `json:"exonerated"`
-    AdmissionDate time.Time `json:"admission_date"`
-    Year          uint      `json:"year"`
+	ID            uint      `json:"id" gorm:"primary_key"`
+	Observation   string    `json:"observation"`
+	Exonerated    bool      `json:"exonerated"`
+	AdmissionDate time.Time `json:"admission_date"`
+	Year          uint      `json:"year"`
 
-    StudentID uint `json:"student_id"`
-    ProgramID uint `json:"program_id"`
-    UserID    uint `json:"user_id"`
+	StudentID uint `json:"student_id"`
+	ProgramID uint `json:"program_id"`
+	UserID    uint `json:"user_id"`
 
-    State bool `json:"state"`
+	State bool `json:"state"`
 
-    DNI      string `json:"dni"`
-    FullName string `json:"full_name"`
-    Email    string `json:"email"`
-    Avatar   string `json:"avatar"`
+	DNI      string `json:"dni"`
+	FullName string `json:"full_name"`
+	Email    string `json:"email"`
+	Avatar   string `json:"avatar"`
 }
+
 func ExportAdmission(c echo.Context) error {
-    // Get data request
-    request := exportAdmissionRequest{}
-    if err := c.Bind(&request); err != nil {
-        return err
-    }
+	// Get data request
+	request := exportAdmissionRequest{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    var total uint
-    exportAdmissionModels := make([]exportAdmissionModel, 0)
-    if err := DB.Table("admissions").
-        Select("admissions.id, admissions.observation, admissions.exonerated, admissions.admission_date, admissions.year, admissions.student_id, admissions.program_id, admissions.state, students.dni , students.full_name, users.id as user_id, users.email, users.avatar").
-        Joins("INNER JOIN students ON admissions.student_id = students.id").
-        Joins("INNER JOIN users on students.user_id = users.id").
-        Where("admissions.year >= ? AND admissions.year <= ? AND admissions.state = ?", request.From,request.To,request.State).
-        Order("admissions.id asc").Scan(&exportAdmissionModels).
-        Count(&total).Error; err != nil {
-        return c.NoContent(http.StatusInternalServerError)
-    }
+	var total uint
+	exportAdmissionModels := make([]exportAdmissionModel, 0)
+	if err := DB.Table("admissions").
+		Select("admissions.id, admissions.observation, admissions.exonerated, admissions.admission_date, admissions.year, admissions.student_id, admissions.program_id, admissions.state, students.dni , students.full_name, users.id as user_id, users.email, users.avatar").
+		Joins("INNER JOIN students ON admissions.student_id = students.id").
+		Joins("INNER JOIN users on students.user_id = users.id").
+		Where("admissions.year >= ? AND admissions.year <= ? AND admissions.state = ?", request.From, request.To, request.State).
+		Order("admissions.id asc").Scan(&exportAdmissionModels).
+		Count(&total).Error; err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
-    // CREATE EXCEL FILE
-    excel := excelize.NewFile()
+	// CREATE EXCEL FILE
+	excel := excelize.NewFile()
 
-    // Create new sheet
-    sheet1 := excel.NewSheet("Sheet1")
+	// Create new sheet
+	sheet1 := excel.NewSheet("Sheet1")
 
-    // Set header values
-    excel.SetCellValue("Sheet1", "A1", "ID")
-    excel.SetCellValue("Sheet1", "B1", "Apellidos y nombre")
-    excel.SetCellValue("Sheet1", "C1", "Fecha de nacimiento")
-    excel.SetCellValue("Sheet1", "D1", "Sexo")
-    excel.SetCellValue("Sheet1", "E1", "Año")
+	// Set header values
+	excel.SetCellValue("Sheet1", "A1", "ID")
+	excel.SetCellValue("Sheet1", "B1", "Apellidos y nombre")
+	excel.SetCellValue("Sheet1", "C1", "Fecha de nacimiento")
+	excel.SetCellValue("Sheet1", "D1", "Sexo")
+	excel.SetCellValue("Sheet1", "E1", "Año")
 
-    //  Set values in excel file
-    for i := 0; i < len(exportAdmissionModels); i++ {
-        excel.SetCellValue("Sheet1", fmt.Sprintf("A%d", i+2), exportAdmissionModels[i].ID)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("B%d", i+2), exportAdmissionModels[i].FullName)
-    }
+	//  Set values in excel file
+	for i := 0; i < len(exportAdmissionModels); i++ {
+		excel.SetCellValue("Sheet1", fmt.Sprintf("A%d", i+2), exportAdmissionModels[i].ID)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("B%d", i+2), exportAdmissionModels[i].FullName)
+	}
 
-    // Default active sheet
-    excel.SetActiveSheet(sheet1)
+	// Default active sheet
+	excel.SetActiveSheet(sheet1)
 
-    // save file
-    err := excel.SaveAs("temp/admission.xlsx")
-    if err != nil {
-        fmt.Println(err)
-    }
+	// save file
+	err := excel.SaveAs("temp/admission.xlsx")
+	if err != nil {
+		fmt.Println(err)
+	}
 
-    // Return object
-    return c.File("temp/admission.xlsx")
+	// Return object
+	return c.File("temp/admission.xlsx")
 }
 
 func ExportAdmissionByIds(c echo.Context) error {
-   // Get data request
-   admissions := make([]admissionmodel.Admission,0)
-   if err := c.Bind(&admissions); err != nil {
-       return err
-   }
+	// Get data request
+	admissions := make([]admissionmodel.Admission, 0)
+	if err := c.Bind(&admissions); err != nil {
+		return err
+	}
 
-   // get connection
-   DB := config.GetConnection()
-   defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-   // CREATE EXCEL FILE
-   excel := excelize.NewFile()
+	// CREATE EXCEL FILE
+	excel := excelize.NewFile()
 
-   // Create new sheet
-   sheet1 := excel.NewSheet("Sheet1")
+	// Create new sheet
+	sheet1 := excel.NewSheet("Sheet1")
 
-   // Set header values
-   excel.SetCellValue("Sheet1", "A1", "ID")
-   excel.SetCellValue("Sheet1", "B1", "Apellidos y nombre")
-   excel.SetCellValue("Sheet1", "C1", "Fecha de nacimiento")
-   excel.SetCellValue("Sheet1", "D1", "Sexo")
-   excel.SetCellValue("Sheet1", "E1", "Año")
+	// Set header values
+	excel.SetCellValue("Sheet1", "A1", "ID")
+	excel.SetCellValue("Sheet1", "B1", "Apellidos y nombre")
+	excel.SetCellValue("Sheet1", "C1", "Fecha de nacimiento")
+	excel.SetCellValue("Sheet1", "D1", "Sexo")
+	excel.SetCellValue("Sheet1", "E1", "Año")
 
-    // Query all students
-    for key, admission := range admissions {
-        // Query get admission all data --- current admission
-        DB.First(&admission,admissionmodel.Admission{ID:admission.ID})
+	// Query all students
+	for key, admission := range admissions {
+		// Query get admission all data --- current admission
+		DB.First(&admission, admissionmodel.Admission{ID: admission.ID})
 
-        // Query get student all data
-        student := institutemodel.Student{}
-        DB.First(&student,institutemodel.Student{ID:admission.StudentID})
+		// Query get student all data
+		student := institutemodel.Student{}
+		DB.First(&student, institutemodel.Student{ID: admission.StudentID})
 
-        // Set values in excel file
-       excel.SetCellValue("Sheet1", fmt.Sprintf("A%d", key+2), admission.ID)
-       excel.SetCellValue("Sheet1", fmt.Sprintf("B%d", key+2), student.FullName)
-    }
+		// Set values in excel file
+		excel.SetCellValue("Sheet1", fmt.Sprintf("A%d", key+2), admission.ID)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("B%d", key+2), student.FullName)
+	}
 
-   // Default active sheet
-   excel.SetActiveSheet(sheet1)
+	// Default active sheet
+	excel.SetActiveSheet(sheet1)
 
-   // save file
-   err := excel.SaveAs("temp/admission.xlsx")
-   if err != nil {
-       fmt.Println(err)
-   }
+	// save file
+	err := excel.SaveAs("temp/admission.xlsx")
+	if err != nil {
+		fmt.Println(err)
+	}
 
-   // Return object
-   return c.File("temp/admission.xlsx")
+	// Return object
+	return c.File("temp/admission.xlsx")
 }

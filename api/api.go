@@ -84,22 +84,22 @@ func ProtectedApi(e *echo.Echo) {
 
 	// Student
 	ar.POST("/student/all", institutecontroller.GetStudentsPaginate)
-    ar.POST("/student/paginate/program", institutecontroller.GetStudentsPaginateByProgram)
-    ar.POST("/student/history", institutecontroller.GetStudentHistory)
+	ar.POST("/student/paginate/program", institutecontroller.GetStudentsPaginateByProgram)
+	ar.POST("/student/history", institutecontroller.GetStudentHistory)
 	ar.POST("/student/create", institutecontroller.CreateStudent)
 	ar.PUT("/student/update", institutecontroller.UpdateStudent)
 	ar.DELETE("/student/delete", institutecontroller.DeleteStudent)
 	ar.POST("/student/search", institutecontroller.GetStudentSearch)
 	ar.GET("/student/download/template/by/subsidiary", institutecontroller.GetTempUploadStudentBySubsidiary)
 	ar.POST("/student/upload/template/by/subsidiary", institutecontroller.SetTempUploadStudentBySubsidiary)
-    ar.GET("/student/download/template/by/program", institutecontroller.GetTempUploadStudentByProgram)
-    ar.POST("/student/upload/template/by/program", institutecontroller.SetTempUploadStudentByProgram)
+	ar.GET("/student/download/template/by/program", institutecontroller.GetTempUploadStudentByProgram)
+	ar.POST("/student/upload/template/by/program", institutecontroller.SetTempUploadStudentByProgram)
 	ar.POST("/student/by/id", institutecontroller.GetStudentByID)
 	ar.POST("/student/by/dni", institutecontroller.GetStudentByDNI)
 
 	// Teacher
 	ar.POST("/teacher/all", institutecontroller.GetTeachers)
-    ar.POST("/teacher/paginate/program", institutecontroller.GetTeachersPaginateByProgram)
+	ar.POST("/teacher/paginate/program", institutecontroller.GetTeachersPaginateByProgram)
 	ar.POST("/teacher/create", institutecontroller.CreateTeacher)
 	ar.PUT("/teacher/update", institutecontroller.UpdateTeacher)
 	ar.DELETE("/teacher/delete", institutecontroller.DeleteTeacher)
@@ -172,6 +172,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/course/student/create", coursescontroller.CreateCourseStudent)
 	ar.PUT("/course/student/update", coursescontroller.UpdateCourseStudent)
 	ar.DELETE("/course/student/delete", coursescontroller.DeleteCourseStudent)
+	ar.POST("/course/student/act", coursescontroller.ActCourseStudent)
 
 	// ---------------------------------------------------------------------------
 	//      Monitoring routes ----------------------------------------------------
@@ -226,13 +227,13 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/admission/admission/export", admissioncontroller.ExportAdmission)
 	ar.POST("/admission/admission/export/by/ids", admissioncontroller.ExportAdmissionByIds)
 
-    // Payment
-    ar.POST("/admission/payment/all", admissioncontroller.GetPayments)
-    ar.POST("/admission/payment/create", admissioncontroller.CreatePayment)
-    ar.PUT("/admission/payment/update", admissioncontroller.UpdatePayment)
-    ar.DELETE("/admission/payment/delete", admissioncontroller.DeletePayment)
+	// Payment
+	ar.POST("/admission/payment/all", admissioncontroller.GetPayments)
+	ar.POST("/admission/payment/create", admissioncontroller.CreatePayment)
+	ar.PUT("/admission/payment/update", admissioncontroller.UpdatePayment)
+	ar.DELETE("/admission/payment/delete", admissioncontroller.DeletePayment)
 
-    // ---------------------------------------------------------------------------
+	// ---------------------------------------------------------------------------
 	//      External api -----------------------------------------------------
 	// RENIEC
 	ar.POST("/external/reniec", controller.Reniec)

@@ -58,11 +58,11 @@ func Reniec(c echo.Context) error {
 		firstName := strings.Title(data[2])
 
 		// Validation
-        if lastName == "" || firstName == "" {
-            return c.JSON(http.StatusOK,utilities.Response{
-                Message: fmt.Sprintf("No se encontró ningún resultado de búsqueda con el DNI %s",request.DNI),
-            })
-        }
+		if lastName == "" || firstName == "" {
+			return c.JSON(http.StatusOK, utilities.Response{
+				Message: fmt.Sprintf("No se encontró ningún resultado de búsqueda con el DNI %s", request.DNI),
+			})
+		}
 
 		// fill data
 		reniecResponse.Student.DNI = request.DNI

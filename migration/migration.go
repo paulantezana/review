@@ -167,12 +167,12 @@ func Migrate() {
 
 	// Validate
 	if role.ID == 0 {
-		role1 := models.Role{Name: "Director@"}   // Global Level
-		role2 := models.Role{Name: "Administrador"}      // Filial Level
+		role1 := models.Role{Name: "Director@"}     // Global Level
+		role2 := models.Role{Name: "Administrador"} // Filial Level
 		role3 := models.Role{Name: "Coordinador"}   // Program level
-		role4 := models.Role{Name: "Profesor"} // Teacher
-		role5 := models.Role{Name: "Estudiante"} // Student
-		role6 := models.Role{Name: "Invitado"} // Invited level
+		role4 := models.Role{Name: "Profesor"}      // Teacher
+		role5 := models.Role{Name: "Estudiante"}    // Student
+		role6 := models.Role{Name: "Invitado"}      // Invited level
 		db.Create(&role1).Create(&role2).Create(&role3)
 		db.Create(&role4).Create(&role5).Create(&role6)
 	}

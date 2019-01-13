@@ -61,6 +61,7 @@ func GetProgramByID(c echo.Context) error {
 
 type createProgramRequest struct {
 	Name         string `json:"name"`
+	Level        string `json:"level"`
 	SubsidiaryID uint   `json:"subsidiary_id"`
 
 	DNI       string `json:"dni"`
@@ -87,6 +88,7 @@ func CreateProgram(c echo.Context) error {
 	TR := DB.Begin()
 	program := institutemodel.Program{
 		Name:         request.Name,
+		Level:        request.Level,
 		SubsidiaryID: request.SubsidiaryID,
 	}
 	// Create new program
@@ -124,10 +126,10 @@ func CreateProgram(c echo.Context) error {
 
 	// Create teacher
 	teacher := institutemodel.Teacher{
-		DNI:              request.DNI,
-		FirstName:        request.FirstName,
+		DNI:       request.DNI,
+		FirstName: request.FirstName,
 		ProgramID: program.ID,
-		UserID:           user.ID,
+		UserID:    user.ID,
 	}
 	if err := TR.Create(&teacher).Error; err != nil {
 		TR.Rollback()

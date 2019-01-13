@@ -1,21 +1,21 @@
 package institutecontroller
 
 import (
-    "crypto/sha256"
-    "fmt"
-    "github.com/paulantezana/review/models"
-    "github.com/paulantezana/review/models/institutemodel"
-    "io"
-    "net/http"
-    "os"
-    "strconv"
-    "strings"
-    "time"
+	"crypto/sha256"
+	"fmt"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/models/institutemodel"
+	"io"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"time"
 
-    "github.com/360EntSecGroup-Skylar/excelize"
-    "github.com/labstack/echo"
-    "github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/utilities"
+	"github.com/360EntSecGroup-Skylar/excelize"
+	"github.com/labstack/echo"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/utilities"
 )
 
 // GetStudents function get all students
@@ -42,14 +42,14 @@ func GetStudentsPaginate(c echo.Context) error {
 	var total uint
 	students := make([]institutemodel.Student, 0)
 
-    // Query in database
-    if err := db.Where("lower(full_name) LIKE lower(?)", "%"+request.Search+"%").
-        Or("dni LIKE ?", "%"+request.Search+"%").
-        Order("id desc").
-        Offset(offset).Limit(request.Limit).Find(&students).
-        Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query in database
+	if err := db.Where("lower(full_name) LIKE lower(?)", "%"+request.Search+"%").
+		Or("dni LIKE ?", "%"+request.Search+"%").
+		Order("id desc").
+		Offset(offset).Limit(request.Limit).Find(&students).
+		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
@@ -76,19 +76,19 @@ func GetStudentsPaginateByProgram(c echo.Context) error {
 	offset := request.Validate()
 
 	// Execute instructions
-    total := utilities.Counter{}
+	total := utilities.Counter{}
 	students := make([]institutemodel.Student, 0)
 
-    // Query in database
-    DB.Raw("SELECT * FROM students " +
-    "WHERE id IN (SELECT student_id FROM student_programs WHERE program_id = ?) " +
-    "AND (lower(full_name) LIKE lower(?) OR dni LIKE ?) ORDER BY id desc " +
-    "OFFSET ? LIMIT ?", request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%",offset,request.Limit).Scan(&students)
+	// Query in database
+	DB.Raw("SELECT * FROM students "+
+		"WHERE id IN (SELECT student_id FROM student_programs WHERE program_id = ?) "+
+		"AND (lower(full_name) LIKE lower(?) OR dni LIKE ?) ORDER BY id desc "+
+		"OFFSET ? LIMIT ?", request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%", offset, request.Limit).Scan(&students)
 
 	// Query students count total
-    DB.Raw("SELECT count(*) FROM students " +
-    "WHERE id IN (SELECT student_id FROM student_programs WHERE program_id = ?) " +
-    "AND (lower(full_name) LIKE lower(?) OR dni LIKE ?)", request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%").Scan(&total)
+	DB.Raw("SELECT count(*) FROM students "+
+		"WHERE id IN (SELECT student_id FROM student_programs WHERE program_id = ?) "+
+		"AND (lower(full_name) LIKE lower(?) OR dni LIKE ?)", request.ProgramID, "%"+request.Search+"%", "%"+request.Search+"%").Scan(&total)
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
@@ -195,9 +195,9 @@ func GetStudentSearch(c echo.Context) error {
 }
 
 type customStudentRequest struct {
-    Student institutemodel.Student `json:"student"`
-    User models.User `json:"user"`
-    ProgramID uint `json:"program_id"`
+	Student   institutemodel.Student `json:"student"`
+	User      models.User            `json:"user"`
+	ProgramID uint                   `json:"program_id"`
 }
 
 func CreateStudent(c echo.Context) error {
@@ -226,7 +226,7 @@ func CreateStudent(c echo.Context) error {
 		RoleID:   5,
 	}
 	if err := TX.Create(&userAccount).Error; err != nil {
-        TX.Rollback()
+		TX.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -234,24 +234,24 @@ func CreateStudent(c echo.Context) error {
 	request.Student.UserID = userAccount.ID
 	request.Student.StudentStatusID = 1
 	if err := TX.Create(&request.Student).Error; err != nil {
-        TX.Rollback()
+		TX.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Create relations
-    if request.ProgramID >= 1 {
-        studentProgram := institutemodel.StudentProgram{
-            StudentID: request.Student.ID,
-            ProgramID: request.ProgramID,
-        }
-        if err := TX.Create(&studentProgram).Error; err != nil {
-            TX.Rollback()
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
-    }
+	if request.ProgramID >= 1 {
+		studentProgram := institutemodel.StudentProgram{
+			StudentID: request.Student.ID,
+			ProgramID: request.ProgramID,
+		}
+		if err := TX.Create(&studentProgram).Error; err != nil {
+			TX.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	}
 
 	// Commit transaction
-    TX.Commit()
+	TX.Commit()
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -311,81 +311,81 @@ func DeleteStudent(c echo.Context) error {
 }
 
 func GetStudentHistory(c echo.Context) error {
-    // Get data request
-    student := institutemodel.Student{}
-    if err := c.Bind(&student); err != nil {
-        return err
-    }
+	// Get data request
+	student := institutemodel.Student{}
+	if err := c.Bind(&student); err != nil {
+		return err
+	}
 
-    // get connection
-    db := config.GetConnection()
-    defer db.Close()
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
 
-    // Find history
-    studentHistory := make([]institutemodel.StudentHistory,0)
-    db.Find(&studentHistory,institutemodel.StudentHistory{StudentID:student.ID})
+	// Find history
+	studentHistory := make([]institutemodel.StudentHistory, 0)
+	db.Find(&studentHistory, institutemodel.StudentHistory{StudentID: student.ID})
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    studentHistory,
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    studentHistory,
+	})
 }
 
 // GetTempUploadStudent dowloand template
 func GetTempUploadStudentBySubsidiary(c echo.Context) error {
-    // Get data request
-    request := utilities.Request{}
-    if err := c.Bind(&request); err != nil {
-        return err
-    }
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Execute instructions
-    programs := make([]institutemodel.Program, 0)
-    if err := DB.Find(&programs,institutemodel.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
-        return err
-    }
+	// Execute instructions
+	programs := make([]institutemodel.Program, 0)
+	if err := DB.Find(&programs, institutemodel.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
+		return err
+	}
 
-    // Get excel file
-    fileDir := "templates/templateStudentSA.xlsx"
-    xlsx, err := excelize.OpenFile(fileDir)
-    if err != nil {
-        fmt.Println(err)
-    }
-    xlsx.DeleteSheet("ProgramIDS") // Delete sheet
-    xlsx.NewSheet("ProgramIDS") // Create new sheet
+	// Get excel file
+	fileDir := "templates/templateStudentSA.xlsx"
+	xlsx, err := excelize.OpenFile(fileDir)
+	if err != nil {
+		fmt.Println(err)
+	}
+	xlsx.DeleteSheet("ProgramIDS") // Delete sheet
+	xlsx.NewSheet("ProgramIDS")    // Create new sheet
 
-    xlsx.SetCellValue("ProgramIDS", "A1", "ID")
-    xlsx.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
+	xlsx.SetCellValue("ProgramIDS", "A1", "ID")
+	xlsx.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
 
-    // Set styles
-    xlsx.SetColWidth("ProgramIDS","B","B",35)
-    xlsx.SetCellStyle("ProgramIDS","A1","B1",2)
+	// Set styles
+	xlsx.SetColWidth("ProgramIDS", "B", "B", 35)
+	xlsx.SetCellStyle("ProgramIDS", "A1", "B1", 2)
 
-    // Set data
-    for i := 0; i < len(programs); i++ {
-        xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
-        xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)
-    }
-    xlsx.SetActiveSheet(1)
+	// Set data
+	for i := 0; i < len(programs); i++ {
+		xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
+		xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)
+	}
+	xlsx.SetActiveSheet(1)
 
-    // Save xlsx file by the given path.
-    err = xlsx.SaveAs(fileDir)
-    if err != nil {
-        fmt.Println(err)
-    }
+	// Save xlsx file by the given path.
+	err = xlsx.SaveAs(fileDir)
+	if err != nil {
+		fmt.Println(err)
+	}
 
-    // Return file excel
-    return c.File(fileDir)
+	// Return file excel
+	return c.File(fileDir)
 }
 
 func GetTempUploadStudentByProgram(c echo.Context) error {
-    // Return file excel
-    return c.File("templates/templateStudent.xlsx")
+	// Return file excel
+	return c.File("templates/templateStudent.xlsx")
 }
 
 // SetTempUploadStudent set upload student
@@ -423,13 +423,13 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 	}
 
 	// GET CONNECTION DATABASE
-    DB := config.GetConnection()
-    defer DB.Close()
+	DB := config.GetConnection()
+	defer DB.Close()
 
 	// Prepare
 	ignoreCols := 1
 	counter := 0
-    TX := DB.Begin()
+	TX := DB.Begin()
 
 	// Get all the rows in the student.
 	rows := xlsx.GetRows("student")
@@ -442,61 +442,61 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 			}
 
 			// program id
-            u, _ := strconv.ParseUint(strings.TrimSpace(row[0]), 0, 32)
-            currentProgram := uint(u)
+			u, _ := strconv.ParseUint(strings.TrimSpace(row[0]), 0, 32)
+			currentProgram := uint(u)
 
-            // DATABASE MODELS
-            // Create model student
-            student := institutemodel.Student{
-                DNI:      strings.TrimSpace(row[1]),
-                FullName: strings.TrimSpace(row[2]),
-                Phone:    strings.TrimSpace(row[3]),
-                Gender:    strings.TrimSpace(row[4]),
-                StudentStatusID: 1,
-            }
+			// DATABASE MODELS
+			// Create model student
+			student := institutemodel.Student{
+				DNI:             strings.TrimSpace(row[1]),
+				FullName:        strings.TrimSpace(row[2]),
+				Phone:           strings.TrimSpace(row[3]),
+				Gender:          strings.TrimSpace(row[4]),
+				StudentStatusID: 1,
+			}
 
-            // has password new user account
-            cc := sha256.Sum256([]byte(student.DNI + "ST"))
-            pwd := fmt.Sprintf("%x", cc)
+			// has password new user account
+			cc := sha256.Sum256([]byte(student.DNI + "ST"))
+			pwd := fmt.Sprintf("%x", cc)
 
-            // New Account
-            userAccount := models.User{
-                UserName: student.DNI + "ST",
-                Password: pwd,
-                RoleID:   5,
-            }
+			// New Account
+			userAccount := models.User{
+				UserName: student.DNI + "ST",
+				Password: pwd,
+				RoleID:   5,
+			}
 
-            // Insert user in database
-            if err := TX.Create(&userAccount).Error; err != nil {
-                TX.Rollback()
-                return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-            }
-            student.UserID = userAccount.ID // Set new user id
+			// Insert user in database
+			if err := TX.Create(&userAccount).Error; err != nil {
+				TX.Rollback()
+				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+			}
+			student.UserID = userAccount.ID // Set new user id
 
-            if err := TX.Create(&student).Error; err != nil {
-                TX.Rollback()
-                return c.JSON(http.StatusOK, utilities.Response{
-                    Message: fmt.Sprintf("Ocurrió un error al insertar el alumno %s con "+
-                        "DNI: %s es posible que este alumno ya este en la base de datos o los datos son incorrectos, "+
-                        "Error: %s, no se realizo ninguna cambio en la base de datos", student.FullName, student.DNI, err),
-                })
-            }
+			if err := TX.Create(&student).Error; err != nil {
+				TX.Rollback()
+				return c.JSON(http.StatusOK, utilities.Response{
+					Message: fmt.Sprintf("Ocurrió un error al insertar el alumno %s con "+
+						"DNI: %s es posible que este alumno ya este en la base de datos o los datos son incorrectos, "+
+						"Error: %s, no se realizo ninguna cambio en la base de datos", student.FullName, student.DNI, err),
+				})
+			}
 
-            // Relation student
-            studentProgram := institutemodel.StudentProgram{
-                ProgramID: currentProgram,
-                StudentID: student.ID,
-            }
-            if err := TX.Create(&studentProgram).Error; err != nil {
-                TX.Rollback()
-                return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-            }
+			// Relation student
+			studentProgram := institutemodel.StudentProgram{
+				ProgramID: currentProgram,
+				StudentID: student.ID,
+			}
+			if err := TX.Create(&studentProgram).Error; err != nil {
+				TX.Rollback()
+				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+			}
 
-            // Counter total operations success
-            counter++
+			// Counter total operations success
+			counter++
 		}
 	}
-    TX.Commit()
+	TX.Commit()
 
 	// Response success
 	return c.JSON(http.StatusOK, utilities.Response{
@@ -507,118 +507,117 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 
 // SetTempUploadStudent set upload student
 func SetTempUploadStudentByProgram(c echo.Context) error {
-    // Source
-    file, err := c.FormFile("file")
-    if err != nil {
-        return err
-    }
-    src, err := file.Open()
-    if err != nil {
-        return err
-    }
-    defer src.Close()
+	// Source
+	file, err := c.FormFile("file")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
 
-    // Destination
-    auxDir := "temp/" + file.Filename
-    dst, err := os.Create(auxDir)
-    if err != nil {
-        return err
-    }
-    defer dst.Close()
+	// Destination
+	auxDir := "temp/" + file.Filename
+	dst, err := os.Create(auxDir)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
 
-    // Copy
-    if _, err = io.Copy(dst, src); err != nil {
-        return err
-    }
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
 
-    // ---------------------
-    // Read File whit Excel
-    // ---------------------
-    xlsx, err := excelize.OpenFile(auxDir)
-    if err != nil {
-        return err
-    }
+	// ---------------------
+	// Read File whit Excel
+	// ---------------------
+	xlsx, err := excelize.OpenFile(auxDir)
+	if err != nil {
+		return err
+	}
 
-    // GET CONNECTION DATABASE
-    DB := config.GetConnection()
-    defer DB.Close()
+	// GET CONNECTION DATABASE
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Prepare
-    ignoreCols := 1
-    counter := 0
-    TX := DB.Begin()
+	// Prepare
+	ignoreCols := 1
+	counter := 0
+	TX := DB.Begin()
 
-    // Get all the rows in the student.
-    rows := xlsx.GetRows("student")
-    for k, row := range rows {
+	// Get all the rows in the student.
+	rows := xlsx.GetRows("student")
+	for k, row := range rows {
 
-        if k >= ignoreCols {
-            // Validate required fields
-            if row[0] == "" || row[1] == "" {
-                break
-            }
+		if k >= ignoreCols {
+			// Validate required fields
+			if row[0] == "" || row[1] == "" {
+				break
+			}
 
-            // program id
-            //u, _ := strconv.ParseUint(strings.TrimSpace(row[0]), 0, 32)
-            //currentProgram := uint(u)
+			// program id
+			//u, _ := strconv.ParseUint(strings.TrimSpace(row[0]), 0, 32)
+			//currentProgram := uint(u)
 
-            // DATABASE MODELS
-            // Create model student
-            student := institutemodel.Student{
-                DNI:      strings.TrimSpace(row[1]),
-                FullName: strings.TrimSpace(row[2]),
-                Phone:    strings.TrimSpace(row[3]),
-                Gender:    strings.TrimSpace(row[4]),
-                StudentStatusID: 1,
-            }
+			// DATABASE MODELS
+			// Create model student
+			student := institutemodel.Student{
+				DNI:             strings.TrimSpace(row[1]),
+				FullName:        strings.TrimSpace(row[2]),
+				Phone:           strings.TrimSpace(row[3]),
+				Gender:          strings.TrimSpace(row[4]),
+				StudentStatusID: 1,
+			}
 
-            // has password new user account
-            cc := sha256.Sum256([]byte(student.DNI + "ST"))
-            pwd := fmt.Sprintf("%x", cc)
+			// has password new user account
+			cc := sha256.Sum256([]byte(student.DNI + "ST"))
+			pwd := fmt.Sprintf("%x", cc)
 
-            // New Account
-            userAccount := models.User{
-                UserName: student.DNI + "ST",
-                Password: pwd,
-                RoleID:   5,
-            }
+			// New Account
+			userAccount := models.User{
+				UserName: student.DNI + "ST",
+				Password: pwd,
+				RoleID:   5,
+			}
 
-            // Insert user in database
-            if err := TX.Create(&userAccount).Error; err != nil {
-                TX.Rollback()
-                return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-            }
-            student.UserID = userAccount.ID // Set new user id
+			// Insert user in database
+			if err := TX.Create(&userAccount).Error; err != nil {
+				TX.Rollback()
+				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+			}
+			student.UserID = userAccount.ID // Set new user id
 
-            if err := TX.Create(&student).Error; err != nil {
-                TX.Rollback()
-                return c.JSON(http.StatusOK, utilities.Response{
-                    Message: fmt.Sprintf("Ocurrió un error al insertar el alumno %s con "+
-                        "DNI: %s es posible que este alumno ya este en la base de datos o los datos son incorrectos, "+
-                        "Error: %s, no se realizo ninguna cambio en la base de datos", student.FullName, student.DNI, err),
-                })
-            }
+			if err := TX.Create(&student).Error; err != nil {
+				TX.Rollback()
+				return c.JSON(http.StatusOK, utilities.Response{
+					Message: fmt.Sprintf("Ocurrió un error al insertar el alumno %s con "+
+						"DNI: %s es posible que este alumno ya este en la base de datos o los datos son incorrectos, "+
+						"Error: %s, no se realizo ninguna cambio en la base de datos", student.FullName, student.DNI, err),
+				})
+			}
 
-            // Relation student
-            //studentProgram := institutemodel.StudentProgram{
-            //    ProgramID: currentProgram,
-            //    StudentID: student.ID,
-            //}
-            //if err := TX.Create(&studentProgram).Error; err != nil {
-            //    TX.Rollback()
-            //    return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-            //}
+			// Relation student
+			//studentProgram := institutemodel.StudentProgram{
+			//    ProgramID: currentProgram,
+			//    StudentID: student.ID,
+			//}
+			//if err := TX.Create(&studentProgram).Error; err != nil {
+			//    TX.Rollback()
+			//    return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+			//}
 
-            // Counter total operations success
-            counter++
-        }
-    }
-    TX.Commit()
+			// Counter total operations success
+			counter++
+		}
+	}
+	TX.Commit()
 
-    // Response success
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Message: fmt.Sprintf("Se guardo %d registros en la base de datos", counter),
-    })
+	// Response success
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: fmt.Sprintf("Se guardo %d registros en la base de datos", counter),
+	})
 }
-
