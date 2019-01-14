@@ -40,7 +40,7 @@ func GetTeacherProgramByProgram(c echo.Context) error {
 		Order("teacher_programs.id desc").
 		Where("teacher_programs.program_id = ?", teacherProgram.ProgramID).
 		Scan(&teachers).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -129,9 +129,7 @@ func DeleteTeacherProgram(c echo.Context) error {
 
 	// Delete teacher in database
 	if err := db.Delete(&teacherProgram).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response

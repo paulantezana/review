@@ -68,14 +68,14 @@ func GetReviews(c echo.Context) error {
 		Order("reviews.id desc").
 		Where("reviews.student_id = ?", request.StudentID).
 		Scan(&reviewsResponses).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// validation
 	countReviews := len(reviewsResponses) // all review count
 	var allModules uint                   // all modules count
 	if err := db.Model(&institutemodel.Module{}).Where("program_id = ?", request.ProgramID).Count(&allModules).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Calculate validations
@@ -102,7 +102,7 @@ func CreateReview(c echo.Context) error {
 	// Get data request
 	review := reviewmodel.Review{}
 	if err := c.Bind(&review); err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 	review.UserID = currentUser.ID
 
@@ -115,7 +115,6 @@ func CreateReview(c echo.Context) error {
 	if DB.Where("student_id = ? and module_id = ?", review.StudentID, review.ModuleId).
 		Find(&rvw).RowsAffected >= 1 {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: "Este alumno ya tiene una revision con este modulo",
 		})
 	}
@@ -169,7 +168,6 @@ func UpdateReview(c echo.Context) error {
 	rows := db.Model(&review).Update(review).RowsAffected
 	if rows == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", review.ID),
 		})
 	}
@@ -196,10 +194,7 @@ func DeleteReview(c echo.Context) error {
 
 	// Delete review in database
 	if err := db.Delete(&review).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -273,7 +268,7 @@ func GetActaReview(c echo.Context) error {
 		Joins("INNER JOIN students on reviews.student_id = students.id").
 		Where("reviews.id = ?", review.ID).
 		Scan(&moduleResponses).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Find detailResponse
@@ -283,7 +278,7 @@ func GetActaReview(c echo.Context) error {
 		Joins("INNER JOIN companies on review_details.company_id = companies.id").
 		Where("review_details.review_id = ?", review.ID).
 		Scan(&detailResponses).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Find Review
@@ -293,7 +288,7 @@ func GetActaReview(c echo.Context) error {
 		Joins("INNER JOIN teachers on reviews.teacher_id = teachers.id").
 		Where("reviews.id = ?", review.ID).
 		Scan(&reviewResponses).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Response data
@@ -333,7 +328,7 @@ func GetConstReview(c echo.Context) error {
 		Joins("INNER JOIN students on reviews.student_id = students.id").
 		Where("reviews.id = ?", review.ID).
 		Scan(&moduleResponses).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Find detailResponse
@@ -343,12 +338,12 @@ func GetConstReview(c echo.Context) error {
 		Joins("INNER JOIN companies on review_details.company_id = companies.id").
 		Where("review_details.review_id = ?", review.ID).
 		Scan(&detailResponses).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// find review
 	if err := db.First(&review, review.ID).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	return c.JSON(http.StatusOK, consResponse{
@@ -407,7 +402,7 @@ func GetConsolidateReview(c echo.Context) error {
 		Joins("INNER JOIN modules on reviews.module_id = modules.id").
 		Where("reviews.student_id  = ?", student.ID).
 		Scan(&reviewModuleResponses).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Find current student
@@ -421,7 +416,7 @@ func GetConsolidateReview(c echo.Context) error {
 			Joins("INNER JOIN companies on review_details.company_id = companies.id").
 			Where("review_details.review_id  = ?", review.ID).
 			Scan(&redR).Error; err != nil {
-			return c.NoContent(http.StatusInternalServerError)
+            return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 		}
 		reviewModuleResponses[key].ReviewDetails = redR
 	}

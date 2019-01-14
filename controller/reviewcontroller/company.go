@@ -37,7 +37,7 @@ func GetCompanies(c echo.Context) error {
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&companies).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -65,7 +65,7 @@ func GetCompanySearch(c echo.Context) error {
 	companies := make([]reviewmodel.Company, 0)
 	if err := db.Where("lower(name_social_reason) LIKE lower(?)", "%"+request.Search+"%").
 		Limit(10).Find(&companies).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	customCompanies := make([]reviewmodel.Company, 0)
@@ -97,9 +97,7 @@ func CreateCompany(c echo.Context) error {
 
 	// Insert companies in database
 	if err := db.Create(&company).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -125,7 +123,6 @@ func UpdateCompany(c echo.Context) error {
 	rows := db.Model(&company).Update(company).RowsAffected
 	if rows == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", company.ID),
 		})
 	}
@@ -151,10 +148,7 @@ func DeleteCompany(c echo.Context) error {
 
 	// Delete company in database
 	if err := db.Delete(&company).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -185,10 +179,7 @@ func MultipleDeleteCompany(c echo.Context) error {
 		// Delete company in database
 		if err := tx.Delete(&company).Error; err != nil {
 			tx.Rollback()
-			return c.JSON(http.StatusOK, utilities.Response{
-				Success: false,
-				Message: fmt.Sprintf("%s", err),
-			})
+            return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 		}
 	}
 
@@ -234,7 +225,7 @@ func SetTempUploadCompany(c echo.Context) error {
 	// ---------------------
 	// Read File whit Excel
 	// ---------------------
-	xlsx, err := excelize.OpenFile(auxDir)
+    excel, err := excelize.OpenFile(auxDir)
 	if err != nil {
 		return err
 	}
@@ -244,7 +235,7 @@ func SetTempUploadCompany(c echo.Context) error {
 	ignoreCols := 1
 
 	// Get all the rows in the student.
-	rows := xlsx.GetRows("empresa")
+	rows := excel.GetRows("empresa")
 	for k, row := range rows {
 		if k >= ignoreCols {
 			companies = append(companies, reviewmodel.Company{
@@ -266,7 +257,6 @@ func SetTempUploadCompany(c echo.Context) error {
 		if err := tr.Create(&company).Error; err != nil {
 			tr.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{
-				Success: false,
 				Message: fmt.Sprintf("Ocurrió un error al insertar al empresa %s con "+
 					"RUC: %s es posible que este alumno ya este en la base de datos o los datos son incorrectos, "+
 					"Error: %s, no se realizo ninguna cambio en la base de datos", company.NameSocialReason, company.RUC, err),
@@ -292,34 +282,34 @@ func ExportAllCompanies(c echo.Context) error {
 
 	// Query in database
 	if err := db.Order("id asc").Find(&companies).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Create excel file
-	xlsx := excelize.NewFile()
+	excel := excelize.NewFile()
 
 	// Create a new sheet.
-	index := xlsx.NewSheet("Sheet1")
+	index := excel.NewSheet("Sheet1")
 
 	// Set value of a cell.
-	xlsx.SetCellValue("Sheet1", "A1", "RUC")
-	xlsx.SetCellValue("Sheet1", "B1", "Nombre o razón social")
-	xlsx.SetCellValue("Sheet1", "C1", "Dirección")
-	xlsx.SetCellValue("Sheet1", "D1", "Gerente")
+    excel.SetCellValue("Sheet1", "A1", "RUC")
+    excel.SetCellValue("Sheet1", "B1", "Nombre o razón social")
+    excel.SetCellValue("Sheet1", "C1", "Dirección")
+    excel.SetCellValue("Sheet1", "D1", "Gerente")
 
 	currentRow := 2
 	for k, company := range companies {
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("A%d", currentRow+k), company.RUC)
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("B%d", currentRow+k), company.NameSocialReason)
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("C%d", currentRow+k), company.Address)
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("D%d", currentRow+k), company.Manager)
+        excel.SetCellValue("Sheet1", fmt.Sprintf("A%d", currentRow+k), company.RUC)
+        excel.SetCellValue("Sheet1", fmt.Sprintf("B%d", currentRow+k), company.NameSocialReason)
+        excel.SetCellValue("Sheet1", fmt.Sprintf("C%d", currentRow+k), company.Address)
+        excel.SetCellValue("Sheet1", fmt.Sprintf("D%d", currentRow+k), company.Manager)
 	}
 
 	// Set active sheet of the workbook.
-	xlsx.SetActiveSheet(index)
+    excel.SetActiveSheet(index)
 
-	// Save xlsx file by the given path.
-	err := xlsx.SaveAs("temp/allCompanies.xlsx")
+	// Save excel file by the given path.
+	err := excel.SaveAs("temp/allCompanies.xlsx")
 	if err != nil {
 		fmt.Println(err)
 	}

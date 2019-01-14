@@ -85,7 +85,7 @@ func GetAdmissionsPaginate(c echo.Context) error {
 		Order("admissions.id desc").
 		Offset(offset).Limit(request.Limit).Scan(&admissionsPaginateResponses).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -186,7 +186,7 @@ func GetAdmissionsPaginateExam(c echo.Context) error {
 		Order("admissions.id desc").
 		Offset(offset).Limit(request.Limit).Scan(&admissionsPaginateExamResponses).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -579,7 +579,7 @@ func ExportAdmission(c echo.Context) error {
 		Where("admissions.year >= ? AND admissions.year <= ? AND admissions.state = ?", request.From, request.To, request.State).
 		Order("admissions.id asc").Scan(&exportAdmissionModels).
 		Count(&total).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// CREATE EXCEL FILE

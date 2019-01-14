@@ -49,7 +49,7 @@ func GetProgramByID(c echo.Context) error {
 
 	// Execute instructions
 	if err := DB.First(&program, program.ID).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response

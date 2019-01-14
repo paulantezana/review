@@ -94,7 +94,7 @@ func Login(c echo.Context) error {
 		Joins("INNER JOIN programs on program_users.program_id = programs.id").
 		Where("program_users.user_id = ? AND program_users.license = true", user.ID).
 		Scan(&loginProgramLicenses).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 	loginSubsidiaryLicenses := make([]loginSubsidiaryLicense, 0)
 	if err := DB.Table("subsidiary_users").
@@ -102,7 +102,7 @@ func Login(c echo.Context) error {
 		Joins("INNER JOIN subsidiaries on subsidiary_users.subsidiary_id = subsidiaries.id").
 		Where("subsidiary_users.user_id = ? AND subsidiary_users.license = true", user.ID).
 		Scan(&loginSubsidiaryLicenses).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Insert new Session
@@ -111,9 +111,7 @@ func Login(c echo.Context) error {
 		LastActivity: time.Now(),
 	}
 	if err := DB.Create(&session).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// get token key
@@ -193,9 +191,7 @@ func LoginStudent(c echo.Context) error {
 		LastActivity: time.Now(),
 	}
 	if err := DB.Create(&session).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// get token key
@@ -270,34 +266,26 @@ func ForgotSearch(c echo.Context) error {
 
 	// Update database
 	if err := db.Model(&user).Update(user).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// SEND EMAIL get html template
 	t, err := template.ParseFiles("utilities/email.html")
 	if err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// SEND EMAIL new buffer
 	buf := new(bytes.Buffer)
 	err = t.Execute(buf, user)
 	if err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// SEND EMAIL
 	err = config.SendEmail(user.Email, fmt.Sprint(key)+" es el código de recuperación de tu cuenta en REVIEW", buf.String())
 	if err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Response success api service
@@ -358,12 +346,12 @@ func ForgotChange(c echo.Context) error {
 
 	// Update
 	if err := db.Model(&user).Update(user).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Update key
 	if err := db.Model(&user).UpdateColumn("key", "").Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Response data
@@ -402,7 +390,7 @@ func GetUsers(c echo.Context) error {
 	if err := db.Where("user_name LIKE ? AND role_id >= ?", "%"+request.Search+"%", currentUser.RoleID).
 		Order("id desc").Offset(offset).Limit(request.Limit).Find(&users).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -429,7 +417,7 @@ func GetUserByID(c echo.Context) error {
 
 	// Execute instructions
 	if err := db.First(&user, user.ID).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -463,10 +451,7 @@ func CreateUser(c echo.Context) error {
 
 	// Insert user in database
 	if err := db.Create(&user).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -493,18 +478,17 @@ func UpdateUser(c echo.Context) error {
 	aux := models.User{ID: user.ID}
 	if db.First(&aux).RecordNotFound() {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se encontró el registro con id %d", user.ID),
 		})
 	}
 
 	// Update user in database
 	if err := db.Model(&user).Update(user).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 	if !user.State {
 		if err := db.Model(user).UpdateColumn("state", false).Error; err != nil {
-			return err
+            return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 		}
 	}
 
@@ -537,9 +521,7 @@ func DeleteUser(c echo.Context) error {
 
 	// Delete user in database
 	if err := db.Delete(&user).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -563,7 +545,6 @@ func UploadAvatarUser(c echo.Context) error {
 	// Validation user exist
 	if db.First(&user, "id = ?", idUser).RecordNotFound() {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se encontró el registro con id %d", user.ID),
 		})
 	}
@@ -597,7 +578,7 @@ func UploadAvatarUser(c echo.Context) error {
 
 	// Update database user
 	if err := db.Model(&user).Update(user).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -623,7 +604,6 @@ func ResetPasswordUser(c echo.Context) error {
 	// Validation user exist
 	if db.First(&user, "id = ?", user.ID).RecordNotFound() {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se encontró el registro con id %d", user.ID),
 		})
 	}
@@ -635,7 +615,7 @@ func ResetPasswordUser(c echo.Context) error {
 
 	// Update user in database
 	if err := db.Model(&user).Update(user).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	return c.JSON(http.StatusOK, utilities.Response{
@@ -660,7 +640,6 @@ func ChangePasswordUser(c echo.Context) error {
 	aux := models.User{ID: user.ID}
 	if db.First(&aux, "id = ?", aux.ID).RecordNotFound() {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se encontró el registro con id %d", aux.ID),
 		})
 	}
@@ -670,7 +649,6 @@ func ChangePasswordUser(c echo.Context) error {
 		// Validate empty length old password
 		if len(user.OldPassword) == 0 {
 			return c.JSON(http.StatusOK, utilities.Response{
-				Success: false,
 				Message: "Ingrese la contraseña antigua",
 			})
 		}
@@ -682,7 +660,6 @@ func ChangePasswordUser(c echo.Context) error {
 		// validate old password
 		if db.Where("password = ?", old).First(&aux).RecordNotFound() {
 			return c.JSON(http.StatusOK, utilities.Response{
-				Success: false,
 				Message: "La contraseña antigua es incorrecta",
 			})
 		}

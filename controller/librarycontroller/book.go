@@ -36,7 +36,7 @@ func GetBooksPaginate(c echo.Context) error {
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&books).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -62,7 +62,7 @@ func GetBookByID(c echo.Context) error {
 
 	// Execute instructions
 	if err := db.First(&book, book.ID).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -85,10 +85,7 @@ func CreateBook(c echo.Context) error {
 
 	// Insert books in database
 	if err := db.Create(&book).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -114,7 +111,6 @@ func UpdateBook(c echo.Context) error {
 	rows := db.Model(&book).Update(book).RowsAffected
 	if rows == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", book.ID),
 		})
 	}
@@ -140,10 +136,7 @@ func DeleteBook(c echo.Context) error {
 
 	// Delete book in database
 	if err := db.Delete(&book).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response

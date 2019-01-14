@@ -306,10 +306,7 @@ func DeleteTeacher(c echo.Context) error {
 
 	// Delete teacher in database
 	if err := db.Delete(&teacher).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -334,34 +331,34 @@ func GetTempUploadTeacher(c echo.Context) error {
 	// Execute instructions
 	programs := make([]institutemodel.Program, 0)
 	if err := DB.Find(&programs, institutemodel.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Get template excel
 	fileDir := "templates/templateTeacherSA.xlsx"
-	xlsx, err := excelize.OpenFile(fileDir)
+    excel, err := excelize.OpenFile(fileDir)
 	if err != nil {
 		fmt.Println(err)
 	}
-	xlsx.DeleteSheet("ProgramIDS") // Delete sheet
-	xlsx.NewSheet("ProgramIDS")    // Create new sheet
+    excel.DeleteSheet("ProgramIDS") // Delete sheet
+    excel.NewSheet("ProgramIDS")    // Create new sheet
 
-	xlsx.SetCellValue("ProgramIDS", "A1", "ID")
-	xlsx.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
+    excel.SetCellValue("ProgramIDS", "A1", "ID")
+    excel.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
 
 	// Set styles
-	xlsx.SetColWidth("ProgramIDS", "B", "B", 35)
-	xlsx.SetCellStyle("ProgramIDS", "A1", "B1", 2)
+    excel.SetColWidth("ProgramIDS", "B", "B", 35)
+    excel.SetCellStyle("ProgramIDS", "A1", "B1", 2)
 
 	// Set data
 	for i := 0; i < len(programs); i++ {
-		xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
-		xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)
+        excel.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
+        excel.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)
 	}
-	xlsx.SetActiveSheet(1)
+    excel.SetActiveSheet(1)
 
-	// Save xlsx file by the given path.
-	err = xlsx.SaveAs(fileDir)
+	// Save excel file by the given path.
+	err = excel.SaveAs(fileDir)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -408,7 +405,7 @@ func SetTempUploadTeacher(c echo.Context) error {
 	// ---------------------
 	// Read File whit Excel
 	// ---------------------
-	xlsx, err := excelize.OpenFile(auxDir)
+    excel, err := excelize.OpenFile(auxDir)
 	if err != nil {
 		return err
 	}
@@ -418,7 +415,7 @@ func SetTempUploadTeacher(c echo.Context) error {
 	ignoreCols := 1
 
 	// Get all the rows in the Sheet1.
-	rows := xlsx.GetRows("teacher")
+	rows := excel.GetRows("teacher")
 	for k, row := range rows {
 		if k >= ignoreCols {
 
@@ -480,10 +477,7 @@ func SetTempUploadTeacher(c echo.Context) error {
 		// Insert user in database
 		if err := tr.Create(&userAccount).Error; err != nil {
 			tr.Rollback()
-			return c.JSON(http.StatusOK, utilities.Response{
-				Success: false,
-				Message: fmt.Sprintf("%s", err),
-			})
+            return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 		}
 
 		// Insert teacher in database
@@ -519,46 +513,46 @@ func ExportAllTeachers(c echo.Context) error {
 	}
 
 	// Create excel file
-	xlsx := excelize.NewFile()
+	excel := excelize.NewFile()
 
 	// Create a new sheet.
-	index := xlsx.NewSheet("Sheet1")
+	index := excel.NewSheet("Sheet1")
 
 	// Set value of a cell.
-	xlsx.SetCellValue("Sheet1", "A1", "DNI")
-	xlsx.SetCellValue("Sheet1", "B1", "Apellidos")
-	xlsx.SetCellValue("Sheet1", "C1", "Nombres")
-	xlsx.SetCellValue("Sheet1", "D1", "Fecha Nacimiento")
-	xlsx.SetCellValue("Sheet1", "E1", "Genero")
-	xlsx.SetCellValue("Sheet1", "F1", "Direccion")
-	xlsx.SetCellValue("Sheet1", "G1", "Telefono")
-	xlsx.SetCellValue("Sheet1", "H1", "Condicion Laboral")
-	xlsx.SetCellValue("Sheet1", "I1", "Nivel de educacion")
-	xlsx.SetCellValue("Sheet1", "J1", "Fecha ingreso")
-	xlsx.SetCellValue("Sheet1", "K1", "Fecha retiro")
-	xlsx.SetCellValue("Sheet1", "L1", "Especialidad")
+    excel.SetCellValue("Sheet1", "A1", "DNI")
+    excel.SetCellValue("Sheet1", "B1", "Apellidos")
+    excel.SetCellValue("Sheet1", "C1", "Nombres")
+    excel.SetCellValue("Sheet1", "D1", "Fecha Nacimiento")
+    excel.SetCellValue("Sheet1", "E1", "Genero")
+    excel.SetCellValue("Sheet1", "F1", "Direccion")
+    excel.SetCellValue("Sheet1", "G1", "Telefono")
+    excel.SetCellValue("Sheet1", "H1", "Condicion Laboral")
+    excel.SetCellValue("Sheet1", "I1", "Nivel de educacion")
+    excel.SetCellValue("Sheet1", "J1", "Fecha ingreso")
+    excel.SetCellValue("Sheet1", "K1", "Fecha retiro")
+    excel.SetCellValue("Sheet1", "L1", "Especialidad")
 
 	currentRow := 2
 	for k, teacher := range teachers {
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("A%d", currentRow+k), teacher.DNI)
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("B%d", currentRow+k), teacher.LastName)
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("C%d", currentRow+k), teacher.FirstName)
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("D%d", currentRow+k), teacher.BirthDate.Format("01/02/2006"))
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("E%d", currentRow+k), teacher.Gender)
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("F%d", currentRow+k), teacher.Address)
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("G%d", currentRow+k), teacher.Phone)
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("H%d", currentRow+k), teacher.WorkConditions)
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("I%d", currentRow+k), teacher.EducationLevel)
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("J%d", currentRow+k), teacher.AdmissionDate.Format("01/02/2006"))
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("K%d", currentRow+k), teacher.RetirementDate.Format("01/02/2006"))
-		xlsx.SetCellValue("Sheet1", fmt.Sprintf("L%d", currentRow+k), teacher.Specialty)
+        excel.SetCellValue("Sheet1", fmt.Sprintf("A%d", currentRow+k), teacher.DNI)
+        excel.SetCellValue("Sheet1", fmt.Sprintf("B%d", currentRow+k), teacher.LastName)
+        excel.SetCellValue("Sheet1", fmt.Sprintf("C%d", currentRow+k), teacher.FirstName)
+        excel.SetCellValue("Sheet1", fmt.Sprintf("D%d", currentRow+k), teacher.BirthDate.Format("01/02/2006"))
+        excel.SetCellValue("Sheet1", fmt.Sprintf("E%d", currentRow+k), teacher.Gender)
+        excel.SetCellValue("Sheet1", fmt.Sprintf("F%d", currentRow+k), teacher.Address)
+        excel.SetCellValue("Sheet1", fmt.Sprintf("G%d", currentRow+k), teacher.Phone)
+        excel.SetCellValue("Sheet1", fmt.Sprintf("H%d", currentRow+k), teacher.WorkConditions)
+        excel.SetCellValue("Sheet1", fmt.Sprintf("I%d", currentRow+k), teacher.EducationLevel)
+        excel.SetCellValue("Sheet1", fmt.Sprintf("J%d", currentRow+k), teacher.AdmissionDate.Format("01/02/2006"))
+        excel.SetCellValue("Sheet1", fmt.Sprintf("K%d", currentRow+k), teacher.RetirementDate.Format("01/02/2006"))
+        excel.SetCellValue("Sheet1", fmt.Sprintf("L%d", currentRow+k), teacher.Specialty)
 	}
 
 	// Set active sheet of the workbook.
-	xlsx.SetActiveSheet(index)
+    excel.SetActiveSheet(index)
 
-	// Save xlsx file by the given path.
-	err := xlsx.SaveAs("temp/allTeachers.xlsx")
+	// Save excel file by the given path.
+	err := excel.SaveAs("temp/allTeachers.xlsx")
 	if err != nil {
 		fmt.Println(err)
 	}

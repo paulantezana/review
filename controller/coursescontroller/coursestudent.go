@@ -38,7 +38,7 @@ func GetCourseStudentsPaginate(c echo.Context) error {
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&courseStudents).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -73,10 +73,7 @@ func CreateCourseStudent(c echo.Context) error {
 
 	// Insert courseStudents in database
 	if err := DB.Create(&courseStudent).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -102,7 +99,6 @@ func UpdateCourseStudent(c echo.Context) error {
 	rows := db.Model(&courseStudent).Update(courseStudent).RowsAffected
 	if rows == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", courseStudent.ID),
 		})
 	}
@@ -128,10 +124,7 @@ func DeleteCourseStudent(c echo.Context) error {
 
 	// Delete course in database
 	if err := db.Delete(&courseStudent).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -208,7 +201,7 @@ func GetTempUploadCourseStudentBySubsidiary(c echo.Context) error {
 	// Execute instructions
 	programs := make([]institutemodel.Program, 0)
 	if err := DB.Find(&programs, institutemodel.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Get excel file

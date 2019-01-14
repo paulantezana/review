@@ -1,7 +1,8 @@
 package monitoringcontroller
 
 import (
-	"github.com/paulantezana/review/models/monitoringmodel"
+    "fmt"
+    "github.com/paulantezana/review/models/monitoringmodel"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -21,7 +22,7 @@ func GetTypeQuestions(c echo.Context) error {
 	if err := db.Find(&typeQuestions).
 		Order("id desc").
 		Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response

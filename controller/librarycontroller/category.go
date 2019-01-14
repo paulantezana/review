@@ -32,7 +32,7 @@ func GetCategoriesPaginate(c echo.Context) error {
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&categories).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -61,7 +61,7 @@ func GetCategoriesAll(c echo.Context) error {
 
 	// Query in database
 	if err := db.Find(&categories).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -84,7 +84,7 @@ func GetCategoryByID(c echo.Context) error {
 
 	// Execute instructions
 	if err := db.First(&category, category.ID).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -107,10 +107,7 @@ func CreateCategory(c echo.Context) error {
 
 	// Insert categories in database
 	if err := db.Create(&category).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -136,7 +133,6 @@ func UpdateCategory(c echo.Context) error {
 	rows := db.Model(&category).Update(category).RowsAffected
 	if rows == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
 			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", category.ID),
 		})
 	}
@@ -162,10 +158,7 @@ func DeleteCategory(c echo.Context) error {
 
 	// Delete category in database
 	if err := db.Delete(&category).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response

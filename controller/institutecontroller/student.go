@@ -347,7 +347,7 @@ func GetTempUploadStudentBySubsidiary(c echo.Context) error {
 	// Execute instructions
 	programs := make([]institutemodel.Program, 0)
 	if err := DB.Find(&programs, institutemodel.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Get excel file
@@ -534,7 +534,7 @@ func SetTempUploadStudentByProgram(c echo.Context) error {
 	// ---------------------
 	// Read File whit Excel
 	// ---------------------
-	xlsx, err := excelize.OpenFile(auxDir)
+	excel, err := excelize.OpenFile(auxDir)
 	if err != nil {
 		return err
 	}
@@ -549,7 +549,7 @@ func SetTempUploadStudentByProgram(c echo.Context) error {
 	TX := DB.Begin()
 
 	// Get all the rows in the student.
-	rows := xlsx.GetRows("student")
+	rows := excel.GetRows("student")
 	for k, row := range rows {
 
 		if k >= ignoreCols {

@@ -38,7 +38,7 @@ func GetGlobalSettings(c echo.Context) error {
 
 	// Execute instructions
 	if err := db.First(&user, user.ID).Error; err != nil {
-		return c.NoContent(http.StatusUnauthorized)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 	user.Password = ""
 	user.Key = ""
@@ -50,7 +50,7 @@ func GetGlobalSettings(c echo.Context) error {
 	// Find settings
 	roles := make([]models.Role, 0)
 	if err := db.Where("id >= ?", user.RoleID).Find(&roles).Error; err != nil {
-		return c.NoContent(http.StatusUnauthorized)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Set object response
@@ -143,13 +143,13 @@ func UpdateSetting(c echo.Context) error {
 	// Insert config in database
 	if exist == 0 {
 		if err := db.Create(&con).Error; err != nil {
-			return err
+            return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 		}
 	}
 
 	// Update con in database
 	if err := db.Model(&con).Update(con).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Response config
@@ -274,7 +274,7 @@ func UploadMinistrySetting(c echo.Context) error {
 
 	// Update database user
 	if err := db.Model(&setting).Update(setting).Error; err != nil {
-		return err
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response

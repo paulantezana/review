@@ -45,7 +45,7 @@ func GetReviewsDetailByReview(c echo.Context) error {
 		Order("review_details.id asc").
 		Where("review_details.review_id = ?", review.ID).
 		Scan(&reviewDetailByReviewResponse).Error; err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
@@ -69,10 +69,7 @@ func DeleteReviewDetail(c echo.Context) error {
 
 	// Delete review in database
 	if err := db.Delete(&reviewDetail).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: false,
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response

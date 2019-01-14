@@ -22,7 +22,7 @@ func GetSemesters(c echo.Context) error {
 
 	// Execute instructions
 	semesters := make([]institutemodel.Semester, 0)
-	if err := db.Where("program_id = ?", semester.ProgramID).Find(&semesters).Order("sequence desc").
+	if err := db.Debug().Where("program_id = ?", semester.ProgramID).Order("sequence asc").Find(&semesters).
 		Error; err != nil {
 		return err
 	}
@@ -98,9 +98,7 @@ func DeleteSemester(c echo.Context) error {
 
 	// Delete teacher in database
 	if err := db.Delete(&semester).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("%s", err),
-		})
+        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
 	}
 
 	// Return response
