@@ -38,7 +38,7 @@ func GetCourseStudentsPaginate(c echo.Context) error {
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&courseStudents).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -73,7 +73,7 @@ func CreateCourseStudent(c echo.Context) error {
 
 	// Insert courseStudents in database
 	if err := DB.Create(&courseStudent).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -124,7 +124,7 @@ func DeleteCourseStudent(c echo.Context) error {
 
 	// Delete course in database
 	if err := db.Delete(&courseStudent).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -177,10 +177,16 @@ func ActCourseStudent(c echo.Context) error {
 		actCourseStudentDetails = append(actCourseStudentDetails, actCourseStudentDetail)
 	}
 
+	course := coursemodel.Course{}
+    if actCourseStudentDetails[0].Student.ID >= 1 {
+        DB.First(&course,coursemodel.Course{ID: actCourseStudentDetails[0].Student.CourseID})
+    }
+
 	// Response data
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data: actCourseStudentResponse{
+		    Course:course,
 			Students: actCourseStudentDetails,
 		},
 	})
@@ -201,7 +207,7 @@ func GetTempUploadCourseStudentBySubsidiary(c echo.Context) error {
 	// Execute instructions
 	programs := make([]institutemodel.Program, 0)
 	if err := DB.Find(&programs, institutemodel.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Get excel file

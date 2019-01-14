@@ -32,7 +32,7 @@ func GetCoursesPaginate(c echo.Context) error {
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&courses).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -58,7 +58,7 @@ func GetCourseByID(c echo.Context) error {
 
 	// Execute instructions
 	if err := db.First(&course, course.ID).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -81,7 +81,7 @@ func CreateCourse(c echo.Context) error {
 
 	// Insert courses in database
 	if err := db.Create(&course).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -132,7 +132,7 @@ func DeleteCourse(c echo.Context) error {
 
 	// Delete course in database
 	if err := db.Delete(&course).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response

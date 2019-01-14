@@ -38,7 +38,7 @@ func GetPollsPaginate(c echo.Context) error {
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&companies).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -64,7 +64,7 @@ func GetPollByID(c echo.Context) error {
 
 	// Execute instructions
 	if err := db.First(&poll, poll.ID).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -95,7 +95,7 @@ func CreatePoll(c echo.Context) error {
 
 	// Insert companies in database
 	if err := db.Create(&poll).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -147,7 +147,7 @@ func DeletePoll(c echo.Context) error {
 
 	// Delete poll in database
 	if err := db.Delete(&poll).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response

@@ -347,7 +347,7 @@ func GetTempUploadStudentBySubsidiary(c echo.Context) error {
 	// Execute instructions
 	programs := make([]institutemodel.Program, 0)
 	if err := DB.Find(&programs, institutemodel.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Get excel file

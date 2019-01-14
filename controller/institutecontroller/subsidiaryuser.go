@@ -63,7 +63,7 @@ func GetSubsidiariesUserByUserID(c echo.Context) error {
 		Joins("INNER JOIN subsidiaries ON subsidiaries.id = subsidiary_users.subsidiary_id").
 		Where("subsidiary_users.user_id = ?", user.ID).
 		Scan(&subsidiaryUsers).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Response data
@@ -90,7 +90,7 @@ func GetSubsidiariesUserByUserIDLicense(c echo.Context) error {
 		Joins("INNER JOIN subsidiaries ON subsidiaries.id = subsidiary_users.subsidiary_id").
 		Where("subsidiary_users.user_id = ? AND license = TRUE", currentUser.ID).
 		Scan(&subsidiaryUsers).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Response data
@@ -115,7 +115,7 @@ func UpdateSubsidiariesUserByUserID(c echo.Context) error {
 	// Update in Database
 	for _, subsidiaryUser := range subsidiaryUsers {
 		if err := DB.Model(subsidiaryUser).UpdateColumn("license", subsidiaryUser.License).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	}
 

@@ -98,7 +98,7 @@ func DeleteSemester(c echo.Context) error {
 
 	// Delete teacher in database
 	if err := db.Delete(&semester).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response

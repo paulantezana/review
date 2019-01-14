@@ -117,7 +117,7 @@ func UpdateProgramsUserByUserID(c echo.Context) error {
 	// Update in Database
 	for _, programUser := range programUsers {
 		if err := DB.Model(programUser).UpdateColumn("license", programUser.License).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	}
 

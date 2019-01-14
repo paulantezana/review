@@ -58,6 +58,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/subsidiary/by/id", institutecontroller.GetSubsidiaryByID)
 	ar.POST("/subsidiary/create", institutecontroller.CreateSubsidiary)
 	ar.PUT("/subsidiary/update", institutecontroller.UpdateSubsidiary)
+	ar.PUT("/subsidiary/update/main", institutecontroller.UpdateMainSubsidiary)
 	ar.DELETE("/subsidiary/delete", institutecontroller.DeleteSubsidiary)
 
 	// subsidiary - user

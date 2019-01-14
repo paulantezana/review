@@ -25,14 +25,14 @@ func GetModules(c echo.Context) error {
 
 	// Query in database
 	if err := db.Find(&modules, &module).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Query semester by module
 	for k, module := range modules {
 		semesters := make([]institutemodel.ModuleSemester, 0)
 		if err := db.Find(&semesters, institutemodel.ModuleSemester{ModuleID: module.ID}).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 		modules[k].Semesters = semesters
 	}
@@ -60,7 +60,7 @@ func GetModuleSearch(c echo.Context) error {
 	modules := make([]institutemodel.Module, 0)
 	if err := db.Where("name LIKE ? AND program_id = ?", "%"+request.Search+"%", request.ProgramID).
 		Limit(5).Find(&modules).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -84,7 +84,7 @@ func CreateModule(c echo.Context) error {
 
 	// Insert modules in database
 	if err := db.Create(&module).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -107,9 +107,9 @@ func UpdateModule(c echo.Context) error {
 	defer DB.Close()
 
 	// Delete all relations by semesters current module
-    if err := DB.Delete(institutemodel.ModuleSemester{},institutemodel.ModuleSemester{ModuleID: module.ID}).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
-    }
+	if err := DB.Delete(institutemodel.ModuleSemester{}, institutemodel.ModuleSemester{ModuleID: module.ID}).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Update module in database
 	rows := DB.Model(&module).Update(module).RowsAffected
@@ -140,7 +140,7 @@ func DeleteModule(c echo.Context) error {
 
 	// Delete module in database
 	if err := DB.Delete(&module).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response

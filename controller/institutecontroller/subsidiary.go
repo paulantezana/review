@@ -16,8 +16,8 @@ func GetSubsidiaries(c echo.Context) error {
 
 	// Execute instructions
 	subsidiaries := make([]institutemodel.Subsidiary, 0)
-	if err := db.Find(&subsidiaries).Order("id desc").Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+	if err := db.Order("id desc").Find(&subsidiaries).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -42,14 +42,14 @@ func GetSubsidiariesTree(c echo.Context) error {
 	subsidiariesTree := make([]SubsidiariesTree, 0)
 	if err := db.Table("subsidiaries").Select("id, name").
 		Scan(&subsidiariesTree).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Query programs
 	for k, subsidiary := range subsidiariesTree {
 		programs := make([]institutemodel.Program, 0)
 		if err := db.Find(&programs, institutemodel.Program{SubsidiaryID: subsidiary.ID}).Order("id desc").Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 		subsidiariesTree[k].Programs = programs
 	}
@@ -74,7 +74,7 @@ func GetSubsidiaryByID(c echo.Context) error {
 
 	// Execute instructions
 	if err := db.First(&subsidiary, subsidiary.ID).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -148,7 +148,7 @@ func DeleteSubsidiary(c echo.Context) error {
 
 	// Delete teacher in database
 	if err := db.Delete(&subsidiary).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
@@ -157,4 +157,33 @@ func DeleteSubsidiary(c echo.Context) error {
 		Data:    subsidiary.ID,
 		Message: fmt.Sprintf("The subsidiary %s was successfully deleted", subsidiary.Name),
 	})
+}
+
+func UpdateMainSubsidiary(c echo.Context) error {
+    // Get data request
+    subsidiary := institutemodel.Subsidiary{}
+    if err := c.Bind(&subsidiary); err != nil {
+        return err
+    }
+
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    //  all subsidiaries main = false
+    if err := DB.Exec("UPDATE subsidiaries SET main = false").Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    //  current subsidiary main = true
+    if err := DB.Model(subsidiary).UpdateColumn("main", true).Error; err != nil {
+       return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Return response
+    return c.JSON(http.StatusCreated, utilities.Response{
+        Success: true,
+        Data:    subsidiary.ID,
+        Message: fmt.Sprintf("The data of the subsidiary %s was updated correctly", subsidiary.Name),
+    })
 }

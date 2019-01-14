@@ -23,7 +23,7 @@ func DeleteMultipleQuestion(c echo.Context) error {
 
 	// Delete question in database
 	if err := db.Delete(&multipleQuestion).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{ Message: fmt.Sprintf("%s", err) })
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
