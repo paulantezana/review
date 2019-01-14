@@ -173,8 +173,8 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/course/student/update", coursescontroller.UpdateCourseStudent)
 	ar.DELETE("/course/student/delete", coursescontroller.DeleteCourseStudent)
 	ar.POST("/course/student/act", coursescontroller.ActCourseStudent)
-    ar.POST("/course/student/download/template/by/subsidiary", coursescontroller.GetTempUploadCourseStudentBySubsidiary)
-    ar.POST("/course/student/upload/template/by/subsidiary", coursescontroller.SetTempUploadStudentBySubsidiary)
+	ar.POST("/course/student/download/template/by/subsidiary", coursescontroller.GetTempUploadCourseStudentBySubsidiary)
+	ar.POST("/course/student/upload/template/by/subsidiary", coursescontroller.SetTempUploadStudentBySubsidiary)
 
 	// ---------------------------------------------------------------------------
 	//      Monitoring routes ----------------------------------------------------

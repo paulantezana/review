@@ -247,6 +247,11 @@ func GetTempUploadCourseStudentBySubsidiary(c echo.Context) error {
 // SetTempUploadStudent set upload student
 func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 	// Source
+	ID := c.FormValue("course_id")
+	IDu, _ := strconv.ParseUint(ID, 0, 32)
+	CourseID := uint(IDu)
+
+	// FromFile
 	file, err := c.FormFile("file")
 	if err != nil {
 		return err
@@ -288,7 +293,7 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 	TX := DB.Begin()
 
 	// Get all the rows in the student.
-	rows := excel.GetRows("student")
+	rows := excel.GetRows("CourseStudents")
 	for k, row := range rows {
 
 		if k >= ignoreCols {
@@ -317,8 +322,10 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 				Year:      rowYear,
 				Note:      rowNote,
 				ProgramID: currentProgram,
+				CourseID:  CourseID,
 			}
 
+			// Create Student
 			if err := TX.Create(&student).Error; err != nil {
 				TX.Rollback()
 				return c.JSON(http.StatusOK, utilities.Response{
