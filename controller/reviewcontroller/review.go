@@ -302,9 +302,8 @@ func GetActaReview(c echo.Context) error {
 
 // consResponse struct
 type consResponse struct {
-	Success bool               `json:"success"`
 	Module  moduleResponse     `json:"module"`
-	Detail  []detailResponse   `json:"detail"`
+	Details  []detailResponse `json:"details"`
 	Review  reviewmodel.Review `json:"review"`
 }
 
@@ -323,7 +322,7 @@ func GetConstReview(c echo.Context) error {
 	// Find reviews
 	moduleResponses := make([]moduleResponse, 0)
 	if err := db.Table("reviews").
-		Select("modules.id, modules.name, modules.sequence, modules.points, modules.hours, modules.semester, students.id as student_id, students.dni as student_dni, students.full_name as student_full_name").
+		Select("modules.id, modules.name, modules.sequence, modules.points, modules.hours, students.id as student_id, students.dni as student_dni, students.full_name as student_full_name").
 		Joins("INNER JOIN modules on reviews.module_id = modules.id").
 		Joins("INNER JOIN students on reviews.student_id = students.id").
 		Where("reviews.id = ?", review.ID).
@@ -346,12 +345,15 @@ func GetConstReview(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	return c.JSON(http.StatusOK, consResponse{
-		Success: true,
-		Module:  moduleResponses[0],
-		Detail:  detailResponses,
-		Review:  review,
-	})
+	// Response
+	return c.JSON(http.StatusOK, utilities.Response{
+	    Success: true,
+	    Data: consResponse{
+            Module:  moduleResponses[0],
+            Details:  detailResponses,
+            Review:  review,
+        },
+    })
 }
 
 type reviewDetailResponse struct {
