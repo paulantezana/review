@@ -24,7 +24,6 @@ type reviewsResponse struct {
 	TeacherID        uint      `json:"teacher_id"`
 	TeacherFirstName string    `json:"teacher_first_name"`
 	TeacherLastName  string    `json:"teacher_last_name"`
-
 }
 
 type reviewEnablesResponse struct {
@@ -32,8 +31,8 @@ type reviewEnablesResponse struct {
 }
 
 type reviewsMainResponse struct {
-    Validates reviewEnablesResponse `json:"validates"`
-    Reviews []reviewsResponse `json:"reviews"`
+	Validates reviewEnablesResponse `json:"validates"`
+	Reviews   []reviewsResponse     `json:"reviews"`
 }
 
 type getReviewsRequest struct {
@@ -50,12 +49,12 @@ func GetReviews(c echo.Context) error {
 	}
 
 	// Get connection
-    DB := config.GetConnection()
+	DB := config.GetConnection()
 	defer DB.Close()
 
-    // Find StudentProgramID
-    studentProgram := institutemodel.StudentProgram{}
-    DB.First(&studentProgram,institutemodel.StudentProgram{StudentID: request.StudentID, ProgramID:request.ProgramID})
+	// Find StudentProgramID
+	studentProgram := institutemodel.StudentProgram{}
+	DB.First(&studentProgram, institutemodel.StudentProgram{StudentID: request.StudentID, ProgramID: request.ProgramID})
 
 	// Query in database
 	reviewsResponses := make([]reviewsResponse, 0)
@@ -84,18 +83,18 @@ func GetReviews(c echo.Context) error {
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
-		Success:   true,
-		Data:      reviewsMainResponse{
-		    Reviews: reviewsResponses,
-		    Validates: reviewEnablesResponse,
-        },
+		Success: true,
+		Data: reviewsMainResponse{
+			Reviews:   reviewsResponses,
+			Validates: reviewEnablesResponse,
+		},
 	})
 }
 
 type reviewRequest struct {
-    ProgramID uint `json:"program_id"`
-    StudentID uint `json:"student_id"`
-    Review reviewmodel.Review `json:"review"`
+	ProgramID uint               `json:"program_id"`
+	StudentID uint               `json:"student_id"`
+	Review    reviewmodel.Review `json:"review"`
 }
 
 // CreateReview function create new review
@@ -129,9 +128,9 @@ func CreateReview(c echo.Context) error {
 	TX := DB.Begin()
 
 	// Find StudentProgramID
-    studentProgram := institutemodel.StudentProgram{}
-	TX.First(&studentProgram,institutemodel.StudentProgram{StudentID: request.StudentID, ProgramID:request.ProgramID})
-    request.Review.StudentProgramID = studentProgram.ID
+	studentProgram := institutemodel.StudentProgram{}
+	TX.First(&studentProgram, institutemodel.StudentProgram{StudentID: request.StudentID, ProgramID: request.ProgramID})
+	request.Review.StudentProgramID = studentProgram.ID
 
 	// Insert reviews in database
 	if err := TX.Create(&request.Review).Error; err != nil {
@@ -255,8 +254,8 @@ type reviewResponse struct {
 type actResponse struct {
 	Student institutemodel.Student `json:"student"`
 	Module  institutemodel.Module  `json:"module"`
-	Details []detailResponse `json:"details"`
-	Review  reviewResponse `json:"review"`
+	Details []detailResponse       `json:"details"`
+	Review  reviewResponse         `json:"review"`
 }
 
 // GetActaReview function get data acta
@@ -271,29 +270,28 @@ func GetActaReview(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
-    // Query current review
-    if err := DB.First(&review).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query current review
+	if err := DB.First(&review).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Query student program
-    studentProgram := institutemodel.StudentProgram{}
-    if err := DB.First(&studentProgram,institutemodel.StudentProgram{ID:review.StudentProgramID}).Error; err != nil{
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query student program
+	studentProgram := institutemodel.StudentProgram{}
+	if err := DB.First(&studentProgram, institutemodel.StudentProgram{ID: review.StudentProgramID}).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Query student
-    student := institutemodel.Student{}
-    if err := DB.First(&student,institutemodel.Student{ID:studentProgram.StudentID}).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query student
+	student := institutemodel.Student{}
+	if err := DB.First(&student, institutemodel.Student{ID: studentProgram.StudentID}).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Query module
-    module := institutemodel.Module{}
-    if err := DB.First(&module,institutemodel.Module{ID:review.ModuleId}).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
-
+	// Query module
+	module := institutemodel.Module{}
+	if err := DB.First(&module, institutemodel.Module{ID: review.ModuleId}).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Find detailResponse
 	detailResponses := make([]detailResponse, 0)
@@ -329,10 +327,10 @@ func GetActaReview(c echo.Context) error {
 
 // consResponse struct
 type consResponse struct {
-    Student institutemodel.Student `json:"student"`
-	Details []detailResponse   `json:"details"`
-	Review  reviewmodel.Review `json:"review"`
-    Module institutemodel.Module `json:"module"`
+	Student institutemodel.Student `json:"student"`
+	Details []detailResponse       `json:"details"`
+	Review  reviewmodel.Review     `json:"review"`
+	Module  institutemodel.Module  `json:"module"`
 }
 
 // GetConstReview function get data constancy
@@ -348,27 +346,27 @@ func GetConstReview(c echo.Context) error {
 	defer DB.Close()
 
 	// Query current review
-    if err := DB.First(&review).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	if err := DB.First(&review).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Query student program
-    studentProgram := institutemodel.StudentProgram{}
-    if err := DB.First(&studentProgram,institutemodel.StudentProgram{ID:review.StudentProgramID}).Error; err != nil{
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	studentProgram := institutemodel.StudentProgram{}
+	if err := DB.First(&studentProgram, institutemodel.StudentProgram{ID: review.StudentProgramID}).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Query student
-    student := institutemodel.Student{}
-    if err := DB.First(&student,institutemodel.Student{ID:studentProgram.StudentID}).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query student
+	student := institutemodel.Student{}
+	if err := DB.First(&student, institutemodel.Student{ID: studentProgram.StudentID}).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Query module
-    module := institutemodel.Module{}
-    if err := DB.First(&module,institutemodel.Module{ID:review.ModuleId}).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query module
+	module := institutemodel.Module{}
+	if err := DB.First(&module, institutemodel.Module{ID: review.ModuleId}).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Find detailResponse
 	detailResponses := make([]detailResponse, 0)
@@ -387,7 +385,7 @@ func GetConstReview(c echo.Context) error {
 			Module:  module,
 			Details: detailResponses,
 			Review:  review,
-			Student:student,
+			Student: student,
 		},
 	})
 }
@@ -423,7 +421,7 @@ type consolidateResponse struct {
 // GetConsolidateReview function get data constancy
 func GetConsolidateReview(c echo.Context) error {
 	// Get data request
-    request := utilities.Request{}
+	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
 		return err
 	}
@@ -432,20 +430,20 @@ func GetConsolidateReview(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
-    // Query student program
-    studentProgram := institutemodel.StudentProgram{}
-    if err := DB.First(&studentProgram,institutemodel.StudentProgram{
-        StudentID: request.StudentID,
-        ProgramID: request.ProgramID,
-    }).Error; err != nil{
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query student program
+	studentProgram := institutemodel.StudentProgram{}
+	if err := DB.First(&studentProgram, institutemodel.StudentProgram{
+		StudentID: request.StudentID,
+		ProgramID: request.ProgramID,
+	}).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Query student
-    student := institutemodel.Student{}
-    if err := DB.First(&student,institutemodel.Student{ID:studentProgram.StudentID}).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query student
+	student := institutemodel.Student{}
+	if err := DB.First(&student, institutemodel.Student{ID: studentProgram.StudentID}).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Find reviews
 	reviewModuleResponses := make([]reviewModuleResponse, 0)
@@ -472,10 +470,10 @@ func GetConsolidateReview(c echo.Context) error {
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
-	    Success:true,
-	    Data: consolidateResponse{
-            Reviews: reviewModuleResponses,
-            Student: student,
-        },
-    })
+		Success: true,
+		Data: consolidateResponse{
+			Reviews: reviewModuleResponses,
+			Student: student,
+		},
+	})
 }

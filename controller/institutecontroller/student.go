@@ -327,7 +327,7 @@ func GetStudentHistory(c echo.Context) error {
 	})
 }
 
-// GetTempUploadStudent dowloand template
+// GetTempUploadStudentBySubsidiary download template
 func GetTempUploadStudentBySubsidiary(c echo.Context) error {
 	// Get data request
 	request := utilities.Request{}
@@ -347,29 +347,29 @@ func GetTempUploadStudentBySubsidiary(c echo.Context) error {
 
 	// Get excel file
 	fileDir := "templates/templateStudentSA.xlsx"
-	xlsx, err := excelize.OpenFile(fileDir)
+	excel, err := excelize.OpenFile(fileDir)
 	if err != nil {
 		fmt.Println(err)
 	}
-	xlsx.DeleteSheet("ProgramIDS") // Delete sheet
-	xlsx.NewSheet("ProgramIDS")    // Create new sheet
+	excel.DeleteSheet("ProgramIDS") // Delete sheet
+	excel.NewSheet("ProgramIDS")    // Create new sheet
 
-	xlsx.SetCellValue("ProgramIDS", "A1", "ID")
-	xlsx.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
+	excel.SetCellValue("ProgramIDS", "A1", "ID")
+	excel.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
 
 	// Set styles
-	xlsx.SetColWidth("ProgramIDS", "B", "B", 35)
-	xlsx.SetCellStyle("ProgramIDS", "A1", "B1", 2)
+	excel.SetColWidth("ProgramIDS", "B", "B", 35)
+	excel.SetCellStyle("ProgramIDS", "A1", "B1", 2)
 
 	// Set data
 	for i := 0; i < len(programs); i++ {
-		xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
-		xlsx.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)
+		excel.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
+		excel.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)
 	}
-	xlsx.SetActiveSheet(1)
+	excel.SetActiveSheet(1)
 
-	// Save xlsx file by the given path.
-	err = xlsx.SaveAs(fileDir)
+	// Save excel file by the given path.
+	err = excel.SaveAs(fileDir)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -412,7 +412,7 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 	// ---------------------
 	// Read File whit Excel
 	// ---------------------
-	xlsx, err := excelize.OpenFile(auxDir)
+	excel, err := excelize.OpenFile(auxDir)
 	if err != nil {
 		return err
 	}
@@ -422,12 +422,12 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 	defer DB.Close()
 
 	// Prepare
-	ignoreCols := 1
+	ignoreCols := 5
 	counter := 0
 	TX := DB.Begin()
 
 	// Get all the rows in the student.
-	rows := xlsx.GetRows("student")
+	rows := excel.GetRows("Student")
 	for k, row := range rows {
 
 		if k >= ignoreCols {
@@ -440,13 +440,22 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 			u, _ := strconv.ParseUint(strings.TrimSpace(row[0]), 0, 32)
 			currentProgram := uint(u)
 
-			// DATABASE MODELS
 			// Create model student
 			student := institutemodel.Student{
-				DNI:             strings.TrimSpace(row[1]),
-				FullName:        strings.TrimSpace(row[2]),
-				Phone:           strings.TrimSpace(row[3]),
-				Gender:          strings.TrimSpace(row[4]),
+				DNI:      strings.TrimSpace(row[1]),
+				FullName: strings.TrimSpace(row[2]),
+				Phone:    strings.TrimSpace(row[3]),
+				Gender:   strings.TrimSpace(row[5]),
+				//BirthDate:          strings.TrimSpace(row[5]),
+				BirthPlace:      strings.TrimSpace(row[7]),
+				District:        strings.TrimSpace(row[8]),
+				Province:        strings.TrimSpace(row[9]),
+				Region:          strings.TrimSpace(row[10]),
+				Country:         strings.TrimSpace(row[11]),
+				Address:         strings.TrimSpace(row[12]),
+				CivilStatus:     strings.TrimSpace(row[13]),
+				IsWork:          strings.TrimSpace(row[14]),
+				MarketStall:     strings.TrimSpace(row[15]),
 				StudentStatusID: 1,
 			}
 
@@ -457,6 +466,7 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 			// New Account
 			userAccount := models.User{
 				UserName: student.DNI + "ST",
+				Email:    strings.TrimSpace(row[4]),
 				Password: pwd,
 				RoleID:   5,
 			}
@@ -502,6 +512,11 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 
 // SetTempUploadStudent set upload student
 func SetTempUploadStudentByProgram(c echo.Context) error {
+	// Get program ID
+	idp := c.FormValue("id")
+	u, _ := strconv.ParseUint(idp, 0, 32)
+	currentProgramID := uint(u)
+
 	// Source
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -539,12 +554,12 @@ func SetTempUploadStudentByProgram(c echo.Context) error {
 	defer DB.Close()
 
 	// Prepare
-	ignoreCols := 1
+	ignoreCols := 5
 	counter := 0
 	TX := DB.Begin()
 
 	// Get all the rows in the student.
-	rows := excel.GetRows("student")
+	rows := excel.GetRows("Student")
 	for k, row := range rows {
 
 		if k >= ignoreCols {
@@ -553,17 +568,22 @@ func SetTempUploadStudentByProgram(c echo.Context) error {
 				break
 			}
 
-			// program id
-			//u, _ := strconv.ParseUint(strings.TrimSpace(row[0]), 0, 32)
-			//currentProgram := uint(u)
-
-			// DATABASE MODELS
 			// Create model student
 			student := institutemodel.Student{
-				DNI:             strings.TrimSpace(row[1]),
-				FullName:        strings.TrimSpace(row[2]),
-				Phone:           strings.TrimSpace(row[3]),
-				Gender:          strings.TrimSpace(row[4]),
+				DNI:      strings.TrimSpace(row[0]),
+				FullName: strings.TrimSpace(row[1]),
+				Phone:    strings.TrimSpace(row[2]),
+				Gender:   strings.TrimSpace(row[4]),
+				//BirthDate:          strings.TrimSpace(row[5]),
+				BirthPlace:      strings.TrimSpace(row[6]),
+				District:        strings.TrimSpace(row[7]),
+				Province:        strings.TrimSpace(row[8]),
+				Region:          strings.TrimSpace(row[9]),
+				Country:         strings.TrimSpace(row[10]),
+				Address:         strings.TrimSpace(row[11]),
+				CivilStatus:     strings.TrimSpace(row[12]),
+				IsWork:          strings.TrimSpace(row[13]),
+				MarketStall:     strings.TrimSpace(row[14]),
 				StudentStatusID: 1,
 			}
 
@@ -575,6 +595,7 @@ func SetTempUploadStudentByProgram(c echo.Context) error {
 			userAccount := models.User{
 				UserName: student.DNI + "ST",
 				Password: pwd,
+				Email:    strings.TrimSpace(row[3]),
 				RoleID:   5,
 			}
 
@@ -595,14 +616,14 @@ func SetTempUploadStudentByProgram(c echo.Context) error {
 			}
 
 			// Relation student
-			//studentProgram := institutemodel.StudentProgram{
-			//    ProgramID: currentProgram,
-			//    StudentID: student.ID,
-			//}
-			//if err := TX.Create(&studentProgram).Error; err != nil {
-			//    TX.Rollback()
-			//    return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-			//}
+			studentProgram := institutemodel.StudentProgram{
+				ProgramID: currentProgramID,
+				StudentID: student.ID,
+			}
+			if err := TX.Create(&studentProgram).Error; err != nil {
+				TX.Rollback()
+				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+			}
 
 			// Counter total operations success
 			counter++
