@@ -244,7 +244,7 @@ type reviewResponse struct {
 type actaResponse struct {
 	Success bool             `json:"success"`
 	Module  moduleResponse   `json:"module"`
-	Detail  []detailResponse `json:"detail"`
+	Details  []detailResponse `json:"details"`
 	Review  reviewResponse   `json:"review"`
 }
 
@@ -263,7 +263,7 @@ func GetActaReview(c echo.Context) error {
 	// Find reviews
 	moduleResponses := make([]moduleResponse, 0)
 	if err := db.Table("reviews").
-		Select("modules.id, modules.name, modules.sequence, modules.points, modules.hours, modules.semester, students.id as student_id, students.dni as student_dni, students.full_name as student_full_name").
+		Select("modules.id, modules.name, modules.sequence, modules.points, modules.hours, students.id as student_id, students.dni as student_dni, students.full_name as student_full_name").
 		Joins("INNER JOIN modules on reviews.module_id = modules.id").
 		Joins("INNER JOIN students on reviews.student_id = students.id").
 		Where("reviews.id = ?", review.ID).
@@ -292,11 +292,13 @@ func GetActaReview(c echo.Context) error {
 	}
 
 	// Response data
-	return c.JSON(http.StatusOK, actaResponse{
+	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Module:  moduleResponses[0],
-		Detail:  detailResponses,
-		Review:  reviewResponses[0],
+		Data: actaResponse{
+            Module:  moduleResponses[0],
+            Details:  detailResponses,
+            Review:  reviewResponses[0],
+        },
 	})
 }
 
@@ -400,7 +402,7 @@ func GetConsolidateReview(c echo.Context) error {
 	// Find reviews
 	reviewModuleResponses := make([]reviewModuleResponse, 0)
 	if err := db.Table("reviews").
-		Select("reviews.id, reviews.approbation_date, modules.id as module_id, modules.sequence as module_sequence, modules.name as module_name, modules.description as module_description, modules.points as module_points, modules.hours as module_hours, modules.semester as module_semester").
+		Select("reviews.id, reviews.approbation_date, modules.id as module_id, modules.sequence as module_sequence, modules.name as module_name, modules.description as module_description, modules.points as module_points, modules.hours as module_hours").
 		Joins("INNER JOIN modules on reviews.module_id = modules.id").
 		Where("reviews.student_id  = ?", student.ID).
 		Scan(&reviewModuleResponses).Error; err != nil {
@@ -423,6 +425,7 @@ func GetConsolidateReview(c echo.Context) error {
 		reviewModuleResponses[key].ReviewDetails = redR
 	}
 
+	// Return response
 	return c.JSON(http.StatusOK, consolidateResponse{
 		Success: true,
 		Reviews: reviewModuleResponses,

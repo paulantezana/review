@@ -21,7 +21,6 @@ type globalSettings struct {
 	Roles   []models.Role  `json:"roles"`
 	Setting models.Setting `json:"setting"`
 	User    models.User    `json:"user"`
-	//Program institutemodel.Program `json:"program"`
 }
 
 // GetGlobalSettings function
