@@ -211,7 +211,7 @@ func UploadLogoSetting(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    setting.ID,
-        Message: fmt.Sprintf("El logo se guardo satisafactoriamente"),
+		Message: fmt.Sprintf("El logo se guardo satisafactoriamente"),
 	})
 }
 

@@ -160,30 +160,30 @@ func DeleteSubsidiary(c echo.Context) error {
 }
 
 func UpdateMainSubsidiary(c echo.Context) error {
-    // Get data request
-    subsidiary := institutemodel.Subsidiary{}
-    if err := c.Bind(&subsidiary); err != nil {
-        return err
-    }
+	// Get data request
+	subsidiary := institutemodel.Subsidiary{}
+	if err := c.Bind(&subsidiary); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    //  all subsidiaries main = false
-    if err := DB.Exec("UPDATE subsidiaries SET main = false").Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	//  all subsidiaries main = false
+	if err := DB.Exec("UPDATE subsidiaries SET main = false").Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    //  current subsidiary main = true
-    if err := DB.Model(subsidiary).UpdateColumn("main", true).Error; err != nil {
-       return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	//  current subsidiary main = true
+	if err := DB.Model(subsidiary).UpdateColumn("main", true).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Return response
-    return c.JSON(http.StatusCreated, utilities.Response{
-        Success: true,
-        Data:    subsidiary.ID,
-        Message: fmt.Sprintf("The data of the subsidiary %s was updated correctly", subsidiary.Name),
-    })
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    subsidiary.ID,
+		Message: fmt.Sprintf("The data of the subsidiary %s was updated correctly", subsidiary.Name),
+	})
 }

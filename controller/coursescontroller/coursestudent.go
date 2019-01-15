@@ -178,15 +178,15 @@ func ActCourseStudent(c echo.Context) error {
 	}
 
 	course := coursemodel.Course{}
-    if actCourseStudentDetails[0].Student.ID >= 1 {
-        DB.First(&course,coursemodel.Course{ID: actCourseStudentDetails[0].Student.CourseID})
-    }
+	if actCourseStudentDetails[0].Student.ID >= 1 {
+		DB.First(&course, coursemodel.Course{ID: actCourseStudentDetails[0].Student.CourseID})
+	}
 
 	// Response data
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data: actCourseStudentResponse{
-		    Course:course,
+			Course:   course,
 			Students: actCourseStudentDetails,
 		},
 	})

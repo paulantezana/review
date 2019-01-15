@@ -17,7 +17,6 @@ type Setting struct {
 	ShortAcademicLevelDirector string `json:"short_academic_level_director"`
 	ResolutionAuthorization    string `json:"resolution_authorization"`
 	ResolutionRenovation       string `json:"resolution_renovation"`
-	ResolutionDirectorial      string `json:"resolution_directorial"`
 	ModularCode                string `json:"modular_code"`
 	ManagementType             string `json:"management_type"`
 	DreGre                     string `json:"dre_gre"`
