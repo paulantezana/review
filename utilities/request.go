@@ -2,14 +2,15 @@ package utilities
 
 import "github.com/paulantezana/review/config"
 
-// ID = cualquier id que se quiera enviar
 type Request struct {
-	Search       string `json:"search"`
-	CurrentPage  uint   `json:"current_page"`
-	Limit        uint   `json:"limit"`
-	ID           uint   `json:"id"`
-	ProgramID    uint   `json:"program_id"`
-	SubsidiaryID uint   `json:"subsidiary_id"`
+	Search      string `json:"search"`
+	CurrentPage uint   `json:"current_page"`
+	Limit       uint   `json:"limit"`
+
+	CourseID     uint `json:"course_id"`
+	ProgramID    uint `json:"program_id"`
+	SubsidiaryID uint `json:"subsidiary_id"`
+	StudentID    uint `json:"student_id"`
 }
 
 func (r *Request) Validate() uint {

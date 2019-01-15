@@ -34,7 +34,7 @@ func GetCourseStudentsPaginate(c echo.Context) error {
 	courseStudents := make([]coursemodel.CourseStudent, 0)
 
 	// Query in database
-	if err := db.Where("course_id = ?", request.ID).
+	if err := db.Where("course_id = ?", request.CourseID).
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&courseStudents).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
