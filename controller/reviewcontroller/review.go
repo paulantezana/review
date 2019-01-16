@@ -498,3 +498,125 @@ func GetConsolidateReview(c echo.Context) error {
 		},
 	})
 }
+
+
+//
+//
+// --------------------------------------------------------------------
+// SYSTEM CERTIFICATE -------------------------------------------------
+//
+//
+//
+type getConstGraduatedResponse struct {
+    Student institutemodel.Student `json:"student"`
+    Program institutemodel.Program `json:"program"`
+}
+
+func GetConstGraduated(c echo.Context) error {
+    // Get data request
+    request := utilities.Request{}
+    if err := c.Bind(&request); err != nil {
+        return err
+    }
+
+    // Get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Query student
+    student := institutemodel.Student{}
+    if err := DB.First(&student, institutemodel.Student{ID: request.StudentID}).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Query Program
+    program := institutemodel.Program{}
+    if err := DB.First(&program, institutemodel.Program{ID: request.ProgramID}).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Response data
+    return c.JSON(http.StatusOK,utilities.Response{
+        Success: true,
+        Data: getConstGraduatedResponse{
+            Student:student,
+            Program:program,
+        },
+    })
+}
+
+type getCertGraduatedResponse struct {
+    Student institutemodel.Student `json:"student"`
+    Program institutemodel.Program `json:"program"`
+}
+
+func GetCertGraduated(c echo.Context) error {
+    // Get data request
+    request := utilities.Request{}
+    if err := c.Bind(&request); err != nil {
+        return err
+    }
+
+    // Get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Query student
+    student := institutemodel.Student{}
+    if err := DB.First(&student, institutemodel.Student{ID: request.StudentID}).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Query Program
+    program := institutemodel.Program{}
+    if err := DB.First(&program, institutemodel.Program{ID: request.ProgramID}).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Response data
+    return c.JSON(http.StatusOK,utilities.Response{
+        Success: true,
+        Data: getCertGraduatedResponse{
+            Student:student,
+            Program:program,
+        },
+    })
+}
+
+type getCertModuleResponse struct {
+    Student institutemodel.Student `json:"student"`
+    Program institutemodel.Program `json:"program"`
+}
+
+func GetCertModule(c echo.Context) error {
+    // Get data request
+    request := utilities.Request{}
+    if err := c.Bind(&request); err != nil {
+        return err
+    }
+
+    // Get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Query student
+    student := institutemodel.Student{}
+    if err := DB.First(&student, institutemodel.Student{ID: request.StudentID}).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Query Program
+    program := institutemodel.Program{}
+    if err := DB.First(&program, institutemodel.Program{ID: request.ProgramID}).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Response data
+    return c.JSON(http.StatusOK,utilities.Response{
+        Success: true,
+        Data: getCertModuleResponse{
+            Student:student,
+            Program:program,
+        },
+    })
+}

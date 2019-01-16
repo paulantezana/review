@@ -178,6 +178,11 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/course/student/download/template/by/subsidiary", coursescontroller.GetTempUploadCourseStudentBySubsidiary)
 	ar.POST("/course/student/upload/template/by/subsidiary", coursescontroller.SetTempUploadStudentBySubsidiary)
 
+    ar.POST("/review/promotion/const", reviewcontroller.GetConstGraduated)
+    ar.POST("/review/promotion/certificate", reviewcontroller.GetCertGraduated)
+    ar.POST("/review/promotion/certificate/module", reviewcontroller.GetCertModule)
+
+
 	// ---------------------------------------------------------------------------
 	//      Monitoring routes ----------------------------------------------------
 
