@@ -115,22 +115,26 @@ func CreateReview(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
-	// Validate
-	//rvw := make([]reviewmodel.Review, 0)
-	//if DB.Where("student_id = ? and module_id = ?", review.StudentID, review.ModuleId).
-	//	Find(&rvw).RowsAffected >= 1 {
-	//	return c.JSON(http.StatusOK, utilities.Response{
-	//		Message: "Este alumno ya tiene una revision con este modulo",
-	//	})
-	//}
+    // Query student program
+    studentProgram := institutemodel.StudentProgram{}
+    if err := DB.First(&studentProgram, institutemodel.StudentProgram{StudentID:request.StudentID,ProgramID:request.ProgramID}).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Validate
+	rvw := make([]reviewmodel.Review, 0)
+	if DB.Where("student_program_id = ? and module_id = ?", studentProgram.ID, request.Review.ModuleId).
+		Find(&rvw).RowsAffected >= 1 {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: "Este alumno ya tiene una revision con este modulo",
+		})
+	}
+
+	// Set StudentProgramID
+	request.Review.StudentProgramID = studentProgram.ID
 
 	// start transaction
 	TX := DB.Begin()
-
-	// Find StudentProgramID
-	studentProgram := institutemodel.StudentProgram{}
-	TX.First(&studentProgram, institutemodel.StudentProgram{StudentID: request.StudentID, ProgramID: request.ProgramID})
-	request.Review.StudentProgramID = studentProgram.ID
 
 	// Insert reviews in database
 	if err := TX.Create(&request.Review).Error; err != nil {
