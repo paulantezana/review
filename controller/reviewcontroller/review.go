@@ -215,20 +215,6 @@ func DeleteReview(c echo.Context) error {
 	})
 }
 
-// moduleResponse struct
-type moduleResponse struct {
-	ID              uint   `json:"id"`
-	Sequence        uint   `json:"sequence"`
-	Name            string `json:"name"`
-	Description     string `json:"description"`
-	Points          uint   `json:"points"`
-	Hours           uint   `json:"hours"`
-	Semester        string `json:"semester"`
-	StudentID       uint   `json:"student_id"`
-	StudentDNI      string `json:"student_dni"`
-	StudentFullName string `json:"student_full_name"`
-}
-
 // detailResponse struct
 type detailResponse struct {
 	ID               uint      `json:"id" gorm:"primary_key"`
@@ -250,13 +236,31 @@ type reviewResponse struct {
 	TeacherID        uint      `json:"teacher_id"`
 }
 
+// moduleResponse struct
+type moduleResponse struct {
+    ID          uint   `json:"id" gorm:"primary_key"`
+    Sequence    uint   `json:"sequence"`
+    Name        string `json:"name"`
+    Description string `json:"description"`
+    Points      uint   `json:"points"`
+    Hours       uint   `json:"hours"`
+
+    ProgramID uint `json:"program_id"`
+
+    Semesters []semesterNames `json:"semesters"`
+}
+
 // consResponse struct
 type actResponse struct {
 	Student institutemodel.Student `json:"student"`
-	Module  institutemodel.Module  `json:"module"`
+	Module  moduleResponse  `json:"module"`
 	Details []detailResponse       `json:"details"`
 	Review  reviewResponse         `json:"review"`
 }
+
+type semesterNames struct {
+    Name string `json:"name"`
+} 
 
 // GetActaReview function get data acta
 func GetActaReview(c echo.Context) error {
@@ -288,10 +292,23 @@ func GetActaReview(c echo.Context) error {
 	}
 
 	// Query module
-	module := institutemodel.Module{}
-	if err := DB.First(&module, institutemodel.Module{ID: review.ModuleId}).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
+	module := moduleResponse{}
+    if err := DB.Raw("SELECT * FROM modules WHERE id = ? LIMIT 1", review.ModuleId).Scan(&module).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Query semesters
+    semesters := make([]semesterNames,0)
+    if err := DB.Table("module_semesters").
+        Select("semesters.name").
+        Joins("INNER JOIN semesters ON module_semesters.semester_id = semesters.id").
+        Where("module_semesters.module_id = ?", module.ID).
+        Scan(&semesters).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Set data semester
+    module.Semesters = semesters
 
 	// Find detailResponse
 	detailResponses := make([]detailResponse, 0)
