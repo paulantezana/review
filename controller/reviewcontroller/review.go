@@ -115,13 +115,13 @@ func CreateReview(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
-    // Query student program
-    studentProgram := institutemodel.StudentProgram{}
-    if err := DB.First(&studentProgram, institutemodel.StudentProgram{StudentID:request.StudentID,ProgramID:request.ProgramID}).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query student program
+	studentProgram := institutemodel.StudentProgram{}
+	if err := DB.First(&studentProgram, institutemodel.StudentProgram{StudentID: request.StudentID, ProgramID: request.ProgramID}).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Validate
+	// Validate
 	rvw := make([]reviewmodel.Review, 0)
 	if DB.Where("student_program_id = ? and module_id = ?", studentProgram.ID, request.Review.ModuleId).
 		Find(&rvw).RowsAffected >= 1 {
@@ -242,29 +242,29 @@ type reviewResponse struct {
 
 // moduleResponse struct
 type moduleResponse struct {
-    ID          uint   `json:"id" gorm:"primary_key"`
-    Sequence    uint   `json:"sequence"`
-    Name        string `json:"name"`
-    Description string `json:"description"`
-    Points      uint   `json:"points"`
-    Hours       uint   `json:"hours"`
+	ID          uint   `json:"id" gorm:"primary_key"`
+	Sequence    uint   `json:"sequence"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Points      uint   `json:"points"`
+	Hours       uint   `json:"hours"`
 
-    ProgramID uint `json:"program_id"`
+	ProgramID uint `json:"program_id"`
 
-    Semesters []semesterNames `json:"semesters"`
+	Semesters []semesterNames `json:"semesters"`
 }
 
 // consResponse struct
 type actResponse struct {
 	Student institutemodel.Student `json:"student"`
-	Module  moduleResponse  `json:"module"`
+	Module  moduleResponse         `json:"module"`
 	Details []detailResponse       `json:"details"`
 	Review  reviewResponse         `json:"review"`
 }
 
 type semesterNames struct {
-    Name string `json:"name"`
-} 
+	Name string `json:"name"`
+}
 
 // GetActaReview function get data acta
 func GetActaReview(c echo.Context) error {
@@ -297,22 +297,22 @@ func GetActaReview(c echo.Context) error {
 
 	// Query module
 	module := moduleResponse{}
-    if err := DB.Raw("SELECT * FROM modules WHERE id = ? LIMIT 1", review.ModuleId).Scan(&module).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	if err := DB.Raw("SELECT * FROM modules WHERE id = ? LIMIT 1", review.ModuleId).Scan(&module).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Query semesters
-    semesters := make([]semesterNames,0)
-    if err := DB.Table("module_semesters").
-        Select("semesters.name").
-        Joins("INNER JOIN semesters ON module_semesters.semester_id = semesters.id").
-        Where("module_semesters.module_id = ?", module.ID).
-        Scan(&semesters).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query semesters
+	semesters := make([]semesterNames, 0)
+	if err := DB.Table("module_semesters").
+		Select("semesters.name").
+		Joins("INNER JOIN semesters ON module_semesters.semester_id = semesters.id").
+		Where("module_semesters.module_id = ?", module.ID).
+		Scan(&semesters).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Set data semester
-    module.Semesters = semesters
+	// Set data semester
+	module.Semesters = semesters
 
 	// Find detailResponse
 	detailResponses := make([]detailResponse, 0)

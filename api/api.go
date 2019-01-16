@@ -87,6 +87,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/student/all", institutecontroller.GetStudentsPaginate)
 	ar.POST("/student/paginate/program", institutecontroller.GetStudentsPaginateByProgram)
 	ar.POST("/student/history", institutecontroller.GetStudentHistory)
+	ar.POST("/student/programs", institutecontroller.GetStudentPrograms)
 	ar.POST("/student/create", institutecontroller.CreateStudent)
 	ar.PUT("/student/update", institutecontroller.UpdateStudent)
 	ar.DELETE("/student/delete", institutecontroller.DeleteStudent)
