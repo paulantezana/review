@@ -133,7 +133,6 @@ func Migrate() {
 	// Monitoring ==============================================================
 	db.Model(&monitoringmodel.Poll{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 	db.Model(&monitoringmodel.AnswerDetail{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
-	db.Model(&monitoringmodel.AnswerDetail{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
 	db.Model(&monitoringmodel.AnswerDetail{}).AddForeignKey("answer_id", "answers(id)", "RESTRICT", "RESTRICT")
 
 	db.Model(&monitoringmodel.Question{}).AddForeignKey("poll_id", "polls(id)", "RESTRICT", "RESTRICT")

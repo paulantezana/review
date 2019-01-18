@@ -33,6 +33,23 @@ func CreateAnswer(c echo.Context) error {
     })
 }
 
+type answerDetailSummary struct {
+    ID     uint   `json:"id" gorm:"primary_key"`
+    Answer string `json:"answer"`
+}
+type multipleQuestionSummary struct {
+    ID    uint   `json:"id"`
+    Label string `json:"label"`
+}
+type answerSummary struct {
+    ID       uint   `json:"id"`
+    Name     string `json:"name"`
+    TypeQuestionID uint `json:"type_question_id"`
+
+    MultipleQuestions []multipleQuestionSummary `json:"multiple_questions"`
+    AnswerDetails []answerDetailSummary `json:"answer_details"`
+} 
+
 func GetAnswerAll(c echo.Context) error {
     // Get data request
     poll := monitoringmodel.Poll{}
@@ -45,19 +62,20 @@ func GetAnswerAll(c echo.Context) error {
     defer DB.Close()
 
     // Get questions
-    questions := make([]monitoringmodel.Question,0)
-    if err := DB.Order("position asc").Find(&questions, monitoringmodel.Question{PollID: poll.ID}).Error; err != nil {
+    questions := make([]answerSummary,0)
+    if err := DB.Table("questions").Select("id, name, type_question_id").Where("poll_id = ?", poll.ID).Scan(&questions).Error; err != nil {
         return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
     }
 
     // Get query answers
     for k, question := range questions {
-        answerDetails := make([]monitoringmodel.AnswerDetail,0)
-        if err := DB.Find(&answerDetails, monitoringmodel.AnswerDetail{QuestionID: question.ID}).Error; err != nil {
+        answerDetails := make([]answerDetailSummary,0)
+        if err := DB.Table("answer_details").Select("id, answer").Where("question_id = ?", question.ID).Scan(&answerDetails).Error; err != nil {
             return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
         }
-        multipleQuestions := make([]monitoringmodel.MultipleQuestion,0)
-        if err := DB.Find(&multipleQuestions, monitoringmodel.MultipleQuestion{QuestionID: question.ID}).Error; err != nil {
+
+        multipleQuestions := make([]multipleQuestionSummary,0)
+        if err := DB.Table("multiple_questions").Select("id, label").Where("question_id = ?", question.ID).Scan(&multipleQuestions).Error; err != nil {
             return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
         }
 
