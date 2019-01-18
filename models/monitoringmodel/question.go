@@ -12,4 +12,5 @@ type Question struct {
 	PollID         uint `json:"poll_id"`
 
 	MultipleQuestions []MultipleQuestion `json:"multiple_questions"`
+	AnswerDetails []AnswerDetail `json:"answer_details"`
 }

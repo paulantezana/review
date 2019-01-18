@@ -201,7 +201,11 @@ func ProtectedApi(e *echo.Echo) {
 
 	// Type questions
 	ar.POST("/monitoring/type/question/all", monitoringcontroller.GetTypeQuestions)
-	ar.DELETE("/monitoring/multiple/question/delete", monitoringcontroller.DeleteMultipleQuestion)
+	//ar.DELETE("/monitoring/multiple/question/delete", monitoringcontroller.DeleteMultipleQuestion)
+
+	// Answer
+	ar.POST("/monitoring/answer/all", monitoringcontroller.GetAnswerAll)
+	ar.POST("/monitoring/answer/create", monitoringcontroller.CreateAnswer)
 
 	// ---------------------------------------------------------------------------
 	//      Book routes ----------------------------------------------------
