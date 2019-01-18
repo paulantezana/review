@@ -34,7 +34,7 @@ func CreateAnswer(c echo.Context) error {
 }
 
 type answerDetailSummary struct {
-    ID     uint   `json:"id" gorm:"primary_key"`
+    ID     uint   `json:"id"`
     Answer string `json:"answer"`
 }
 type multipleQuestionSummary struct {
@@ -93,10 +93,6 @@ func GetAnswerSummary(c echo.Context) error {
     })
 }
 
-type answerDetailOne struct {
-    ID     uint   `json:"id" gorm:"primary_key"`
-    Answer string `json:"answer"`
-}
 type multipleQuestionOne struct {
     ID    uint   `json:"id"`
     Label string `json:"label"`
@@ -108,7 +104,7 @@ type getQuestionOne struct {
     TypeQuestionID uint `json:"type_question_id"`
 
     MultipleQuestions []multipleQuestionOne `json:"multiple_questions"`
-    AnswerDetail answerDetailOne `json:"answer_detail"`
+    Answer string `json:"answer"`
 }
 
 type navigateRequest struct {
@@ -127,11 +123,6 @@ func GetAnswerNavigate(c echo.Context) error {
     DB := config.GetConnection()
     defer DB.Close()
 
-    // Validate
-    if request.Current == 0 {
-        request.Current = 1
-    }
-
     // Get questions
     questions := make([]getQuestionOne,0)
     if err := DB.Table("questions").Select("id, name, type_question_id").
@@ -141,7 +132,7 @@ func GetAnswerNavigate(c echo.Context) error {
 
     // Get query answers
     for k, question := range questions {
-        answerDetails := make([]answerDetailOne,0)
+        answerDetails := make([]answerDetailSummary,0)
         if err := DB.Table("answer_details").Select("id, answer").
             Where("question_id = ?", question.ID).
             Limit(1).Offset(request.Current).
@@ -155,16 +146,19 @@ func GetAnswerNavigate(c echo.Context) error {
             return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
         }
 
-        questions[k].AnswerDetail =answerDetails[0]
+        questions[k].Answer =answerDetails[0].Answer
         questions[k].MultipleQuestions = multipleQuestions
     }
 
-    // Navigation
-    navigation := make([]utilities.Navigation,0)
+    // query total answers
+    var total uint
+    DB.Model(&monitoringmodel.Answer{}).Where("poll_id = ?",request.ID).Count(&total)
 
-    return c.JSON(http.StatusOK,utilities.ResponseNavigation{
+    // return request
+    return c.JSON(http.StatusOK,utilities.ResponsePaginate{
         Success: true,
         Data: questions,
-        Navigation:navigation,
+        CurrentPage: request.Current,
+        Total: total,
     })
 }
