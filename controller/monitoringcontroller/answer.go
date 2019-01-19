@@ -108,7 +108,6 @@ type getQuestionOne struct {
 	ID                uint                  `json:"id"`
 	Name              string                `json:"name"`
 	TypeQuestionID    uint                  `json:"type_question_id"`
-	Student           studentQuestionOne    `json:"student"`
 	MultipleQuestions []multipleQuestionOne `json:"multiple_questions"`
 	Answer            string                `json:"answer"`
 }
@@ -137,13 +136,13 @@ func GetAnswerNavigate(c echo.Context) error {
 	}
 
     // Query student
-    students := make([]studentQuestionOne, 0)
-    if err := DB.Table("students").Select("id, full_name, dni, gender").
-        Where("poll_id = ?", request.ID).
-        Limit(1).Offset(request.Current).
-        Scan(&students).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+    //students := make([]studentQuestionOne, 0)
+    //if err := DB.Table("students").Select("id, full_name, dni, gender").
+    //    Where("poll_id = ?", request.ID).
+    //    Limit(1).Offset(request.Current).
+    //    Scan(&students).Error; err != nil {
+    //    return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    //}
 
 	// Get query answers
 	for k, question := range questions {
