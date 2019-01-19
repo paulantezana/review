@@ -298,9 +298,9 @@ func CreateAdmission(c echo.Context) error {
 
 	// Insert new Relation program and student
 	studentProgram := institutemodel.StudentProgram{
-		StudentID: request.Student.ID,
-		ProgramID: request.Admission.ProgramID,
-		ByDefault: true,
+		StudentID:     request.Student.ID,
+		ProgramID:     request.Admission.ProgramID,
+		ByDefault:     true,
 		YearAdmission: currentYear,
 	}
 	if err := TX.Create(&studentProgram).Error; err != nil {

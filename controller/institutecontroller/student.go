@@ -306,42 +306,42 @@ func DeleteStudent(c echo.Context) error {
 }
 
 type getStudentProgramsResponse struct {
-    ID    uint   `json:"id"`
-    Name  string `json:"name"`
-    Level string `json:"level"`
-    SubsidiaryID uint `json:"subsidiary_id"`
-    ByDefault     bool `json:"by_default"`
-    YearAdmission uint `json:"year_admission"`
-    YearPromotion uint `json:"year_promotion"`
+	ID            uint   `json:"id"`
+	Name          string `json:"name"`
+	Level         string `json:"level"`
+	SubsidiaryID  uint   `json:"subsidiary_id"`
+	ByDefault     bool   `json:"by_default"`
+	YearAdmission uint   `json:"year_admission"`
+	YearPromotion uint   `json:"year_promotion"`
 }
 
 func GetStudentPrograms(c echo.Context) error {
-    // Get data request
-    student := institutemodel.Student{}
-    if err := c.Bind(&student); err != nil {
-        return err
-    }
+	// Get data request
+	student := institutemodel.Student{}
+	if err := c.Bind(&student); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Query
-    studentPrograms := make([]getStudentProgramsResponse,0)
-    if err := DB.Table("programs").
-        Select("programs.id, programs.name, programs.level, programs.subsidiary_id, student_programs.by_default, student_programs.year_admission, student_programs.year_promotion").
-        Joins("INNER JOIN student_programs ON programs.id = student_programs.program_id").
-        Order("programs.id desc").
-        Where("student_programs.student_id = ?", student.ID).
-        Scan(&studentPrograms).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query
+	studentPrograms := make([]getStudentProgramsResponse, 0)
+	if err := DB.Table("programs").
+		Select("programs.id, programs.name, programs.level, programs.subsidiary_id, student_programs.by_default, student_programs.year_admission, student_programs.year_promotion").
+		Joins("INNER JOIN student_programs ON programs.id = student_programs.program_id").
+		Order("programs.id desc").
+		Where("student_programs.student_id = ?", student.ID).
+		Scan(&studentPrograms).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    studentPrograms,
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    studentPrograms,
+	})
 }
 
 func GetStudentHistory(c echo.Context) error {

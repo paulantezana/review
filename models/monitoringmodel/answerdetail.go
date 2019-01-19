@@ -6,6 +6,6 @@ type AnswerDetail struct {
 	Answer string `json:"answer"`
 	State  bool   `json:"state" gorm:"default:'true'"`
 
-	QuestionID     uint `json:"question_id"`
-	AnswerID       uint `json:"answer_id"`
+	QuestionID uint `json:"question_id"`
+	AnswerID   uint `json:"answer_id"`
 }
