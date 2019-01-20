@@ -35,15 +35,10 @@ type reviewsMainResponse struct {
 	Reviews   []reviewsResponse     `json:"reviews"`
 }
 
-type getReviewsRequest struct {
-	StudentID uint `json:"student_id"`
-	ProgramID uint `json:"program_id"`
-}
-
 // GetReviews functions get all reviews
 func GetReviews(c echo.Context) error {
 	// Get data request
-	request := getReviewsRequest{}
+	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
 		return err
 	}

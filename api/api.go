@@ -75,6 +75,7 @@ func ProtectedApi(e *echo.Echo) {
 	// Program - user
 	ar.POST("/program/user/all/by/user", institutecontroller.GetProgramsUserByUserID)
 	ar.POST("/program/user/all/by/user/license", institutecontroller.GetProgramsUserByUserIDLicense)
+	ar.POST("/program/user/all/by/student/license", institutecontroller.GetProgramsUserByStudentIDLicense)
 	ar.PUT("/program/user/update", institutecontroller.UpdateProgramsUserByUserID)
 
 	// Program
@@ -251,6 +252,7 @@ func ProtectedApi(e *echo.Echo) {
 	// RENIEC
 	ar.POST("/external/reniec", controller.Reniec)
 
-	// Web Site services
-	ar.POST("/web/setting/by/student", controller.GetStudentSettings)
+    // ---------------------------------------------------------------------------
+    //      Student routes -----------------------------------------------------
+	ar.POST("/setting/global/student", controller.GetStudentSettings)
 }

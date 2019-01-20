@@ -7,8 +7,9 @@ import (
 	"net/http"
 	"os"
 	"path"
+    "time"
 
-	"github.com/labstack/echo"
+    "github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
@@ -62,62 +63,67 @@ func GetGlobalSettings(c echo.Context) error {
 	})
 }
 
+type studentSettings struct {
+    ID          uint      `json:"id"`
+    DNI         string    `json:"dni"`
+    FullName    string    `json:"full_name"`
+    Phone       string    `json:"phone"`
+    Gender      string    `json:"gender"`
+    BirthDate   time.Time `json:"birth_date"`
+}
+
 type studentSettingsResponse struct {
 	Setting models.Setting         `json:"setting"`
-	Program institutemodel.Program `json:"program"`
 	User    models.User            `json:"user"`
-	Roles   models.Role            `json:"roles"`
-	Student institutemodel.Student `json:"student"`
+	Student studentSettings `json:"student"`
 	Message string                 `json:"message"`
 	Success bool                   `json:"success"`
 }
 
 // GetGlobalSettings function
 func GetStudentSettings(c echo.Context) error {
-	// Get data request
-	setting := models.Setting{}
-	program := institutemodel.Program{}
-	student := institutemodel.Student{}
+    // Get data request
+    user := models.User{}
+    if err := c.Bind(&user); err != nil {
+        return err
+    }
 
-	user := models.User{}
-	if err := c.Bind(&user); err != nil {
-		return err
-	}
+    // get connection
+    db := config.GetConnection()
+    defer db.Close()
 
-	// get connection
-	db := config.GetConnection()
-	defer db.Close()
+    // Execute instructions
+    if err := db.First(&user, user.ID).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+    user.Password = ""
+    user.Key = ""
 
-	// find user
-	//if err := db.First(&user, user.ID).Error; err != nil {
-	//	return c.NoContent(http.StatusUnauthorized)
-	//}
-	//user.Password = ""
-	//user.Key = ""
+    // Find settings
+    setting := models.Setting{}
+    if err := db.First(&setting).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
 
-	// find student
-	//if err := db.First(&student, "user_id = ?", user.ID).Error; err != nil {
-	//	return c.JSON(http.StatusOK, utilities.Response{
-	//		Message: fmt.Sprintf("%s", err),
-	//	})
-	//}
+    // find student
+    student := institutemodel.Student{}
+    if err := db.First(&student,institutemodel.Student{UserID:user.ID}).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+    studentSetting := studentSettings{
+        ID:student.ID,
+        FullName: student.FullName,
+        Gender: student.Gender,
+        DNI: student.DNI,
+        Phone: student.Phone,
+        BirthDate:student.BirthDate,
+    }
 
-	// find program
-	//if err := db.First(&program, student.DefaultProgramID).Error; err != nil {
-	//	return c.JSON(http.StatusOK, utilities.Response{
-	//		Message: fmt.Sprintf("%s", err),
-	//	})
-	//}
-
-	// Find settings
-	db.First(&setting)
-
-	// Set object response
+    // Set object response
 	return c.JSON(http.StatusOK, studentSettingsResponse{
 		User:    user,
 		Setting: setting,
-		Program: program,
-		Student: student,
+        Student: studentSetting,
 		Success: true,
 		Message: "OK",
 	})

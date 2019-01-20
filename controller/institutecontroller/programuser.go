@@ -103,6 +103,36 @@ func GetProgramsUserByUserIDLicense(c echo.Context) error {
 	})
 }
 
+func GetProgramsUserByStudentIDLicense(c echo.Context) error {
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Query student
+    student := institutemodel.Student{}
+    if err := DB.First(&student,institutemodel.Student{UserID: currentUser.ID}).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Query programs
+    programs  := make([]institutemodel.Program,0)
+    if err := DB.Debug().Raw("SELECT id, name FROM programs WHERE id " +
+        "IN (SELECT program_id FROM student_programs WHERE student_id = ?)", student.ID).
+        Scan(&programs).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Response data
+    return c.JSON(http.StatusCreated, utilities.Response{
+        Success: true,
+        Data:    programs,
+    })
+}
+
 func UpdateProgramsUserByUserID(c echo.Context) error {
 	// Get data request
 	programUsers := make([]institutemodel.ProgramUser, 0)
