@@ -135,6 +135,7 @@ func Login(c echo.Context) error {
 
 type loginStudent struct {
 	Programs []loginProgramLicense `json:"programs"`
+	User models.User `json:"user"`
 	Token interface{} `json:"token"`
 }
 
@@ -205,6 +206,7 @@ func LoginStudent(c echo.Context) error {
 		Data: loginStudent{
 			Token: token,
 			Programs:loginProgramLicenses,
+			User:user,
 		},
 	})
 }
