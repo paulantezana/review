@@ -1,4 +1,4 @@
-package librarymodel
+package models
 
 // Category struct
 type Category struct {
@@ -7,5 +7,6 @@ type Category struct {
 	ParentID uint   `json:"parent_id"`
 	State    bool   `json:"state" gorm:"default:'true'"`
 
-	Books []Book `json:"books"`
+	Books    []Book     `json:"books"`
+	Children []Category `json:"children"`
 }

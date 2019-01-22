@@ -1,24 +1,24 @@
 package controller
 
 import (
-    "bytes"
-    "crypto/sha256"
-    "fmt"
-    "github.com/dgrijalva/jwt-go"
-    "github.com/paulantezana/review/models"
-    "github.com/paulantezana/review/models/institutemodel"
-    "github.com/paulantezana/review/models/messengermodel"
-    "html/template"
-    "io"
-    "math/rand"
-    "net/http"
-    "os"
-    "path/filepath"
-    "time"
+	"bytes"
+	"crypto/sha256"
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/models/institutemodel"
+	"github.com/paulantezana/review/models/messengermodel"
+	"html/template"
+	"io"
+	"math/rand"
+	"net/http"
+	"os"
+	"path/filepath"
+	"time"
 
-    "github.com/labstack/echo"
-    "github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/utilities"
+	"github.com/labstack/echo"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/utilities"
 )
 
 type loginProgramLicense struct {
@@ -135,8 +135,8 @@ func Login(c echo.Context) error {
 
 type loginStudent struct {
 	Programs []loginProgramLicense `json:"programs"`
-	User models.User `json:"user"`
-	Token interface{} `json:"token"`
+	User     models.User           `json:"user"`
+	Token    interface{}           `json:"token"`
 }
 
 // Login by student
@@ -175,17 +175,17 @@ func LoginStudent(c echo.Context) error {
 
 	// Query student
 	student := institutemodel.Student{}
-    if err := DB.First(&student,institutemodel.Student{UserID: user.ID}).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	if err := DB.First(&student, institutemodel.Student{UserID: user.ID}).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Query programs
-    loginProgramLicenses  := make([]loginProgramLicense,0)
-    if err := DB.Debug().Raw("SELECT id, name FROM programs WHERE id " +
-        "IN (SELECT program_id FROM student_programs WHERE student_id = ?)", student.ID).
-        Scan(&loginProgramLicenses).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query programs
+	loginProgramLicenses := make([]loginProgramLicense, 0)
+	if err := DB.Debug().Raw("SELECT id, name FROM programs WHERE id "+
+		"IN (SELECT program_id FROM student_programs WHERE student_id = ?)", student.ID).
+		Scan(&loginProgramLicenses).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Insert new Session
 	session := messengermodel.Session{
@@ -204,9 +204,9 @@ func LoginStudent(c echo.Context) error {
 		Success: true,
 		Message: fmt.Sprintf("Bienvenido al sistema %s", user.UserName),
 		Data: loginStudent{
-			Token: token,
-			Programs:loginProgramLicenses,
-			User:user,
+			Token:    token,
+			Programs: loginProgramLicenses,
+			User:     user,
 		},
 	})
 }

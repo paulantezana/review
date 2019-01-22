@@ -1,16 +1,18 @@
 package librarycontroller
 
 import (
-	"crypto/sha256"
-	"fmt"
-	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models/librarymodel"
-	"github.com/paulantezana/review/utilities"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
+    "crypto/sha256"
+    "fmt"
+    "github.com/dgrijalva/jwt-go"
+    "github.com/labstack/echo"
+    "github.com/paulantezana/review/config"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
+    "io"
+    "net/http"
+    "os"
+    "path/filepath"
+    "time"
 )
 
 func GetBooksPaginate(c echo.Context) error {
@@ -29,7 +31,7 @@ func GetBooksPaginate(c echo.Context) error {
 
 	// Execute instructions
 	var total uint
-	books := make([]librarymodel.Book, 0)
+	books := make([]models.Book, 0)
 
 	// Query in database
 	if err := db.Where("lower(name) LIKE lower(?)", "%"+request.Search+"%").
@@ -51,7 +53,7 @@ func GetBooksPaginate(c echo.Context) error {
 
 func GetBookByID(c echo.Context) error {
 	// Get data request
-	book := librarymodel.Book{}
+	book := models.Book{}
 	if err := c.Bind(&book); err != nil {
 		return err
 	}
@@ -72,9 +74,53 @@ func GetBookByID(c echo.Context) error {
 	})
 }
 
+func GetBookByIDReading(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
+    // Get data request
+    book := models.Book{}
+    if err := c.Bind(&book); err != nil {
+        return err
+    }
+
+    // Get connection
+    db := config.GetConnection()
+    defer db.Close()
+
+    // Execute instructions
+    if err := db.First(&book, book.ID).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Create readings
+    reading := models.Reading{
+        UserID: currentUser.ID,
+        BookID: book.ID,
+        Date: time.Now(),
+    }
+    if err := db.Create(&reading).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Update table book
+    book.Views++
+    if err := db.Save(&book).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Return response
+    return c.JSON(http.StatusCreated, utilities.Response{
+        Success: true,
+        Data:    book,
+    })
+}
+
 func CreateBook(c echo.Context) error {
 	// Get data request
-	book := librarymodel.Book{}
+	book := models.Book{}
 	if err := c.Bind(&book); err != nil {
 		return err
 	}
@@ -98,7 +144,7 @@ func CreateBook(c echo.Context) error {
 
 func UpdateBook(c echo.Context) error {
 	// Get data request
-	book := librarymodel.Book{}
+	book := models.Book{}
 	if err := c.Bind(&book); err != nil {
 		return err
 	}
@@ -125,7 +171,7 @@ func UpdateBook(c echo.Context) error {
 
 func DeleteBook(c echo.Context) error {
 	// Get data request
-	book := librarymodel.Book{}
+	book := models.Book{}
 	if err := c.Bind(&book); err != nil {
 		return err
 	}
@@ -151,7 +197,7 @@ func DeleteBook(c echo.Context) error {
 func UploadAvatarBook(c echo.Context) error {
 	// Read form fields
 	idBook := c.FormValue("id")
-	book := librarymodel.Book{}
+	book := models.Book{}
 
 	// get connection
 	db := config.GetConnection()
@@ -208,7 +254,7 @@ func UploadAvatarBook(c echo.Context) error {
 func UploadPdfBook(c echo.Context) error {
 	// Read form fields
 	idBook := c.FormValue("id")
-	book := librarymodel.Book{}
+	book := models.Book{}
 
 	// get connection
 	db := config.GetConnection()

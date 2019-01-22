@@ -20,6 +20,17 @@ func CreateAnswer(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
+	// Validate
+	validateAnswer := monitoringmodel.Answer{}
+	if rows := DB.First(&validateAnswer, monitoringmodel.Answer{
+		StudentID: answer.StudentID,
+		PollID:    answer.PollID,
+	}).RowsAffected; rows >= 1 {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("Esta encuesta ya fue resulto por este estudiante"),
+		})
+	}
+
 	// Insert companies in database
 	if err := DB.Create(&answer).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -135,14 +146,14 @@ func GetAnswerNavigate(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-    // Query student
-    //students := make([]studentQuestionOne, 0)
-    //if err := DB.Table("students").Select("id, full_name, dni, gender").
-    //    Where("poll_id = ?", request.ID).
-    //    Limit(1).Offset(request.Current).
-    //    Scan(&students).Error; err != nil {
-    //    return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    //}
+	// Query student
+	//students := make([]studentQuestionOne, 0)
+	//if err := DB.Table("students").Select("id, full_name, dni, gender").
+	//    Where("poll_id = ?", request.ID).
+	//    Limit(1).Offset(request.Current).
+	//    Scan(&students).Error; err != nil {
+	//    return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	//}
 
 	// Get query answers
 	for k, question := range questions {

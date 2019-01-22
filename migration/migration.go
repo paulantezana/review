@@ -8,7 +8,6 @@ import (
 	"github.com/paulantezana/review/models/admissionmodel"
 	"github.com/paulantezana/review/models/coursemodel"
 	"github.com/paulantezana/review/models/institutemodel"
-	"github.com/paulantezana/review/models/librarymodel"
 	"github.com/paulantezana/review/models/messengermodel"
 	"github.com/paulantezana/review/models/monitoringmodel"
 	"github.com/paulantezana/review/models/reviewmodel"
@@ -68,11 +67,12 @@ func Migrate() {
 		&monitoringmodel.TypeQuestion{},
 
 		// Libraries
-		&librarymodel.Category{},
-		&librarymodel.Book{},
-		&librarymodel.Reading{},
-		&librarymodel.Comment{},
-		&librarymodel.Like{},
+		&models.Category{},
+		&models.Book{},
+		&models.Reading{},
+		&models.Comment{},
+		&models.Like{},
+		&models.Vote{},
 
 		// Messenger model
 		&messengermodel.Group{},
@@ -143,13 +143,13 @@ func Migrate() {
 	db.Model(&monitoringmodel.MultipleQuestion{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
 
 	// Libraries ===========================================================
-	db.Model(&librarymodel.Book{}).AddForeignKey("category_id", "categories(id)", "RESTRICT", "RESTRICT")
-	db.Model(&librarymodel.Reading{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
-	db.Model(&librarymodel.Reading{}).AddForeignKey("book_id", "books(id)", "CASCADE", "CASCADE")
-	db.Model(&librarymodel.Comment{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
-	db.Model(&librarymodel.Comment{}).AddForeignKey("book_id", "books(id)", "CASCADE", "CASCADE")
-	db.Model(&librarymodel.Like{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
-	db.Model(&librarymodel.Like{}).AddForeignKey("book_id", "books(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Book{}).AddForeignKey("category_id", "categories(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Reading{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Reading{}).AddForeignKey("book_id", "books(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Comment{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Comment{}).AddForeignKey("book_id", "books(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Like{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Like{}).AddForeignKey("book_id", "books(id)", "CASCADE", "CASCADE")
 
 	// Messenger ===========================================================
 	db.Model(&messengermodel.MessageRecipient{}).AddForeignKey("recipient_id", "users(id)", "RESTRICT", "RESTRICT")

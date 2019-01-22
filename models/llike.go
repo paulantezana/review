@@ -1,4 +1,4 @@
-package librarymodel
+package models
 
 type Like struct {
 	ID    uint `json:"id" gorm:"primary_key"`

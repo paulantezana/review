@@ -9,8 +9,8 @@ import (
 type User struct {
 	ID       uint   `json:"id" gorm:"primary_key"`
 	UserName string `json:"user_name" gorm:"type:varchar(64); unique; not null"` //
-	Password string `json:"password" gorm:"type:varchar(64); not null"`
-	Key      string `json:"key"`
+	Password string `json:"password, omitempty" gorm:"type:varchar(64); not null"`
+	Key      string `json:"key, omitempty"`
 	State    bool   `json:"state" gorm:"default:'true'"`
 	Avatar   string `json:"avatar"`
 	Email    string `json:"email" gorm:"type:varchar(64)"`
@@ -19,8 +19,8 @@ type User struct {
 	RoleID      uint   `json:"role_id"`
 	OldPassword string `json:"old_password" gorm:"-"`
 
-	Students []institutemodel.Student `json:"students"`
-	Teachers []institutemodel.Teacher `json:"teachers"`
-
-	Reviews []reviewmodel.Review `json:"reviews"`
+	Students []institutemodel.Student `json:"students,omitempty"`
+	Teachers []institutemodel.Teacher `json:"teachers,omitempty"`
+	Reviews  []reviewmodel.Review     `json:"reviews,omitempty"`
+	Comments []Comment                `json:"coos,omitempty"`
 }

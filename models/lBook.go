@@ -1,4 +1,4 @@
-package librarymodel
+package models
 
 // Book struct
 type Book struct {
@@ -14,11 +14,12 @@ type Book struct {
 	Avatar           string `json:"avatar"`
 	Pdf              string `json:"pdf"`
 	State            bool   `json:"state" gorm:"default:'true'"`
+    Views  uint32 `json:"views"`
 
 	CategoryID uint `json:"category_id"`
 	UserID     uint `json:"user_id"`
 
-	Comments []Comment `json:"comments"`
-	Readings []Reading `json:"readings"`
-	Likes    []Like    `json:"likes"`
+	Comments []Comment `json:"comments, omitempty"`
+	Readings []Reading `json:"readings, omitempty"`
+	Likes    []Like    `json:"likes, omitempty"`
 }

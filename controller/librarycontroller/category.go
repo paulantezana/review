@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models/librarymodel"
+	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
@@ -25,7 +25,7 @@ func GetCategoriesPaginate(c echo.Context) error {
 
 	// Execute instructions
 	var total uint
-	categories := make([]librarymodel.Category, 0)
+	categories := make([]models.Category, 0)
 
 	// Query in database
 	if err := db.Where("lower(name) LIKE lower(?)", "%"+request.Search+"%").
@@ -57,7 +57,7 @@ func GetCategoriesAll(c echo.Context) error {
 	defer db.Close()
 
 	// Execute instructions
-	categories := make([]librarymodel.Category, 0)
+	categories := make([]models.Category, 0)
 
 	// Query in database
 	if err := db.Find(&categories).Error; err != nil {
@@ -73,7 +73,7 @@ func GetCategoriesAll(c echo.Context) error {
 
 func GetCategoryByID(c echo.Context) error {
 	// Get data request
-	category := librarymodel.Category{}
+	category := models.Category{}
 	if err := c.Bind(&category); err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func GetCategoryByID(c echo.Context) error {
 
 func CreateCategory(c echo.Context) error {
 	// Get data request
-	category := librarymodel.Category{}
+	category := models.Category{}
 	if err := c.Bind(&category); err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func CreateCategory(c echo.Context) error {
 
 func UpdateCategory(c echo.Context) error {
 	// Get data request
-	category := librarymodel.Category{}
+	category := models.Category{}
 	if err := c.Bind(&category); err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func UpdateCategory(c echo.Context) error {
 
 func DeleteCategory(c echo.Context) error {
 	// Get data request
-	category := librarymodel.Category{}
+	category := models.Category{}
 	if err := c.Bind(&category); err != nil {
 		return err
 	}

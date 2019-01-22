@@ -224,8 +224,14 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/library/book/update", librarycontroller.UpdateBook)
 	ar.DELETE("/library/book/delete", librarycontroller.DeleteBook)
 	ar.POST("/library/book/by/id", librarycontroller.GetBookByID)
+	ar.POST("/library/book/by/id/reading", librarycontroller.GetBookByIDReading)
 	ar.POST("/library/book/upload/avatar", librarycontroller.UploadAvatarBook)
 	ar.POST("/library/book/upload/pdf", librarycontroller.UploadPdfBook)
+
+	// Comments
+	ar.POST("/library/comment/all", librarycontroller.GetCommentsAll)
+	ar.POST("/library/comment/create", librarycontroller.CreateComment)
+	ar.POST("/library/comment/vote", librarycontroller.CreateVote)
 
 	// ---------------------------------------------------------------------------
 	//      Admission routes -----------------------------------------------------
@@ -252,7 +258,7 @@ func ProtectedApi(e *echo.Echo) {
 	// RENIEC
 	ar.POST("/external/reniec", controller.Reniec)
 
-    // ---------------------------------------------------------------------------
-    //      Student routes -----------------------------------------------------
+	// ---------------------------------------------------------------------------
+	//      Student routes -----------------------------------------------------
 	ar.POST("/setting/global/student", controller.GetStudentSettings)
 }

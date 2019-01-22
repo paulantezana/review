@@ -38,6 +38,7 @@ func main() {
 	// Sting API services
 	api.PublicApi(e)
 	api.ProtectedApi(e)
+	api.PublicWs(e)
 
 	// Custom port
 	port := os.Getenv("PORT")
