@@ -46,12 +46,6 @@ func GetCategoriesPaginate(c echo.Context) error {
 }
 
 func GetCategoriesAll(c echo.Context) error {
-	// Get data request
-	request := utilities.Request{}
-	if err := c.Bind(&request); err != nil {
-		return err
-	}
-
 	// Get connection
 	db := config.GetConnection()
 	defer db.Close()
@@ -60,7 +54,7 @@ func GetCategoriesAll(c echo.Context) error {
 	categories := make([]models.Category, 0)
 
 	// Query in database
-	if err := db.Find(&categories).Error; err != nil {
+	if err := db.Order("id desc").Find(&categories).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 

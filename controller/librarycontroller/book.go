@@ -23,8 +23,8 @@ func GetBooksPaginate(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
-	defer db.Close()
+	DB := config.GetConnection()
+	defer DB.Close()
 
 	// Pagination calculate
 	offset := request.Validate()
@@ -34,12 +34,19 @@ func GetBooksPaginate(c echo.Context) error {
 	books := make([]models.Book, 0)
 
 	// Query in database
-	if err := db.Where("lower(name) LIKE lower(?)", "%"+request.Search+"%").
+	if err := DB.Debug().Where("lower(name) LIKE lower(?) AND category_id in (?)", "%"+request.Search+"%",request.IDs).
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&books).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
+
+    // Query book comments count
+    for i := range books {
+        DB.Model(&models.Comment{}).
+            Where("book_id = ?", books[i].ID).
+            Count(&books[i].CommentCount)
+    }
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
@@ -87,13 +94,18 @@ func GetBookByIDReading(c echo.Context) error {
     }
 
     // Get connection
-    db := config.GetConnection()
-    defer db.Close()
+    DB := config.GetConnection()
+    defer DB.Close()
 
     // Execute instructions
-    if err := db.First(&book, book.ID).Error; err != nil {
+    if err := DB.First(&book, book.ID).Error; err != nil {
         return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
     }
+
+    // Comments count
+    DB.Model(&models.Comment{}).
+        Where("book_id = ?", book.ID).
+        Count(&book.CommentCount)
 
     // Create readings
     reading := models.Reading{
@@ -101,13 +113,13 @@ func GetBookByIDReading(c echo.Context) error {
         BookID: book.ID,
         Date: time.Now(),
     }
-    if err := db.Create(&reading).Error; err != nil {
+    if err := DB.Create(&reading).Error; err != nil {
         return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
     }
 
     // Update table book
     book.Views++
-    if err := db.Save(&book).Error; err != nil {
+    if err := DB.Save(&book).Error; err != nil {
         return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
     }
 

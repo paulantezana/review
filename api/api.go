@@ -220,6 +220,7 @@ func ProtectedApi(e *echo.Echo) {
 
 	// book
 	ar.POST("/library/book/paginate", librarycontroller.GetBooksPaginate)
+	ar.POST("/library/book/like", librarycontroller.CreateLike)
 	ar.POST("/library/book/create", librarycontroller.CreateBook)
 	ar.PUT("/library/book/update", librarycontroller.UpdateBook)
 	ar.DELETE("/library/book/delete", librarycontroller.DeleteBook)

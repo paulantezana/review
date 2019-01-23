@@ -15,6 +15,7 @@ type Book struct {
 	Pdf              string `json:"pdf"`
 	State            bool   `json:"state" gorm:"default:'true'"`
     Views  uint32 `json:"views"`
+	CommentCount uint32 `json:"comment_count" gorm:"-"` // aux
 
 	CategoryID uint `json:"category_id"`
 	UserID     uint `json:"user_id"`

@@ -47,7 +47,7 @@ func CreateVote(c echo.Context) error {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
-		c.JSON(http.StatusCreated, utilities.Response{
+		return c.JSON(http.StatusCreated, utilities.Response{
 			Success: true,
 			Message: fmt.Sprintf("Voto registrado"),
 		})
@@ -56,7 +56,7 @@ func CreateVote(c echo.Context) error {
 		currentVote.Value = vote.Value
 
 		// Insert books in database
-		if err := DB.Save(&vote).Error; err != nil {
+		if err := DB.Save(&currentVote).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
@@ -64,7 +64,7 @@ func CreateVote(c echo.Context) error {
 		if err := updateCommentVotes(vote.CommentID, vote.Value, true); err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
-		c.JSON(http.StatusOK, utilities.Response{
+        return c.JSON(http.StatusOK, utilities.Response{
 			Success: true,
 			Message: fmt.Sprintf("Voto actualizado"),
 		})
