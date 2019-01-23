@@ -233,6 +233,8 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/library/comment/all", librarycontroller.GetCommentsAll)
 	ar.POST("/library/comment/create", librarycontroller.CreateComment)
 	ar.POST("/library/comment/vote", librarycontroller.CreateVote)
+    ar.PUT("/library/comment/update", librarycontroller.UpdateComment)
+    ar.DELETE("/library/comment/delete", librarycontroller.DeleteComment)
 
 	// ---------------------------------------------------------------------------
 	//      Admission routes -----------------------------------------------------

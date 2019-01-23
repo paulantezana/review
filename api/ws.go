@@ -8,6 +8,7 @@ import (
 
 func PublicWs(e *echo.Echo) {
     mel := melody.New()
+    mel.Config.MaxMessageSize = 1024 * 1024 * 1024
     ws := e.Group("/api/v1/ws")
 
     // Comment comment

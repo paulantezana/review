@@ -18,6 +18,7 @@ var Melody *melody.Melody
 
 func init()  {
     Melody = melody.New()
+    Melody.Config.MaxMessageSize = 1024 * 1024 * 1024
 }
 
 func GetCommentsAll(c echo.Context) error {
@@ -100,9 +101,6 @@ func CreateComment(c echo.Context) error {
     comment.User[0].Password = ""
     comment.User[0].Key = ""
 
-    // Update comments count
-    //book := models.Book{ID:comment.BookID,}
-
 	// Serialize struct to json
     json, err := json.Marshal(&comment)
 
@@ -124,6 +122,64 @@ func CreateComment(c echo.Context) error {
 		Data:    comment.ID,
 		Message: fmt.Sprintf("El comentario %d se registro correctamente", comment.ID),
 	})
+}
+
+func UpdateComment(c echo.Context) error {
+    // Get data request
+    comment := models.Comment{}
+    if err := c.Bind(&comment); err != nil {
+        return err
+    }
+
+    // get connection
+    db := config.GetConnection()
+    defer db.Close()
+
+    // Update category in database
+    rows := db.Model(&comment).Update(comment).RowsAffected
+    if rows == 0 {
+        return c.JSON(http.StatusOK, utilities.Response{
+            Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", comment.ID),
+        })
+    }
+
+    // Return response
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        Data:    comment.ID,
+        Message: fmt.Sprintf("Los datos del curso %s se actualizaron correctamente", comment.ID),
+    })
+}
+
+func DeleteComment(c echo.Context) error {
+    // Get data request
+    comment := models.Comment{}
+    if err := c.Bind(&comment); err != nil {
+        return err
+    }
+
+    // get connection
+    db := config.GetConnection()
+    defer db.Close()
+
+    // Delete book in database
+    if err := db.Delete(&comment).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Delete comments children
+    if comment.ID >= 1 {
+        if err := db.Delete(models.Comment{}, "parent_id = ?", comment.ID).Error; err != nil {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+        }
+    }
+
+    // Return response
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        Data:    comment.ID,
+        Message: fmt.Sprintf("El curso %s se elimino correctamente", comment.ID),
+    })
 }
 
 func commentGetChildren(id uint) (children []models.Comment) {
