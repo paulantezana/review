@@ -34,7 +34,7 @@ func GetBooksPaginate(c echo.Context) error {
 	books := make([]models.Book, 0)
 
 	// Query in database
-	if err := DB.Debug().Where("lower(name) LIKE lower(?) AND category_id in (?)", "%"+request.Search+"%",request.IDs).
+	if err := DB.Where("lower(name) LIKE lower(?) AND category_id in (?)", "%"+request.Search+"%",request.IDs).
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&books).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
@@ -66,13 +66,18 @@ func GetBookByID(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
-	defer db.Close()
+    DB := config.GetConnection()
+	defer DB.Close()
 
 	// Execute instructions
-	if err := db.First(&book, book.ID).Error; err != nil {
+	if err := DB.First(&book, book.ID).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
+
+    // Comments count
+    DB.Model(&models.Comment{}).
+        Where("book_id = ?", book.ID).
+        Count(&book.CommentCount)
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{

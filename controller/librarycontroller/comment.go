@@ -102,7 +102,10 @@ func CreateComment(c echo.Context) error {
     comment.User[0].Key = ""
 
 	// Serialize struct to json
-    json, err := json.Marshal(&comment)
+    json, err := json.Marshal(&utilities.SocketResponse{
+        Type: "create",
+        Data: comment,
+    })
 
 	// websocket
     origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
@@ -136,11 +139,34 @@ func UpdateComment(c echo.Context) error {
     defer db.Close()
 
     // Update category in database
-    rows := db.Model(&comment).Update(comment).RowsAffected
+    rows := db.Model(&comment).Update(&comment).RowsAffected
     if rows == 0 {
         return c.JSON(http.StatusOK, utilities.Response{
             Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", comment.ID),
         })
+    }
+
+    // Find data
+    if err := db.First(&comment, comment.ID).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Serialize struct to json
+    json, err := json.Marshal(&utilities.SocketResponse{
+        Type: "update",
+        Data: comment,
+    })
+
+    // websocket
+    origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
+    url := fmt.Sprintf("ws://localhost:%s/api/v1/ws/comment",config.GetConfig().Server.Port)
+
+    ws, err := websocket.Dial(url, "", origin)
+    if err != nil {
+        log.Fatal(err)
+    }
+    if _, err := ws.Write(json); err != nil {
+        log.Fatal(err)
     }
 
     // Return response
@@ -162,6 +188,11 @@ func DeleteComment(c echo.Context) error {
     db := config.GetConnection()
     defer db.Close()
 
+    // Find data
+    if err := db.First(&comment, comment.ID).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
     // Delete book in database
     if err := db.Delete(&comment).Error; err != nil {
         return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -172,6 +203,27 @@ func DeleteComment(c echo.Context) error {
         if err := db.Delete(models.Comment{}, "parent_id = ?", comment.ID).Error; err != nil {
             return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
         }
+    }
+
+    // Empty data
+    comment.Body = ""
+
+    // Serialize struct to json
+    json, err := json.Marshal(&utilities.SocketResponse{
+        Type: "delete",
+        Data: comment,
+    })
+
+    // websocket
+    origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
+    url := fmt.Sprintf("ws://localhost:%s/api/v1/ws/comment",config.GetConfig().Server.Port)
+
+    ws, err := websocket.Dial(url, "", origin)
+    if err != nil {
+        log.Fatal(err)
+    }
+    if _, err := ws.Write(json); err != nil {
+        log.Fatal(err)
     }
 
     // Return response

@@ -16,3 +16,9 @@ type ResponsePaginate struct {
 	CurrentPage uint        `json:"current_page"`
 	Limit       uint        `json:"limit"`
 }
+
+// SocketResponse
+type SocketResponse struct {
+    Type string `json:"type"`
+    Data interface{} `json:"data"`
+}
