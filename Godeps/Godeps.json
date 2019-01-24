@@ -14,6 +14,11 @@
 			"Rev": "0b96aaa707760d6ab28d9b9d1913ff5993328bae"
 		},
 		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Comment": "v1.4.0",
+			"Rev": "66b9c49e59c6c48f0ffce28c2d8b8a5678502c6d"
+		},
+		{
 			"ImportPath": "github.com/jinzhu/gorm",
 			"Comment": "v1.9.1-14-g409121d",
 			"Rev": "409121d9e394922787885b001d148a05e3a42b6c"
@@ -77,6 +82,11 @@
 			"Rev": "c48cc78d482608239f6c4c92a4abd87eb8761c90"
 		},
 		{
+			"ImportPath": "github.com/olahol/melody",
+			"Comment": "v1-2-g7bd6591",
+			"Rev": "7bd65910e5abdd2e7396c23acb13475bff79d1af"
+		},
+		{
 			"ImportPath": "github.com/valyala/bytebufferpool",
 			"Rev": "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
 		},
@@ -91,6 +101,10 @@
 		{
 			"ImportPath": "golang.org/x/crypto/acme/autocert",
 			"Rev": "de0752318171da717af4ce24d0a2e8626afaeb11"
+		},
+		{
+			"ImportPath": "golang.org/x/net/websocket",
+			"Rev": "ed066c81e75eba56dd9bd2139ade88125b855585"
 		},
 		{
 			"ImportPath": "golang.org/x/sys/unix",
