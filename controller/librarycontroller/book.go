@@ -149,6 +149,11 @@ func GetBooksPaginateByReading(c echo.Context) error {
 }
 
 func GetBookByID(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
 	// Get data request
 	book := models.Book{}
 	if err := c.Bind(&book); err != nil {
@@ -168,6 +173,29 @@ func GetBookByID(c echo.Context) error {
 	DB.Model(&models.Comment{}).
 		Where("book_id = ?", book.ID).
 		Count(&book.Detail.Comments)
+
+    // Query start
+    bStarts := make([]models.BStarts,0)
+    if err := DB.Raw("SELECT users.user_name, likes.stars FROM likes " +
+       "INNER JOIN users ON likes.user_id = users.id " +
+       "WHERE likes.book_id = ? LIMIT 15", book.ID).
+       Scan(&bStarts).Error; err != nil {
+       return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+    book.Detail.Starts = bStarts
+
+    // has like
+    like := models.Like{
+        UserID: currentUser.ID,
+        BookID: book.ID,
+    }
+    DB.Where(&like).First(&like)
+    book.Detail.StartValue = like.Stars
+    if like.ID >= 1 {
+        book.Detail.HasStart = 1
+    } else {
+        book.Detail.HasStart = 0
+    }
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -217,6 +245,29 @@ func GetBookByIDReading(c echo.Context) error {
 	if err := DB.Save(&book).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
+
+    // Query start
+    bStarts := make([]models.BStarts,0)
+    if err := DB.Raw("SELECT users.user_name, likes.stars FROM likes " +
+        "INNER JOIN users ON likes.user_id = users.id " +
+        "WHERE likes.book_id = ? LIMIT 15", book.ID).
+        Scan(&bStarts).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+    book.Detail.Starts = bStarts
+
+    // has like
+    like := models.Like{
+        UserID: currentUser.ID,
+        BookID: book.ID,
+    }
+    DB.Where(&like).First(&like)
+    book.Detail.StartValue = like.Stars
+    if like.ID >= 1 {
+        book.Detail.HasStart = 1
+    } else {
+        book.Detail.HasStart = 0
+    }
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
