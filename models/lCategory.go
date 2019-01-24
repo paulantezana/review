@@ -7,5 +7,5 @@ type Category struct {
 	ParentID uint   `json:"parent_id"`
 	State    bool   `json:"state" gorm:"default:'true'"`
 
-	Books    []Book     `json:"books, omitempty"`
+	Books []Book `json:"books, omitempty"`
 }

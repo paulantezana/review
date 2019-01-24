@@ -19,6 +19,6 @@ type ResponsePaginate struct {
 
 // SocketResponse
 type SocketResponse struct {
-    Type string `json:"type"`
-    Data interface{} `json:"data"`
+	Type string      `json:"type"`
+	Data interface{} `json:"data"`
 }

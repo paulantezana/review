@@ -4,7 +4,7 @@ import "time"
 
 // Reading struct
 type Reading struct {
-	ID   uint `json:"id" gorm:"primary_key"`
+	ID   uint      `json:"id" gorm:"primary_key"`
 	Date time.Time `json:"date"`
 
 	UserID uint `json:"user_id"`

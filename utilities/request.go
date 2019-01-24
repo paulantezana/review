@@ -7,11 +7,11 @@ type Request struct {
 	CurrentPage uint   `json:"current_page"`
 	Limit       uint   `json:"limit"`
 
-	CourseID     uint `json:"course_id"`
-	ProgramID    uint `json:"program_id"`
-	SubsidiaryID uint `json:"subsidiary_id"`
-	StudentID    uint `json:"student_id"`
-	IDs []uint `json:"i_ds"`
+	CourseID     uint   `json:"course_id"`
+	ProgramID    uint   `json:"program_id"`
+	SubsidiaryID uint   `json:"subsidiary_id"`
+	StudentID    uint   `json:"student_id"`
+	IDs          []uint `json:"i_ds"`
 }
 
 func (r *Request) Validate() uint {
