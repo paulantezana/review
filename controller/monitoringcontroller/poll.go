@@ -2,8 +2,8 @@ package monitoringcontroller
 
 import (
 	"fmt"
-	"github.com/paulantezana/review/models/monitoringmodel"
-	"net/http"
+    "github.com/paulantezana/review/models"
+    "net/http"
 
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
@@ -31,7 +31,7 @@ func GetPollsPaginate(c echo.Context) error {
 
 	// Execute instructions
 	var total uint
-	companies := make([]monitoringmodel.Poll, 0)
+	companies := make([]models.Poll, 0)
 
 	// Query in database
 	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ProgramID).
@@ -53,7 +53,7 @@ func GetPollsPaginate(c echo.Context) error {
 
 func GetPollByID(c echo.Context) error {
 	// Get data request
-	poll := monitoringmodel.Poll{}
+	poll := models.Poll{}
 	if err := c.Bind(&poll); err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func CreatePoll(c echo.Context) error {
 	//currentUser := claims.User
 
 	// Get data request
-	poll := monitoringmodel.Poll{}
+	poll := models.Poll{}
 	if err := c.Bind(&poll); err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func CreatePoll(c echo.Context) error {
 
 func UpdatePoll(c echo.Context) error {
 	// Get data request
-	poll := monitoringmodel.Poll{}
+	poll := models.Poll{}
 	if err := c.Bind(&poll); err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func UpdatePoll(c echo.Context) error {
 // DeletePoll delete pooll by id
 func DeletePoll(c echo.Context) error {
 	// Get data request
-	poll := monitoringmodel.Poll{}
+	poll := models.Poll{}
 	if err := c.Bind(&poll); err != nil {
 		return err
 	}

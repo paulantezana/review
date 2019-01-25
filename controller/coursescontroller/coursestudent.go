@@ -5,9 +5,8 @@ import (
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models/coursemodel"
-	"github.com/paulantezana/review/models/institutemodel"
-	"github.com/paulantezana/review/utilities"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
 	"io"
 	"net/http"
 	"os"
@@ -31,7 +30,7 @@ func GetCourseStudentsPaginate(c echo.Context) error {
 
 	// Execute instructions
 	var total uint
-	courseStudents := make([]coursemodel.CourseStudent, 0)
+	courseStudents := make([]models.CourseStudent, 0)
 
 	// Query in database
 	if err := db.Where("course_id = ?", request.CourseID).
@@ -53,7 +52,7 @@ func GetCourseStudentsPaginate(c echo.Context) error {
 
 func CreateCourseStudent(c echo.Context) error {
 	// Get data request
-	courseStudent := coursemodel.CourseStudent{}
+	courseStudent := models.CourseStudent{}
 	if err := c.Bind(&courseStudent); err != nil {
 		return err
 	}
@@ -63,8 +62,8 @@ func CreateCourseStudent(c echo.Context) error {
 	defer DB.Close()
 
 	// Validation
-	VCStudent := coursemodel.CourseStudent{}
-	DB.First(&VCStudent, coursemodel.CourseStudent{DNI: courseStudent.DNI, CourseID: courseStudent.CourseID})
+	VCStudent := models.CourseStudent{}
+	DB.First(&VCStudent, models.CourseStudent{DNI: courseStudent.DNI, CourseID: courseStudent.CourseID})
 	if VCStudent.ID != 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
 			Message: fmt.Sprintf("El estudiante %s ya está matriculado en este curso", courseStudent.FullName),
@@ -86,7 +85,7 @@ func CreateCourseStudent(c echo.Context) error {
 
 func UpdateCourseStudent(c echo.Context) error {
 	// Get data request
-	courseStudent := coursemodel.CourseStudent{}
+	courseStudent := models.CourseStudent{}
 	if err := c.Bind(&courseStudent); err != nil {
 		return err
 	}
@@ -113,7 +112,7 @@ func UpdateCourseStudent(c echo.Context) error {
 
 func DeleteCourseStudent(c echo.Context) error {
 	// Get data request
-	courseStudent := coursemodel.CourseStudent{}
+	courseStudent := models.CourseStudent{}
 	if err := c.Bind(&courseStudent); err != nil {
 		return err
 	}
@@ -136,18 +135,18 @@ func DeleteCourseStudent(c echo.Context) error {
 }
 
 type actCourseStudentDetail struct {
-	Student coursemodel.CourseStudent `json:"student"`
-	Program institutemodel.Program    `json:"program"`
+	Student models.CourseStudent `json:"student"`
+	Program models.Program    `json:"program"`
 }
 
 type actCourseStudentResponse struct {
-	Course   coursemodel.Course       `json:"course"`
+	Course   models.Course       `json:"course"`
 	Students []actCourseStudentDetail `json:"students"`
 }
 
 func ActCourseStudent(c echo.Context) error {
 	// Get data request
-	courseStudents := make([]coursemodel.CourseStudent, 0)
+	courseStudents := make([]models.CourseStudent, 0)
 	if err := c.Bind(&courseStudents); err != nil {
 		return err
 	}
@@ -162,12 +161,12 @@ func ActCourseStudent(c echo.Context) error {
 	// Query
 	for _, cStudent := range courseStudents {
 		// Query student
-		student := coursemodel.CourseStudent{}
-		DB.First(&student, coursemodel.CourseStudent{ID: cStudent.ID})
+		student := models.CourseStudent{}
+		DB.First(&student, models.CourseStudent{ID: cStudent.ID})
 
 		// Query program
-		program := institutemodel.Program{}
-		DB.First(&program, institutemodel.Program{ID: student.ProgramID})
+		program := models.Program{}
+		DB.First(&program, models.Program{ID: student.ProgramID})
 
 		// Set current student
 		actCourseStudentDetail := actCourseStudentDetail{
@@ -177,9 +176,9 @@ func ActCourseStudent(c echo.Context) error {
 		actCourseStudentDetails = append(actCourseStudentDetails, actCourseStudentDetail)
 	}
 
-	course := coursemodel.Course{}
+	course := models.Course{}
 	if actCourseStudentDetails[0].Student.ID >= 1 {
-		DB.First(&course, coursemodel.Course{ID: actCourseStudentDetails[0].Student.CourseID})
+		DB.First(&course, models.Course{ID: actCourseStudentDetails[0].Student.CourseID})
 	}
 
 	// Response data
@@ -205,8 +204,8 @@ func GetTempUploadCourseStudentBySubsidiary(c echo.Context) error {
 	defer DB.Close()
 
 	// Execute instructions
-	programs := make([]institutemodel.Program, 0)
-	if err := DB.Find(&programs, institutemodel.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
+	programs := make([]models.Program, 0)
+	if err := DB.Find(&programs, models.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -313,7 +312,7 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 
 			// DATABASE MODELS
 			// Create model student
-			student := coursemodel.CourseStudent{
+			student := models.CourseStudent{
 				DNI:       strings.TrimSpace(row[1]),
 				FullName:  strings.TrimSpace(row[2]),
 				Phone:     strings.TrimSpace(row[3]),

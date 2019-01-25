@@ -8,8 +8,6 @@ import (
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/models/admissionmodel"
-	"github.com/paulantezana/review/models/institutemodel"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 	"time"
@@ -115,7 +113,7 @@ type admissionsPaginateExamResponse struct {
 
 func GetAdmissionsByID(c echo.Context) error {
 	// Get data request
-	admission := admissionmodel.Admission{}
+	admission := models.Admission{}
 	if err := c.Bind(&admission); err != nil {
 		return err
 	}
@@ -128,8 +126,8 @@ func GetAdmissionsByID(c echo.Context) error {
 	DB.First(&admission)
 
 	// Query Student
-	student := institutemodel.Student{}
-	DB.First(&student, institutemodel.Student{ID: admission.StudentID})
+	student := models.Student{}
+	DB.First(&student, models.Student{ID: admission.StudentID})
 
 	// Query user
 	user := models.User{}
@@ -190,8 +188,8 @@ func GetAdmissionsPaginateExam(c echo.Context) error {
 }
 
 type createAdmissionRequest struct {
-	Student   institutemodel.Student   `json:"student"`
-	Admission admissionmodel.Admission `json:"admission"`
+	Student   models.Student   `json:"student"`
+	Admission models.Admission `json:"admission"`
 	User      models.User              `json:"user"`
 }
 
@@ -235,8 +233,8 @@ func CreateAdmission(c echo.Context) error {
 	TX := DB.Begin()
 
 	// find if exist student
-	st := institutemodel.Student{}
-	DB.First(&st, institutemodel.Student{DNI: request.Student.DNI})
+	st := models.Student{}
+	DB.First(&st, models.Student{DNI: request.Student.DNI})
 
 	// Validate if exist student
 	if st.ID == 0 {
@@ -297,7 +295,7 @@ func CreateAdmission(c echo.Context) error {
 	TX.Exec("UPDATE student_programs SET by_default = false WHERE student_id = ?", request.Student.ID)
 
 	// Insert new Relation program and student
-	studentProgram := institutemodel.StudentProgram{
+	studentProgram := models.StudentProgram{
 		StudentID:     request.Student.ID,
 		ProgramID:     request.Admission.ProgramID,
 		ByDefault:     true,
@@ -309,7 +307,7 @@ func CreateAdmission(c echo.Context) error {
 	}
 
 	// Insert student history
-	studentHistory := institutemodel.StudentHistory{
+	studentHistory := models.StudentHistory{
 		StudentID:   request.Student.ID,
 		UserID:      currentUser.ID,
 		Description: fmt.Sprintf("Admision"),
@@ -377,8 +375,8 @@ func UpdateAdmission(c echo.Context) error {
 	}
 
 	// Query student
-	db.First(&request.Student, institutemodel.Student{ID: request.Student.ID})
-	db.First(&request.Admission, admissionmodel.Admission{ID: request.Admission.ID})
+	db.First(&request.Student, models.Student{ID: request.Student.ID})
+	db.First(&request.Admission, models.Admission{ID: request.Admission.ID})
 	db.First(&request.User, models.User{ID: request.User.ID})
 
 	// Reset Keys and fields
@@ -400,7 +398,7 @@ func CancelAdmission(c echo.Context) error {
 	currentUser := claims.User
 
 	// Get data request
-	admission := admissionmodel.Admission{}
+	admission := models.Admission{}
 	if err := c.Bind(&admission); err != nil {
 		return err
 	}
@@ -422,7 +420,7 @@ func CancelAdmission(c echo.Context) error {
 	TX.First(&admission)
 
 	// Insert new state student
-	studentHistory := institutemodel.StudentHistory{
+	studentHistory := models.StudentHistory{
 		Description: "Admisión anulada",
 		StudentID:   admission.StudentID,
 		UserID:      currentUser.ID,
@@ -447,7 +445,7 @@ func CancelAdmission(c echo.Context) error {
 
 func UpdateExamAdmission(c echo.Context) error {
 	// Get data request
-	admission := admissionmodel.Admission{}
+	admission := models.Admission{}
 	if err := c.Bind(&admission); err != nil {
 		return err
 	}
@@ -476,14 +474,14 @@ func UpdateExamAdmission(c echo.Context) error {
 }
 
 type fileAdmissionResponse struct {
-	Students   []institutemodel.Student  `json:"students"`
-	Subsidiary institutemodel.Subsidiary `json:"subsidiary"`
-	Program    institutemodel.Program    `json:"program"`
+	Students   []models.Student  `json:"students"`
+	Subsidiary models.Subsidiary `json:"subsidiary"`
+	Program    models.Program    `json:"program"`
 }
 
 func FileAdmission(c echo.Context) error {
 	// Get data request
-	admissions := make([]admissionmodel.Admission, 0)
+	admissions := make([]models.Admission, 0)
 	if err := c.Bind(&admissions); err != nil {
 		return err
 	}
@@ -492,27 +490,27 @@ func FileAdmission(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
-	students := make([]institutemodel.Student, 0)
+	students := make([]models.Student, 0)
 
 	// Query all students
 	for _, admission := range admissions {
 		// Query get admission all data --- current admission
-		DB.First(&admission, admissionmodel.Admission{ID: admission.ID})
+		DB.First(&admission, models.Admission{ID: admission.ID})
 
 		// Query get student all data
-		student := institutemodel.Student{}
-		DB.First(&student, institutemodel.Student{ID: admission.StudentID})
+		student := models.Student{}
+		DB.First(&student, models.Student{ID: admission.StudentID})
 
 		// Append array
 		students = append(students, student)
 	}
 
 	// Query program
-	program := institutemodel.Program{}
-	subsidiary := institutemodel.Subsidiary{}
+	program := models.Program{}
+	subsidiary := models.Subsidiary{}
 	if len(admissions) >= 1 {
-		DB.First(&program, institutemodel.Program{ID: admissions[0].ProgramID})
-		DB.First(&subsidiary, institutemodel.Subsidiary{ID: program.SubsidiaryID})
+		DB.First(&program, models.Program{ID: admissions[0].ProgramID})
+		DB.First(&subsidiary, models.Subsidiary{ID: program.SubsidiaryID})
 	}
 
 	// Response data
@@ -531,7 +529,7 @@ type exportAdmissionRequest struct {
 	To    uint `json:"to"`
 	State bool `json:"state"`
 }
-type exportAdmissionModel struct {
+type exportModels struct {
 	ID            uint      `json:"id" gorm:"primary_key"`
 	Observation   string    `json:"observation"`
 	Exonerated    bool      `json:"exonerated"`
@@ -562,13 +560,13 @@ func ExportAdmission(c echo.Context) error {
 	defer DB.Close()
 
 	var total uint
-	exportAdmissionModels := make([]exportAdmissionModel, 0)
+	exportModelss := make([]exportModels, 0)
 	if err := DB.Table("admissions").
 		Select("admissions.id, admissions.observation, admissions.exonerated, admissions.admission_date, admissions.year, admissions.student_id, admissions.program_id, admissions.state, students.dni , students.full_name, users.id as user_id, users.email, users.avatar").
 		Joins("INNER JOIN students ON admissions.student_id = students.id").
 		Joins("INNER JOIN users on students.user_id = users.id").
 		Where("admissions.year >= ? AND admissions.year <= ? AND admissions.state = ?", request.From, request.To, request.State).
-		Order("admissions.id asc").Scan(&exportAdmissionModels).
+		Order("admissions.id asc").Scan(&exportModelss).
 		Count(&total).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
@@ -587,9 +585,9 @@ func ExportAdmission(c echo.Context) error {
 	excel.SetCellValue("Sheet1", "E1", "Año")
 
 	//  Set values in excel file
-	for i := 0; i < len(exportAdmissionModels); i++ {
-		excel.SetCellValue("Sheet1", fmt.Sprintf("A%d", i+2), exportAdmissionModels[i].ID)
-		excel.SetCellValue("Sheet1", fmt.Sprintf("B%d", i+2), exportAdmissionModels[i].FullName)
+	for i := 0; i < len(exportModelss); i++ {
+		excel.SetCellValue("Sheet1", fmt.Sprintf("A%d", i+2), exportModelss[i].ID)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("B%d", i+2), exportModelss[i].FullName)
 	}
 
 	// Default active sheet
@@ -607,7 +605,7 @@ func ExportAdmission(c echo.Context) error {
 
 func ExportAdmissionByIds(c echo.Context) error {
 	// Get data request
-	admissions := make([]admissionmodel.Admission, 0)
+	admissions := make([]models.Admission, 0)
 	if err := c.Bind(&admissions); err != nil {
 		return err
 	}
@@ -632,11 +630,11 @@ func ExportAdmissionByIds(c echo.Context) error {
 	// Query all students
 	for key, admission := range admissions {
 		// Query get admission all data --- current admission
-		DB.First(&admission, admissionmodel.Admission{ID: admission.ID})
+		DB.First(&admission, models.Admission{ID: admission.ID})
 
 		// Query get student all data
-		student := institutemodel.Student{}
-		DB.First(&student, institutemodel.Student{ID: admission.StudentID})
+		student := models.Student{}
+		DB.First(&student, models.Student{ID: admission.StudentID})
 
 		// Set values in excel file
 		excel.SetCellValue("Sheet1", fmt.Sprintf("A%d", key+2), admission.ID)

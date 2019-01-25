@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models/institutemodel"
-	"github.com/paulantezana/review/utilities"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
@@ -23,7 +23,7 @@ type teacherProgramResponse struct {
 
 func GetTeacherProgramByProgram(c echo.Context) error {
 	// Get data request
-	teacherProgram := institutemodel.TeacherProgram{}
+	teacherProgram := models.TeacherProgram{}
 	if err := c.Bind(&teacherProgram); err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func GetTeacherProgramByProgram(c echo.Context) error {
 
 func CreateTeacherProgram(c echo.Context) error {
 	// Get data request
-	teacherProgram := institutemodel.TeacherProgram{}
+	teacherProgram := models.TeacherProgram{}
 	if err := c.Bind(&teacherProgram); err != nil {
 		return err
 	}
@@ -62,8 +62,8 @@ func CreateTeacherProgram(c echo.Context) error {
 	defer DB.Close()
 
 	// Validation
-	tValidate := make([]institutemodel.TeacherProgram, 0)
-	if err := DB.Find(&tValidate, institutemodel.TeacherProgram{
+	tValidate := make([]models.TeacherProgram, 0)
+	if err := DB.Find(&tValidate, models.TeacherProgram{
 		TeacherID: teacherProgram.TeacherID,
 		ProgramID: teacherProgram.ProgramID,
 	}).Error; err != nil {
@@ -91,7 +91,7 @@ func CreateTeacherProgram(c echo.Context) error {
 
 func UpdateTeacherProgram(c echo.Context) error {
 	// Get data request
-	teacherProgram := institutemodel.TeacherProgram{}
+	teacherProgram := models.TeacherProgram{}
 	if err := c.Bind(&teacherProgram); err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func UpdateTeacherProgram(c echo.Context) error {
 
 func DeleteTeacherProgram(c echo.Context) error {
 	// Get data request
-	teacherProgram := institutemodel.TeacherProgram{}
+	teacherProgram := models.TeacherProgram{}
 	if err := c.Bind(&teacherProgram); err != nil {
 		return err
 	}

@@ -5,8 +5,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models/institutemodel"
-	"github.com/paulantezana/review/utilities"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
@@ -36,7 +36,7 @@ func GetProgramsUserByUserID(c echo.Context) error {
 	defer DB.Close()
 
 	// Query Programs
-	programs := make([]institutemodel.Subsidiary, 0)
+	programs := make([]models.Subsidiary, 0)
 	if err := DB.Raw("SELECT * FROM programs WHERE id NOT IN (SELECT program_id  FROM program_users WHERE user_id = ?) AND subsidiary_id = ?", request.UserID, request.SubsidiaryID).
 		Scan(&programs).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -47,7 +47,7 @@ func GetProgramsUserByUserID(c echo.Context) error {
 
 	// Insert SubsidiaryUsers
 	for _, program := range programs {
-		programUser := institutemodel.ProgramUser{
+		programUser := models.ProgramUser{
 			UserID:    request.UserID,
 			ProgramID: program.ID,
 		}
@@ -113,13 +113,13 @@ func GetProgramsUserByStudentIDLicense(c echo.Context) error {
 	defer DB.Close()
 
 	// Query student
-	student := institutemodel.Student{}
-	if err := DB.First(&student, institutemodel.Student{UserID: currentUser.ID}).Error; err != nil {
+	student := models.Student{}
+	if err := DB.First(&student, models.Student{UserID: currentUser.ID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Query programs
-	programs := make([]institutemodel.Program, 0)
+	programs := make([]models.Program, 0)
 	if err := DB.Debug().Raw("SELECT id, name FROM programs WHERE id "+
 		"IN (SELECT program_id FROM student_programs WHERE student_id = ?)", student.ID).
 		Scan(&programs).Error; err != nil {
@@ -135,7 +135,7 @@ func GetProgramsUserByStudentIDLicense(c echo.Context) error {
 
 func UpdateProgramsUserByUserID(c echo.Context) error {
 	// Get data request
-	programUsers := make([]institutemodel.ProgramUser, 0)
+	programUsers := make([]models.ProgramUser, 0)
 	if err := c.Bind(&programUsers); err != nil {
 		return err
 	}

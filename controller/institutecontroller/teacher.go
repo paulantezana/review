@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/models/institutemodel"
 	"io"
 	"net/http"
 	"os"
@@ -38,7 +37,7 @@ func GetTeachers(c echo.Context) error {
 
 	// Execute instructions
 	var total uint
-	teachers := make([]institutemodel.Teacher, 0)
+	teachers := make([]models.Teacher, 0)
 
 	if err := db.Where("lower(first_name) LIKE lower(?)", "%"+request.Search+"%").
 		Or("lower(last_name) LIKE lower(?)", "%"+request.Search+"%").
@@ -51,8 +50,8 @@ func GetTeachers(c echo.Context) error {
 
 	// Get type teacher
 	for k, teacher := range teachers {
-		teacherProgram := institutemodel.TeacherProgram{}
-		db.First(&teacherProgram, institutemodel.TeacherProgram{
+		teacherProgram := models.TeacherProgram{}
+		db.First(&teacherProgram, models.TeacherProgram{
 			TeacherID: teacher.ID,
 		})
 		teachers[k].Type = teacherProgram.Type
@@ -85,7 +84,7 @@ func GetTeachersPaginateByProgram(c echo.Context) error {
 
 	// Execute instructions
 	total := utilities.Counter{}
-	teachers := make([]institutemodel.Teacher, 0)
+	teachers := make([]models.Teacher, 0)
 
 	// Query in database
 	DB.Raw("SELECT * FROM teachers "+
@@ -102,8 +101,8 @@ func GetTeachersPaginateByProgram(c echo.Context) error {
 
 	// Get type teacher
 	for k, teacher := range teachers {
-		teacherProgram := institutemodel.TeacherProgram{}
-		DB.First(&teacherProgram, institutemodel.TeacherProgram{
+		teacherProgram := models.TeacherProgram{}
+		DB.First(&teacherProgram, models.TeacherProgram{
 			TeacherID: teacher.ID,
 		})
 		teachers[k].Type = teacherProgram.Type
@@ -194,7 +193,7 @@ func CreateTeacher(c echo.Context) error {
 	//currentUser := claims.User
 
 	// Get data request
-	teacher := institutemodel.Teacher{}
+	teacher := models.Teacher{}
 	if err := c.Bind(&teacher); err != nil {
 		return err
 	}
@@ -222,8 +221,8 @@ func CreateTeacher(c echo.Context) error {
 	}
 
 	// Insert teachers in database
-	teacherPrograms := make([]institutemodel.TeacherProgram, 0)
-	teacherPrograms = append(teacherPrograms, institutemodel.TeacherProgram{
+	teacherPrograms := make([]models.TeacherProgram, 0)
+	teacherPrograms = append(teacherPrograms, models.TeacherProgram{
 		ProgramID: teacher.ProgramID,
 		Type:      teacher.Type,
 		ByDefault: true,
@@ -249,7 +248,7 @@ func CreateTeacher(c echo.Context) error {
 
 func UpdateTeacher(c echo.Context) error {
 	// Get data request
-	teacher := institutemodel.Teacher{}
+	teacher := models.Teacher{}
 	if err := c.Bind(&teacher); err != nil {
 		return err
 	}
@@ -270,11 +269,11 @@ func UpdateTeacher(c echo.Context) error {
 	}
 
 	// Update teacher program
-	teacherProgram := institutemodel.TeacherProgram{
+	teacherProgram := models.TeacherProgram{
 		ProgramID: teacher.ProgramID,
 		Type:      teacher.Type,
 	}
-	if err := TR.Debug().Model(&institutemodel.TeacherProgram{}).Where("teacher_id = ? AND by_default = true", teacher.ID).
+	if err := TR.Debug().Model(&models.TeacherProgram{}).Where("teacher_id = ? AND by_default = true", teacher.ID).
 		Update(teacherProgram).Error; err != nil {
 		TR.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{
@@ -295,7 +294,7 @@ func UpdateTeacher(c echo.Context) error {
 
 func DeleteTeacher(c echo.Context) error {
 	// Get data request
-	teacher := institutemodel.Teacher{}
+	teacher := models.Teacher{}
 	if err := c.Bind(&teacher); err != nil {
 		return err
 	}
@@ -329,8 +328,8 @@ func GetTempUploadTeacher(c echo.Context) error {
 	defer DB.Close()
 
 	// Execute instructions
-	programs := make([]institutemodel.Program, 0)
-	if err := DB.Find(&programs, institutemodel.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
+	programs := make([]models.Program, 0)
+	if err := DB.Find(&programs, models.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -411,7 +410,7 @@ func SetTempUploadTeacher(c echo.Context) error {
 	}
 
 	// Prepare
-	teachers := make([]institutemodel.Teacher, 0)
+	teachers := make([]models.Teacher, 0)
 	ignoreCols := 1
 
 	// Get all the rows in the Sheet1.
@@ -434,14 +433,14 @@ func SetTempUploadTeacher(c echo.Context) error {
 			}
 
 			// Create model teacherPrograms
-			teacherPrograms := make([]institutemodel.TeacherProgram, 0)
-			teacherPrograms = append(teacherPrograms, institutemodel.TeacherProgram{
+			teacherPrograms := make([]models.TeacherProgram, 0)
+			teacherPrograms = append(teacherPrograms, models.TeacherProgram{
 				ProgramID: currentProgram,
 				Type:      "career",
 			})
 
 			// Create AND Append model Teacher
-			teachers = append(teachers, institutemodel.Teacher{
+			teachers = append(teachers, models.Teacher{
 				DNI:             strings.TrimSpace(row[0]),
 				LastName:        strings.TrimSpace(row[1]),
 				FirstName:       strings.TrimSpace(row[2]),
@@ -507,7 +506,7 @@ func ExportAllTeachers(c echo.Context) error {
 	defer db.Close()
 
 	// Query in database
-	teachers := make([]institutemodel.Teacher, 0)
+	teachers := make([]models.Teacher, 0)
 	if err := db.Order("id asc").Find(&teachers).Error; err != nil {
 		return err
 	}

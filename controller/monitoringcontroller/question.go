@@ -2,8 +2,8 @@ package monitoringcontroller
 
 import (
 	"fmt"
-	"github.com/paulantezana/review/models/monitoringmodel"
-	"net/http"
+    "github.com/paulantezana/review/models"
+    "net/http"
 
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
@@ -13,7 +13,7 @@ import (
 // GetQuestions get all questions by poll
 func GetQuestions(c echo.Context) error {
 	// Get data request
-	poll := monitoringmodel.Poll{}
+	poll := models.Poll{}
 	if err := c.Bind(&poll); err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func GetQuestions(c echo.Context) error {
 	defer db.Close()
 
 	// Execute instructions
-	questions := make([]monitoringmodel.Question, 0)
+	questions := make([]models.Question, 0)
 
 	// Query in database
 	if err := db.Where("poll_id = ?", poll.ID).
@@ -32,7 +32,7 @@ func GetQuestions(c echo.Context) error {
 	}
 
 	for k, question := range questions {
-		multipleQuestions := make([]monitoringmodel.MultipleQuestion, 0)
+		multipleQuestions := make([]models.MultipleQuestion, 0)
 		if err := db.Where("question_id = ?", question.ID).
 			Order("id asc").Find(&multipleQuestions).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -48,7 +48,7 @@ func GetQuestions(c echo.Context) error {
 }
 
 type createQuestionsRequest struct {
-	Questions []monitoringmodel.Question `json:"questions"`
+	Questions []models.Question `json:"questions"`
 }
 
 // CreateQuestions create multiple questions
@@ -99,7 +99,7 @@ func CreateQuestions(c echo.Context) error {
 // UpdateQuestion update one question
 func UpdateQuestion(c echo.Context) error {
 	// Get data request
-	question := monitoringmodel.Question{}
+	question := models.Question{}
 	if err := c.Bind(&question); err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func UpdateQuestion(c echo.Context) error {
 // DeleteQuestion Delete one question
 func DeleteQuestion(c echo.Context) error {
 	// Get data request
-	question := monitoringmodel.Question{}
+	question := models.Question{}
 	if err := c.Bind(&question); err != nil {
 		return err
 	}

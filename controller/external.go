@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/models/institutemodel"
-	"github.com/paulantezana/review/utilities"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -17,7 +16,7 @@ type reniecRequest struct {
 }
 
 type reniecResponse struct {
-	Student institutemodel.Student `json:"student"`
+	Student models.Student `json:"student"`
 	User    models.User            `json:"user"`
 	Exist   bool                   `json:"exist"`
 }
@@ -33,8 +32,8 @@ func Reniec(c echo.Context) error {
 	defer DB.Close()
 
 	// Search student
-	student := institutemodel.Student{}
-	DB.First(&student, institutemodel.Student{DNI: request.DNI})
+	student := models.Student{}
+	DB.First(&student, models.Student{DNI: request.DNI})
 	reniecResponse := reniecResponse{
 		Student: student,
 	}

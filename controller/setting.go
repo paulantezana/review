@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	"github.com/paulantezana/review/models/institutemodel"
 	"io"
 	"net/http"
 	"os"
@@ -106,8 +105,8 @@ func GetStudentSettings(c echo.Context) error {
 	}
 
 	// find student
-	student := institutemodel.Student{}
-	if err := db.First(&student, institutemodel.Student{UserID: user.ID}).Error; err != nil {
+	student := models.Student{}
+	if err := db.First(&student, models.Student{UserID: user.ID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 	studentSetting := studentSettings{

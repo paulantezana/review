@@ -5,12 +5,6 @@ import (
 	"fmt"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/models/admissionmodel"
-	"github.com/paulantezana/review/models/coursemodel"
-	"github.com/paulantezana/review/models/institutemodel"
-	"github.com/paulantezana/review/models/messengermodel"
-	"github.com/paulantezana/review/models/monitoringmodel"
-	"github.com/paulantezana/review/models/reviewmodel"
 )
 
 // migration function
@@ -25,46 +19,46 @@ func Migrate() {
 		&models.Setting{},
 
 		// Institute
-		&institutemodel.Subsidiary{},
-		&institutemodel.SubsidiaryUser{},
-		&institutemodel.Program{},
-		&institutemodel.ProgramUser{},
-		&institutemodel.Semester{},
-		&institutemodel.Module{},
-		&institutemodel.ModuleSemester{},
-		&institutemodel.Unity{},
+		&models.Subsidiary{},
+		&models.SubsidiaryUser{},
+		&models.Program{},
+		&models.ProgramUser{},
+		&models.Semester{},
+		&models.Module{},
+		&models.ModuleSemester{},
+		&models.Unity{},
 
-		&institutemodel.StudentStatus{},
-		&institutemodel.Student{},
-		&institutemodel.StudentHistory{},
-		&institutemodel.StudentProgram{},
+		&models.StudentStatus{},
+		&models.Student{},
+		&models.StudentHistory{},
+		&models.StudentProgram{},
 
-		&institutemodel.Teacher{},
-		&institutemodel.TeacherAction{},
-		&institutemodel.TeacherProgram{},
+		&models.Teacher{},
+		&models.TeacherAction{},
+		&models.TeacherProgram{},
 
 		// Admission
-		&admissionmodel.Admission{},
-		&admissionmodel.AdmissionPayment{},
-		&admissionmodel.Payment{},
+		&models.Admission{},
+		&models.AdmissionPayment{},
+		&models.Payment{},
 
 		// Review
-		&reviewmodel.Review{},
-		&reviewmodel.ReviewDetail{},
-		&reviewmodel.Company{},
+		&models.Review{},
+		&models.ReviewDetail{},
+		&models.Company{},
 
 		// Migration certification
-		&coursemodel.Course{},
-		&coursemodel.CourseStudent{},
-		&coursemodel.CourseExam{},
+		&models.Course{},
+		&models.CourseStudent{},
+		&models.CourseExam{},
 
 		// Migration monitoring
-		&monitoringmodel.Answer{},
-		&monitoringmodel.AnswerDetail{},
-		&monitoringmodel.MultipleQuestion{},
-		&monitoringmodel.Poll{},
-		&monitoringmodel.Question{},
-		&monitoringmodel.TypeQuestion{},
+		&models.Answer{},
+		&models.AnswerDetail{},
+		&models.MultipleQuestion{},
+		&models.Poll{},
+		&models.Question{},
+		&models.TypeQuestion{},
 
 		// Libraries
 		&models.Category{},
@@ -75,72 +69,72 @@ func Migrate() {
 		&models.Vote{},
 
 		// Messenger model
-		&messengermodel.Group{},
-		&messengermodel.Message{},
-		&messengermodel.MessageRecipient{},
-		&messengermodel.ReminderFrequency{},
-		&messengermodel.Session{},
-		&messengermodel.UserGroup{},
+		&models.Group{},
+		&models.Message{},
+		&models.MessageRecipient{},
+		&models.ReminderFrequency{},
+		&models.Session{},
+		&models.UserGroup{},
 	)
 	// General =================================================================
 	db.Model(&models.User{}).AddForeignKey("role_id", "roles(id)", "RESTRICT", "RESTRICT")
 
 	// Institutional ===========================================================
-	db.Model(&institutemodel.SubsidiaryUser{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
-	db.Model(&institutemodel.SubsidiaryUser{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "CASCADE", "CASCADE")
-	db.Model(&institutemodel.Program{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "RESTRICT", "RESTRICT")
-	db.Model(&institutemodel.ProgramUser{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
-	db.Model(&institutemodel.ProgramUser{}).AddForeignKey("program_id", "programs(id)", "CASCADE", "CASCADE")
-	db.Model(&institutemodel.Semester{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-	db.Model(&institutemodel.ModuleSemester{}).AddForeignKey("semester_id", "semesters(id)", "CASCADE", "CASCADE")
-	db.Model(&institutemodel.ModuleSemester{}).AddForeignKey("module_id", "modules(id)", "CASCADE", "CASCADE")
-	db.Model(&institutemodel.Unity{}).AddForeignKey("module_id", "modules(id)", "RESTRICT", "RESTRICT")
-	db.Model(&institutemodel.Unity{}).AddForeignKey("semester_id", "semesters(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.SubsidiaryUser{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	db.Model(&models.SubsidiaryUser{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Program{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.ProgramUser{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	db.Model(&models.ProgramUser{}).AddForeignKey("program_id", "programs(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Semester{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.ModuleSemester{}).AddForeignKey("semester_id", "semesters(id)", "CASCADE", "CASCADE")
+	db.Model(&models.ModuleSemester{}).AddForeignKey("module_id", "modules(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Unity{}).AddForeignKey("module_id", "modules(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Unity{}).AddForeignKey("semester_id", "semesters(id)", "RESTRICT", "RESTRICT")
 
-	db.Model(&institutemodel.Student{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
-	db.Model(&institutemodel.Student{}).AddForeignKey("student_status_id", "student_status(id)", "RESTRICT", "RESTRICT")
-	db.Model(&institutemodel.StudentHistory{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
-	db.Model(&institutemodel.StudentHistory{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
-	db.Model(&institutemodel.StudentProgram{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
-	db.Model(&institutemodel.StudentProgram{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Student{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Student{}).AddForeignKey("student_status_id", "student_status(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.StudentHistory{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.StudentHistory{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.StudentProgram{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.StudentProgram{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 
-	db.Model(&institutemodel.Teacher{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
-	db.Model(&institutemodel.TeacherAction{}).AddForeignKey("teacher_id", "teachers(id)", "RESTRICT", "RESTRICT")
-	db.Model(&institutemodel.TeacherProgram{}).AddForeignKey("teacher_id", "teachers(id)", "CASCADE", "CASCADE")
-	db.Model(&institutemodel.TeacherProgram{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Teacher{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.TeacherAction{}).AddForeignKey("teacher_id", "teachers(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.TeacherProgram{}).AddForeignKey("teacher_id", "teachers(id)", "CASCADE", "CASCADE")
+	db.Model(&models.TeacherProgram{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 
 	// Admission ===============================================================
-	db.Model(&admissionmodel.Admission{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
-	db.Model(&admissionmodel.Admission{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-	db.Model(&admissionmodel.Admission{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
-	db.Model(&admissionmodel.AdmissionPayment{}).AddForeignKey("admission_id", "admissions(id)", "RESTRICT", "RESTRICT")
-	//db.Model(&admissionmodel.Payment{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Admission{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Admission{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Admission{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.AdmissionPayment{}).AddForeignKey("admission_id", "admissions(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&models.Payment{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "RESTRICT", "RESTRICT")
 
 	// Reviews =================================================================
-	db.Model(&reviewmodel.Review{}).AddForeignKey("creator_id", "users(id)", "RESTRICT", "RESTRICT")
-	db.Model(&reviewmodel.Review{}).AddForeignKey("student_program_id", "student_programs(id)", "RESTRICT", "RESTRICT")
-	db.Model(&reviewmodel.Review{}).AddForeignKey("module_id", "modules(id)", "RESTRICT", "RESTRICT")
-	db.Model(&reviewmodel.Review{}).AddForeignKey("teacher_id", "teachers(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Review{}).AddForeignKey("creator_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Review{}).AddForeignKey("student_program_id", "student_programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Review{}).AddForeignKey("module_id", "modules(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Review{}).AddForeignKey("teacher_id", "teachers(id)", "RESTRICT", "RESTRICT")
 
-	db.Model(&reviewmodel.ReviewDetail{}).AddForeignKey("company_id", "companies(id)", "RESTRICT", "RESTRICT")
-	db.Model(&reviewmodel.ReviewDetail{}).AddForeignKey("review_id", "reviews(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.ReviewDetail{}).AddForeignKey("company_id", "companies(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.ReviewDetail{}).AddForeignKey("review_id", "reviews(id)", "RESTRICT", "RESTRICT")
 
 	// Certification ===========================================================
-	db.Model(&coursemodel.CourseStudent{}).AddForeignKey("course_id", "courses(id)", "RESTRICT", "RESTRICT")
-	db.Model(&coursemodel.CourseStudent{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-	db.Model(&coursemodel.CourseExam{}).AddForeignKey("course_student_id", "course_students(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.CourseStudent{}).AddForeignKey("course_id", "courses(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.CourseStudent{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.CourseExam{}).AddForeignKey("course_student_id", "course_students(id)", "RESTRICT", "RESTRICT")
 
 	// Monitoring ==============================================================
-	db.Model(&monitoringmodel.Poll{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-	db.Model(&monitoringmodel.Answer{}).AddForeignKey("poll_id", "polls(id)", "RESTRICT", "RESTRICT")
-	db.Model(&monitoringmodel.Answer{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
-	db.Model(&monitoringmodel.AnswerDetail{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
-	db.Model(&monitoringmodel.AnswerDetail{}).AddForeignKey("answer_id", "answers(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Poll{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Answer{}).AddForeignKey("poll_id", "polls(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Answer{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.AnswerDetail{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
+	db.Model(&models.AnswerDetail{}).AddForeignKey("answer_id", "answers(id)", "RESTRICT", "RESTRICT")
 
-	db.Model(&monitoringmodel.Question{}).AddForeignKey("poll_id", "polls(id)", "RESTRICT", "RESTRICT")
-	db.Model(&monitoringmodel.Question{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Question{}).AddForeignKey("poll_id", "polls(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Question{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
 
-	db.Model(&monitoringmodel.MultipleQuestion{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
+	db.Model(&models.MultipleQuestion{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
 
 	// Libraries ===========================================================
 	db.Model(&models.Book{}).AddForeignKey("category_id", "categories(id)", "RESTRICT", "RESTRICT")
@@ -152,13 +146,13 @@ func Migrate() {
 	db.Model(&models.Like{}).AddForeignKey("book_id", "books(id)", "CASCADE", "CASCADE")
 
 	// Messenger ===========================================================
-	db.Model(&messengermodel.MessageRecipient{}).AddForeignKey("recipient_id", "users(id)", "RESTRICT", "RESTRICT")
-	db.Model(&messengermodel.MessageRecipient{}).AddForeignKey("recipient_group_id", "user_groups(id)", "RESTRICT", "RESTRICT")
-	db.Model(&messengermodel.MessageRecipient{}).AddForeignKey("message_id", "messages(id)", "RESTRICT", "RESTRICT")
-	db.Model(&messengermodel.UserGroup{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
-	db.Model(&messengermodel.UserGroup{}).AddForeignKey("group_id", "groups(id)", "RESTRICT", "RESTRICT")
-	db.Model(&messengermodel.Message{}).AddForeignKey("creator_id", "users(id)", "RESTRICT", "RESTRICT")
-	db.Model(&messengermodel.Message{}).AddForeignKey("reminder_frequency_id", "reminder_frequencies(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&models.MessageRecipient{}).AddForeignKey("recipient_id", "users(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&models.MessageRecipient{}).AddForeignKey("recipient_group_id", "user_groups(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.MessageRecipient{}).AddForeignKey("message_id", "messages(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.UserGroup{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.UserGroup{}).AddForeignKey("group_id", "groups(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Message{}).AddForeignKey("creator_id", "users(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&models.Message{}).AddForeignKey("reminder_frequency_id", "reminder_frequencies(id)", "RESTRICT", "RESTRICT")
 
 	// -------------------------------------------------------------
 	// INSERT FIST DATA --------------------------------------------
@@ -180,19 +174,19 @@ func Migrate() {
 
 	// -------------------------------------------------------------
 	// Insert State students ---------------------------------------
-	status := institutemodel.StudentStatus{}
+	status := models.StudentStatus{}
 	db.First(&status)
 	if status.ID == 0 {
-		status1 := institutemodel.StudentStatus{Name: "No asignado"}
-		status2 := institutemodel.StudentStatus{Name: "Postulante"}
-		status3 := institutemodel.StudentStatus{Name: "Exonerado"}
-		status4 := institutemodel.StudentStatus{Name: "Trasladado"}
-		status5 := institutemodel.StudentStatus{Name: "Rechazado"}
-		status6 := institutemodel.StudentStatus{Name: "Aprobado"}
-		status7 := institutemodel.StudentStatus{Name: "Prematriculado"}
-		status8 := institutemodel.StudentStatus{Name: "Matriculado"}
-		status9 := institutemodel.StudentStatus{Name: "Expulsado"}
-		status10 := institutemodel.StudentStatus{Name: "Egresado"}
+		status1 := models.StudentStatus{Name: "No asignado"}
+		status2 := models.StudentStatus{Name: "Postulante"}
+		status3 := models.StudentStatus{Name: "Exonerado"}
+		status4 := models.StudentStatus{Name: "Trasladado"}
+		status5 := models.StudentStatus{Name: "Rechazado"}
+		status6 := models.StudentStatus{Name: "Aprobado"}
+		status7 := models.StudentStatus{Name: "Prematriculado"}
+		status8 := models.StudentStatus{Name: "Matriculado"}
+		status9 := models.StudentStatus{Name: "Expulsado"}
+		status10 := models.StudentStatus{Name: "Egresado"}
 		db.Create(&status1).Create(&status2).Create(&status3).Create(&status4).Create(&status5)
 		db.Create(&status6).Create(&status7).Create(&status8).Create(&status9).Create(&status10)
 	}
@@ -240,15 +234,15 @@ func Migrate() {
 
 	// ====================================================
 	// -- Insert Type Quiestions
-	tpq := monitoringmodel.TypeQuestion{}
+	tpq := models.TypeQuestion{}
 	db.First(&tpq)
 
 	if tpq.ID == 0 {
 		// Create Models
-		tq1 := monitoringmodel.TypeQuestion{Name: "Respuesta breve"}          // 1 = Simple input
-		tq2 := monitoringmodel.TypeQuestion{Name: "Párrafo"}                  // 2 = TextArea input
-		tq3 := monitoringmodel.TypeQuestion{Name: "Opción múltiple"}          // 3 = Radio input
-		tq4 := monitoringmodel.TypeQuestion{Name: "Casillas de verificación"} // 4 = Checkbox input
+		tq1 := models.TypeQuestion{Name: "Respuesta breve"}          // 1 = Simple input
+		tq2 := models.TypeQuestion{Name: "Párrafo"}                  // 2 = TextArea input
+		tq3 := models.TypeQuestion{Name: "Opción múltiple"}          // 3 = Radio input
+		tq4 := models.TypeQuestion{Name: "Casillas de verificación"} // 4 = Checkbox input
 
 		// Insert in Database
 		db.Create(&tq1)

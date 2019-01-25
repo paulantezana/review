@@ -6,14 +6,13 @@ import (
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/models/institutemodel"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
 func GetPrograms(c echo.Context) error {
 	// Get data request
-	program := institutemodel.Program{}
+	program := models.Program{}
 	if err := c.Bind(&program); err != nil {
 		return err
 	}
@@ -23,7 +22,7 @@ func GetPrograms(c echo.Context) error {
 	defer DB.Close()
 
 	// Execute instructions
-	programs := make([]institutemodel.Program, 0)
+	programs := make([]models.Program, 0)
 	if err := DB.Where("subsidiary_id = ?", program.SubsidiaryID).Find(&programs).Order("id desc").
 		Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -38,7 +37,7 @@ func GetPrograms(c echo.Context) error {
 
 func GetProgramByID(c echo.Context) error {
 	// Get data request
-	program := institutemodel.Program{}
+	program := models.Program{}
 	if err := c.Bind(&program); err != nil {
 		return err
 	}
@@ -86,7 +85,7 @@ func CreateProgram(c echo.Context) error {
 	// Starting transaction
 	// ------------------------------------
 	TR := DB.Begin()
-	program := institutemodel.Program{
+	program := models.Program{
 		Name:         request.Name,
 		Level:        request.Level,
 		SubsidiaryID: request.SubsidiaryID,
@@ -114,7 +113,7 @@ func CreateProgram(c echo.Context) error {
 	}
 
 	// Create program user - relation
-	programUser := institutemodel.ProgramUser{
+	programUser := models.ProgramUser{
 		UserID:    user.ID,
 		ProgramID: program.ID,
 		License:   true,
@@ -125,7 +124,7 @@ func CreateProgram(c echo.Context) error {
 	}
 
 	// Create teacher
-	teacher := institutemodel.Teacher{
+	teacher := models.Teacher{
 		DNI:       request.DNI,
 		FirstName: request.FirstName,
 		ProgramID: program.ID,
@@ -137,7 +136,7 @@ func CreateProgram(c echo.Context) error {
 	}
 
 	// Create Relation
-	teacherProgram := institutemodel.TeacherProgram{
+	teacherProgram := models.TeacherProgram{
 		ProgramID: program.ID,
 		TeacherID: teacher.ID,
 		Type:      "career",
@@ -163,7 +162,7 @@ func CreateProgram(c echo.Context) error {
 
 func UpdateProgram(c echo.Context) error {
 	// Get data request
-	program := institutemodel.Program{}
+	program := models.Program{}
 	if err := c.Bind(&program); err != nil {
 		return err
 	}

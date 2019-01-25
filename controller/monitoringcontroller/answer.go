@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models/monitoringmodel"
-	"github.com/paulantezana/review/utilities"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
 func CreateAnswer(c echo.Context) error {
 	// Get data request
-	answer := monitoringmodel.Answer{}
+	answer := models.Answer{}
 	if err := c.Bind(&answer); err != nil {
 		return err
 	}
@@ -21,8 +21,8 @@ func CreateAnswer(c echo.Context) error {
 	defer DB.Close()
 
 	// Validate
-	validateAnswer := monitoringmodel.Answer{}
-	if rows := DB.First(&validateAnswer, monitoringmodel.Answer{
+	validateAnswer := models.Answer{}
+	if rows := DB.First(&validateAnswer, models.Answer{
 		StudentID: answer.StudentID,
 		PollID:    answer.PollID,
 	}).RowsAffected; rows >= 1 {
@@ -63,7 +63,7 @@ type answerSummary struct {
 
 func GetAnswerSummary(c echo.Context) error {
 	// Get data request
-	poll := monitoringmodel.Poll{}
+	poll := models.Poll{}
 	if err := c.Bind(&poll); err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func GetAnswerNavigate(c echo.Context) error {
 
 	// query total answers
 	var total uint
-	DB.Model(&monitoringmodel.Answer{}).Where("poll_id = ?", request.ID).Count(&total)
+	DB.Model(&models.Answer{}).Where("poll_id = ?", request.ID).Count(&total)
 
 	// return request
 	return c.JSON(http.StatusOK, utilities.ResponsePaginate{

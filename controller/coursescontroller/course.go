@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models/coursemodel"
-	"github.com/paulantezana/review/utilities"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
@@ -25,7 +25,7 @@ func GetCoursesPaginate(c echo.Context) error {
 
 	// Execute instructions
 	var total uint
-	courses := make([]coursemodel.Course, 0)
+	courses := make([]models.Course, 0)
 
 	// Query in database
 	if err := db.Where("lower(name) LIKE lower(?)", "%"+request.Search+"%").
@@ -47,7 +47,7 @@ func GetCoursesPaginate(c echo.Context) error {
 
 func GetCourseByID(c echo.Context) error {
 	// Get data request
-	course := coursemodel.Course{}
+	course := models.Course{}
 	if err := c.Bind(&course); err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func GetCourseByID(c echo.Context) error {
 
 func CreateCourse(c echo.Context) error {
 	// Get data request
-	course := coursemodel.Course{}
+	course := models.Course{}
 	if err := c.Bind(&course); err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func CreateCourse(c echo.Context) error {
 
 func UpdateCourse(c echo.Context) error {
 	// Get data request
-	course := coursemodel.Course{}
+	course := models.Course{}
 	if err := c.Bind(&course); err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func UpdateCourse(c echo.Context) error {
 
 func DeleteCourse(c echo.Context) error {
 	// Get data request
-	course := coursemodel.Course{}
+	course := models.Course{}
 	if err := c.Bind(&course); err != nil {
 		return err
 	}

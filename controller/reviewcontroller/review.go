@@ -2,9 +2,8 @@ package reviewcontroller
 
 import (
 	"fmt"
-	"github.com/paulantezana/review/models/institutemodel"
-	"github.com/paulantezana/review/models/reviewmodel"
-	"net/http"
+    "github.com/paulantezana/review/models"
+    "net/http"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -48,8 +47,8 @@ func GetReviews(c echo.Context) error {
 	defer DB.Close()
 
 	// Find StudentProgramID
-	studentProgram := institutemodel.StudentProgram{}
-	DB.First(&studentProgram, institutemodel.StudentProgram{StudentID: request.StudentID, ProgramID: request.ProgramID})
+	studentProgram := models.StudentProgram{}
+	DB.First(&studentProgram, models.StudentProgram{StudentID: request.StudentID, ProgramID: request.ProgramID})
 
 	// Query in database
 	reviewsResponses := make([]reviewsResponse, 0)
@@ -66,7 +65,7 @@ func GetReviews(c echo.Context) error {
 	// validation
 	countReviews := len(reviewsResponses) // all review count
 	var allModules uint                   // all modules count
-	if err := DB.Model(&institutemodel.Module{}).Where("program_id = ?", request.ProgramID).Count(&allModules).Error; err != nil {
+	if err := DB.Model(&models.Module{}).Where("program_id = ?", request.ProgramID).Count(&allModules).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -89,7 +88,7 @@ func GetReviews(c echo.Context) error {
 type reviewRequest struct {
 	ProgramID uint               `json:"program_id"`
 	StudentID uint               `json:"student_id"`
-	Review    reviewmodel.Review `json:"review"`
+	Review    models.Review `json:"review"`
 }
 
 // CreateReview function create new review
@@ -111,13 +110,13 @@ func CreateReview(c echo.Context) error {
 	defer DB.Close()
 
 	// Query student program
-	studentProgram := institutemodel.StudentProgram{}
-	if err := DB.First(&studentProgram, institutemodel.StudentProgram{StudentID: request.StudentID, ProgramID: request.ProgramID}).Error; err != nil {
+	studentProgram := models.StudentProgram{}
+	if err := DB.First(&studentProgram, models.StudentProgram{StudentID: request.StudentID, ProgramID: request.ProgramID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Validate
-	rvw := make([]reviewmodel.Review, 0)
+	rvw := make([]models.Review, 0)
 	if DB.Where("student_program_id = ? and module_id = ?", studentProgram.ID, request.Review.ModuleId).
 		Find(&rvw).RowsAffected >= 1 {
 		return c.JSON(http.StatusOK, utilities.Response{
@@ -138,7 +137,7 @@ func CreateReview(c echo.Context) error {
 	}
 
 	// Insert History student
-	studentHistory := institutemodel.StudentHistory{
+	studentHistory := models.StudentHistory{
 		StudentID:   request.StudentID,
 		UserID:      currentUser.ID,
 		Description: fmt.Sprintf("Revisón de prácticas del modulo %d", request.Review.ModuleId),
@@ -164,7 +163,7 @@ func CreateReview(c echo.Context) error {
 // UpdateReview function update review
 func UpdateReview(c echo.Context) error {
 	// Get data request
-	review := reviewmodel.Review{}
+	review := models.Review{}
 	if err := c.Bind(&review); err != nil {
 		return err
 	}
@@ -192,7 +191,7 @@ func UpdateReview(c echo.Context) error {
 // DeleteReview function delete review
 func DeleteReview(c echo.Context) error {
 	// Get data request
-	review := reviewmodel.Review{}
+	review := models.Review{}
 	if err := c.Bind(&review); err != nil {
 		return err
 	}
@@ -251,7 +250,7 @@ type moduleResponse struct {
 
 // consResponse struct
 type actResponse struct {
-	Student institutemodel.Student `json:"student"`
+	Student models.Student `json:"student"`
 	Module  moduleResponse         `json:"module"`
 	Details []detailResponse       `json:"details"`
 	Review  reviewResponse         `json:"review"`
@@ -264,7 +263,7 @@ type semesterNames struct {
 // GetActaReview function get data acta
 func GetActaReview(c echo.Context) error {
 	// Get data request
-	review := reviewmodel.Review{}
+	review := models.Review{}
 	if err := c.Bind(&review); err != nil {
 		return err
 	}
@@ -279,14 +278,14 @@ func GetActaReview(c echo.Context) error {
 	}
 
 	// Query student program
-	studentProgram := institutemodel.StudentProgram{}
-	if err := DB.First(&studentProgram, institutemodel.StudentProgram{ID: review.StudentProgramID}).Error; err != nil {
+	studentProgram := models.StudentProgram{}
+	if err := DB.First(&studentProgram, models.StudentProgram{ID: review.StudentProgramID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Query student
-	student := institutemodel.Student{}
-	if err := DB.First(&student, institutemodel.Student{ID: studentProgram.StudentID}).Error; err != nil {
+	student := models.Student{}
+	if err := DB.First(&student, models.Student{ID: studentProgram.StudentID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -343,16 +342,16 @@ func GetActaReview(c echo.Context) error {
 
 // consResponse struct
 type consResponse struct {
-	Student institutemodel.Student `json:"student"`
+	Student models.Student `json:"student"`
 	Details []detailResponse       `json:"details"`
-	Review  reviewmodel.Review     `json:"review"`
-	Module  institutemodel.Module  `json:"module"`
+	Review  models.Review     `json:"review"`
+	Module  models.Module  `json:"module"`
 }
 
 // GetConstReview function get data constancy
 func GetConstReview(c echo.Context) error {
 	// Get data request
-	review := reviewmodel.Review{}
+	review := models.Review{}
 	if err := c.Bind(&review); err != nil {
 		return err
 	}
@@ -367,20 +366,20 @@ func GetConstReview(c echo.Context) error {
 	}
 
 	// Query student program
-	studentProgram := institutemodel.StudentProgram{}
-	if err := DB.First(&studentProgram, institutemodel.StudentProgram{ID: review.StudentProgramID}).Error; err != nil {
+	studentProgram := models.StudentProgram{}
+	if err := DB.First(&studentProgram, models.StudentProgram{ID: review.StudentProgramID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Query student
-	student := institutemodel.Student{}
-	if err := DB.First(&student, institutemodel.Student{ID: studentProgram.StudentID}).Error; err != nil {
+	student := models.Student{}
+	if err := DB.First(&student, models.Student{ID: studentProgram.StudentID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Query module
-	module := institutemodel.Module{}
-	if err := DB.First(&module, institutemodel.Module{ID: review.ModuleId}).Error; err != nil {
+	module := models.Module{}
+	if err := DB.First(&module, models.Module{ID: review.ModuleId}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -430,7 +429,7 @@ type reviewModuleResponse struct {
 }
 
 type consolidateResponse struct {
-	Student institutemodel.Student `json:"student"`
+	Student models.Student `json:"student"`
 	Reviews []reviewModuleResponse `json:"reviews"`
 }
 
@@ -447,8 +446,8 @@ func GetConsolidateReview(c echo.Context) error {
 	defer DB.Close()
 
 	// Query student program
-	studentProgram := institutemodel.StudentProgram{}
-	if err := DB.First(&studentProgram, institutemodel.StudentProgram{
+	studentProgram := models.StudentProgram{}
+	if err := DB.First(&studentProgram, models.StudentProgram{
 		StudentID: request.StudentID,
 		ProgramID: request.ProgramID,
 	}).Error; err != nil {
@@ -456,8 +455,8 @@ func GetConsolidateReview(c echo.Context) error {
 	}
 
 	// Query student
-	student := institutemodel.Student{}
-	if err := DB.First(&student, institutemodel.Student{ID: studentProgram.StudentID}).Error; err != nil {
+	student := models.Student{}
+	if err := DB.First(&student, models.Student{ID: studentProgram.StudentID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -502,8 +501,8 @@ func GetConsolidateReview(c echo.Context) error {
 //
 //
 type getConstGraduatedResponse struct {
-	Student institutemodel.Student `json:"student"`
-	Program institutemodel.Program `json:"program"`
+	Student models.Student `json:"student"`
+	Program models.Program `json:"program"`
 }
 
 func GetConstGraduated(c echo.Context) error {
@@ -518,14 +517,14 @@ func GetConstGraduated(c echo.Context) error {
 	defer DB.Close()
 
 	// Query student
-	student := institutemodel.Student{}
-	if err := DB.First(&student, institutemodel.Student{ID: request.StudentID}).Error; err != nil {
+	student := models.Student{}
+	if err := DB.First(&student, models.Student{ID: request.StudentID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Query Program
-	program := institutemodel.Program{}
-	if err := DB.First(&program, institutemodel.Program{ID: request.ProgramID}).Error; err != nil {
+	program := models.Program{}
+	if err := DB.First(&program, models.Program{ID: request.ProgramID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -540,8 +539,8 @@ func GetConstGraduated(c echo.Context) error {
 }
 
 type getCertGraduatedResponse struct {
-	Student institutemodel.Student `json:"student"`
-	Program institutemodel.Program `json:"program"`
+	Student models.Student `json:"student"`
+	Program models.Program `json:"program"`
 }
 
 func GetCertGraduated(c echo.Context) error {
@@ -556,14 +555,14 @@ func GetCertGraduated(c echo.Context) error {
 	defer DB.Close()
 
 	// Query student
-	student := institutemodel.Student{}
-	if err := DB.First(&student, institutemodel.Student{ID: request.StudentID}).Error; err != nil {
+	student := models.Student{}
+	if err := DB.First(&student, models.Student{ID: request.StudentID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Query Program
-	program := institutemodel.Program{}
-	if err := DB.First(&program, institutemodel.Program{ID: request.ProgramID}).Error; err != nil {
+	program := models.Program{}
+	if err := DB.First(&program, models.Program{ID: request.ProgramID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -578,15 +577,15 @@ func GetCertGraduated(c echo.Context) error {
 }
 
 type getCertModuleResponse struct {
-	Student institutemodel.Student `json:"student"`
-	Program institutemodel.Program `json:"program"`
-	Module  institutemodel.Module  `json:"module"`
+	Student models.Student `json:"student"`
+	Program models.Program `json:"program"`
+	Module  models.Module  `json:"module"`
 	Details []detailResponse       `json:"details"`
 }
 
 func GetCertModule(c echo.Context) error {
 	// Get data request
-	review := reviewmodel.Review{}
+	review := models.Review{}
 	if err := c.Bind(&review); err != nil {
 		return err
 	}
@@ -601,26 +600,26 @@ func GetCertModule(c echo.Context) error {
 	}
 
 	// Query student program
-	studentProgram := institutemodel.StudentProgram{}
-	if err := DB.First(&studentProgram, institutemodel.StudentProgram{ID: review.StudentProgramID}).Error; err != nil {
+	studentProgram := models.StudentProgram{}
+	if err := DB.First(&studentProgram, models.StudentProgram{ID: review.StudentProgramID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Query student
-	student := institutemodel.Student{}
-	if err := DB.First(&student, institutemodel.Student{ID: studentProgram.StudentID}).Error; err != nil {
+	student := models.Student{}
+	if err := DB.First(&student, models.Student{ID: studentProgram.StudentID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Query module
-	module := institutemodel.Module{}
-	if err := DB.First(&module, institutemodel.Module{ID: review.ModuleId}).Error; err != nil {
+	module := models.Module{}
+	if err := DB.First(&module, models.Module{ID: review.ModuleId}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Query program
-	program := institutemodel.Program{}
-	if err := DB.First(&program, institutemodel.Program{ID: studentProgram.ProgramID}).Error; err != nil {
+	program := models.Program{}
+	if err := DB.First(&program, models.Program{ID: studentProgram.ProgramID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 

@@ -225,11 +225,6 @@ func GetBookByIDReading(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	// Comments count
-	DB.Model(&models.Comment{}).
-		Where("book_id = ?", book.ID).
-		Count(&book.Detail.Comments)
-
 	// Create readings
 	reading := models.Reading{
 		UserID: currentUser.ID,
@@ -245,6 +240,11 @@ func GetBookByIDReading(c echo.Context) error {
 	if err := DB.Save(&book).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
+
+    // Comments count
+    DB.Model(&models.Comment{}).
+        Where("book_id = ?", book.ID).
+        Count(&book.Detail.Comments)
 
     // Query start
     bStarts := make([]models.BStarts,0)

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/models/institutemodel"
-	"github.com/paulantezana/review/models/messengermodel"
 	"html/template"
 	"io"
 	"math/rand"
@@ -107,7 +105,7 @@ func Login(c echo.Context) error {
 	}
 
 	// Insert new Session
-	session := messengermodel.Session{
+	session := models.Session{
 		UserName:     user.UserName,
 		LastActivity: time.Now(),
 	}
@@ -174,8 +172,8 @@ func LoginStudent(c echo.Context) error {
 	user.Key = ""
 
 	// Query student
-	student := institutemodel.Student{}
-	if err := DB.First(&student, institutemodel.Student{UserID: user.ID}).Error; err != nil {
+	student := models.Student{}
+	if err := DB.First(&student, models.Student{UserID: user.ID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -188,7 +186,7 @@ func LoginStudent(c echo.Context) error {
 	}
 
 	// Insert new Session
-	session := messengermodel.Session{
+	session := models.Session{
 		UserName:     user.UserName,
 		LastActivity: time.Now(),
 	}

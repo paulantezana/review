@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models/institutemodel"
-	"github.com/paulantezana/review/utilities"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
 func GetSemesters(c echo.Context) error {
 	// Get data request
-	semester := institutemodel.Semester{}
+	semester := models.Semester{}
 	if err := c.Bind(&semester); err != nil {
 		return err
 	}
@@ -21,7 +21,7 @@ func GetSemesters(c echo.Context) error {
 	defer db.Close()
 
 	// Execute instructions
-	semesters := make([]institutemodel.Semester, 0)
+	semesters := make([]models.Semester, 0)
 	if err := db.Debug().Where("program_id = ?", semester.ProgramID).Order("sequence asc").Find(&semesters).
 		Error; err != nil {
 		return err
@@ -36,7 +36,7 @@ func GetSemesters(c echo.Context) error {
 
 func CreateSemester(c echo.Context) error {
 	// Get data request
-	semester := institutemodel.Semester{}
+	semester := models.Semester{}
 	if err := c.Bind(&semester); err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func CreateSemester(c echo.Context) error {
 
 func UpdateSemester(c echo.Context) error {
 	// Get data request
-	semester := institutemodel.Semester{}
+	semester := models.Semester{}
 	if err := c.Bind(&semester); err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func UpdateSemester(c echo.Context) error {
 
 func DeleteSemester(c echo.Context) error {
 	// Get data request
-	semester := institutemodel.Semester{}
+	semester := models.Semester{}
 	if err := c.Bind(&semester); err != nil {
 		return err
 	}

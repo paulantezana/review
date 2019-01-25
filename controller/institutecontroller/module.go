@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models/institutemodel"
-	"github.com/paulantezana/review/utilities"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
 func GetModules(c echo.Context) error {
 	// Get data request
-	module := institutemodel.Module{}
+	module := models.Module{}
 	if err := c.Bind(&module); err != nil {
 		return err
 	}
@@ -21,7 +21,7 @@ func GetModules(c echo.Context) error {
 	defer db.Close()
 
 	// Execute instructions
-	modules := make([]institutemodel.Module, 0)
+	modules := make([]models.Module, 0)
 
 	// Query in database
 	if err := db.Find(&modules, &module).Error; err != nil {
@@ -30,8 +30,8 @@ func GetModules(c echo.Context) error {
 
 	// Query semester by module
 	for k, module := range modules {
-		semesters := make([]institutemodel.ModuleSemester, 0)
-		if err := db.Find(&semesters, institutemodel.ModuleSemester{ModuleID: module.ID}).Error; err != nil {
+		semesters := make([]models.ModuleSemester, 0)
+		if err := db.Find(&semesters, models.ModuleSemester{ModuleID: module.ID}).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 		modules[k].Semesters = semesters
@@ -57,7 +57,7 @@ func GetModuleSearch(c echo.Context) error {
 	defer db.Close()
 
 	// Execute instructions
-	modules := make([]institutemodel.Module, 0)
+	modules := make([]models.Module, 0)
 	if err := db.Where("name LIKE ? AND program_id = ?", "%"+request.Search+"%", request.ProgramID).
 		Limit(5).Find(&modules).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -72,7 +72,7 @@ func GetModuleSearch(c echo.Context) error {
 
 func CreateModule(c echo.Context) error {
 	// Get data request
-	module := institutemodel.Module{}
+	module := models.Module{}
 	if err := c.Bind(&module); err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func CreateModule(c echo.Context) error {
 
 func UpdateModule(c echo.Context) error {
 	// Get data request
-	module := institutemodel.Module{}
+	module := models.Module{}
 	if err := c.Bind(&module); err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func UpdateModule(c echo.Context) error {
 	defer DB.Close()
 
 	// Delete all relations by semesters current module
-	if err := DB.Delete(institutemodel.ModuleSemester{}, institutemodel.ModuleSemester{ModuleID: module.ID}).Error; err != nil {
+	if err := DB.Delete(models.ModuleSemester{}, models.ModuleSemester{ModuleID: module.ID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -129,7 +129,7 @@ func UpdateModule(c echo.Context) error {
 
 func DeleteModule(c echo.Context) error {
 	// Get data request
-	module := institutemodel.Module{}
+	module := models.Module{}
 	if err := c.Bind(&module); err != nil {
 		return err
 	}

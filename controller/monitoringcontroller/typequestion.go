@@ -2,8 +2,8 @@ package monitoringcontroller
 
 import (
 	"fmt"
-	"github.com/paulantezana/review/models/monitoringmodel"
-	"net/http"
+    "github.com/paulantezana/review/models"
+    "net/http"
 
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
@@ -18,7 +18,7 @@ func GetTypeQuestions(c echo.Context) error {
 	defer db.Close()
 
 	// Execute instructions
-	typeQuestions := make([]monitoringmodel.TypeQuestion, 0)
+	typeQuestions := make([]models.TypeQuestion, 0)
 	if err := db.Find(&typeQuestions).
 		Order("id desc").
 		Error; err != nil {

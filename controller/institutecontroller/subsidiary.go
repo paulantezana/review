@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models/institutemodel"
-	"github.com/paulantezana/review/utilities"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
@@ -15,7 +15,7 @@ func GetSubsidiaries(c echo.Context) error {
 	defer db.Close()
 
 	// Execute instructions
-	subsidiaries := make([]institutemodel.Subsidiary, 0)
+	subsidiaries := make([]models.Subsidiary, 0)
 	if err := db.Order("id desc").Find(&subsidiaries).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
@@ -30,7 +30,7 @@ func GetSubsidiaries(c echo.Context) error {
 type SubsidiariesTree struct {
 	ID       uint                     `json:"id" gorm:"primary_key"`
 	Name     string                   `json:"name"`
-	Programs []institutemodel.Program `json:"programs"`
+	Programs []models.Program `json:"programs"`
 }
 
 func GetSubsidiariesTree(c echo.Context) error {
@@ -47,8 +47,8 @@ func GetSubsidiariesTree(c echo.Context) error {
 
 	// Query programs
 	for k, subsidiary := range subsidiariesTree {
-		programs := make([]institutemodel.Program, 0)
-		if err := db.Find(&programs, institutemodel.Program{SubsidiaryID: subsidiary.ID}).Order("id desc").Error; err != nil {
+		programs := make([]models.Program, 0)
+		if err := db.Find(&programs, models.Program{SubsidiaryID: subsidiary.ID}).Order("id desc").Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 		subsidiariesTree[k].Programs = programs
@@ -63,7 +63,7 @@ func GetSubsidiariesTree(c echo.Context) error {
 
 func GetSubsidiaryByID(c echo.Context) error {
 	// Get data request
-	subsidiary := institutemodel.Subsidiary{}
+	subsidiary := models.Subsidiary{}
 	if err := c.Bind(&subsidiary); err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func GetSubsidiaryByID(c echo.Context) error {
 
 func CreateSubsidiary(c echo.Context) error {
 	// Get data request
-	subsidiary := institutemodel.Subsidiary{}
+	subsidiary := models.Subsidiary{}
 	if err := c.Bind(&subsidiary); err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func CreateSubsidiary(c echo.Context) error {
 
 func UpdateSubsidiary(c echo.Context) error {
 	// Get data request
-	subsidiary := institutemodel.Subsidiary{}
+	subsidiary := models.Subsidiary{}
 	if err := c.Bind(&subsidiary); err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func UpdateSubsidiary(c echo.Context) error {
 
 func DeleteSubsidiary(c echo.Context) error {
 	// Get data request
-	subsidiary := institutemodel.Subsidiary{}
+	subsidiary := models.Subsidiary{}
 	if err := c.Bind(&subsidiary); err != nil {
 		return err
 	}
@@ -161,7 +161,7 @@ func DeleteSubsidiary(c echo.Context) error {
 
 func UpdateMainSubsidiary(c echo.Context) error {
 	// Get data request
-	subsidiary := institutemodel.Subsidiary{}
+	subsidiary := models.Subsidiary{}
 	if err := c.Bind(&subsidiary); err != nil {
 		return err
 	}

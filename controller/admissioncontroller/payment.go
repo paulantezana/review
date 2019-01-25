@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models/admissionmodel"
-	"github.com/paulantezana/review/utilities"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
 func GetPayments(c echo.Context) error {
 	// Get data request
-	payment := admissionmodel.Payment{}
+	payment := models.Payment{}
 	if err := c.Bind(&payment); err != nil {
 		return err
 	}
@@ -21,7 +21,7 @@ func GetPayments(c echo.Context) error {
 	defer DB.Close()
 
 	// Execute instructions
-	payments := make([]admissionmodel.Payment, 0)
+	payments := make([]models.Payment, 0)
 	DB.Find(&payments)
 
 	// Return response
@@ -33,7 +33,7 @@ func GetPayments(c echo.Context) error {
 
 func CreatePayment(c echo.Context) error {
 	// Get data request
-	payment := admissionmodel.Payment{}
+	payment := models.Payment{}
 	if err := c.Bind(&payment); err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func CreatePayment(c echo.Context) error {
 
 func UpdatePayment(c echo.Context) error {
 	// Get data request
-	payment := admissionmodel.Payment{}
+	payment := models.Payment{}
 	if err := c.Bind(&payment); err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func UpdatePayment(c echo.Context) error {
 
 func DeletePayment(c echo.Context) error {
 	// Get data request
-	payment := admissionmodel.Payment{}
+	payment := models.Payment{}
 	if err := c.Bind(&payment); err != nil {
 		return err
 	}

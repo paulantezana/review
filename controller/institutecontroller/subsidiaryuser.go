@@ -6,7 +6,6 @@ import (
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/models/institutemodel"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
@@ -32,7 +31,7 @@ func GetSubsidiariesUserByUserID(c echo.Context) error {
 	defer DB.Close()
 
 	// Query Subsidiaries
-	subsidiaries := make([]institutemodel.Subsidiary, 0)
+	subsidiaries := make([]models.Subsidiary, 0)
 	if err := DB.Raw("SELECT * FROM subsidiaries WHERE id NOT IN (SELECT subsidiary_id FROM subsidiary_users WHERE user_id = ?)", user.ID).
 		Scan(&subsidiaries).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -43,7 +42,7 @@ func GetSubsidiariesUserByUserID(c echo.Context) error {
 
 	// Insert SubsidiaryUsers
 	for _, subsidiary := range subsidiaries {
-		subsidiaryUser := institutemodel.SubsidiaryUser{
+		subsidiaryUser := models.SubsidiaryUser{
 			UserID:       user.ID,
 			SubsidiaryID: subsidiary.ID,
 		}
@@ -103,7 +102,7 @@ func GetSubsidiariesUserByUserIDLicense(c echo.Context) error {
 // Update license By subsidiary users
 func UpdateSubsidiariesUserByUserID(c echo.Context) error {
 	// Get data request
-	subsidiaryUsers := make([]institutemodel.SubsidiaryUser, 0)
+	subsidiaryUsers := make([]models.SubsidiaryUser, 0)
 	if err := c.Bind(&subsidiaryUsers); err != nil {
 		return err
 	}
