@@ -1,14 +1,14 @@
 package messengercontroller
 
 import (
-	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/utilities"
-	"net/http"
-	"time"
+    "fmt"
+    "github.com/dgrijalva/jwt-go"
+    "github.com/labstack/echo"
+    "github.com/paulantezana/review/config"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
+    "net/http"
+    "time"
 )
 
 type chatMessage struct {
@@ -34,17 +34,45 @@ func GetUsersMessageScroll(c echo.Context) error {
 	claims := user.Claims.(*utilities.Claim)
 	currentUser := claims.User
 
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
+
 	// get connection
 	DB := config.GetConnection()
 	defer DB.Close()
 
+	// Pagination calculate
+	offset := request.Validate()
+
+	// Check the number of matches
+	counter := utilities.Counter{}
+
 	// Query users
 	users := make([]userMessage, 0)
-	if err := DB.Table("users").Select("id, user_name, avatar").
-		Scan(&users).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
+    if err := DB.Raw("SELECT id, user_name, avatar FROM users " +
+        "WHERE  id IN ( SELECT creator_id FROM messages " +
+        "INNER JOIN message_recipients ON messages.id = message_recipients.message_id " +
+        "WHERE message_recipients.recipient_id = ? " +
+        ") OR id IN ( SELECT recipient_id FROM message_recipients " +
+        "INNER JOIN messages ON message_recipients.message_id = messages.id " +
+        "WHERE creator_id = ?) " +
+        "OFFSET ? LIMIT ?", currentUser.ID, currentUser.ID, offset, request.Limit ).Scan(&users).Error; err != nil {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+	if err := DB.Raw("SELECT count(*) FROM users " +
+        "WHERE  id IN ( SELECT creator_id FROM messages " +
+        "INNER JOIN message_recipients ON messages.id = message_recipients.message_id " +
+        "WHERE message_recipients.recipient_id = ? " +
+        ") OR id IN ( SELECT recipient_id FROM message_recipients " +
+        "INNER JOIN messages ON message_recipients.message_id = messages.id " +
+        "WHERE creator_id = ?)", currentUser.ID, currentUser.ID).Scan(&counter).Error; err != nil {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
 
+	// Users
 	for i := range users {
 		// Find las activity
 		session := models.Session{}
@@ -67,10 +95,20 @@ func GetUsersMessageScroll(c echo.Context) error {
 		users[i].LastMessages = chatMessage
 	}
 
+	// Validate scroll
+	var hasMore = false
+    if request.CurrentPage < 10 {
+        if uint(len(users)) * request.CurrentPage < counter.Count {
+            hasMore = true
+        }
+    }
+
+
 	// Return response
-	return c.JSON(http.StatusOK, utilities.Response{
-		Success: true,
-		Data:    users,
+	return c.JSON(http.StatusOK, utilities.ResponseScroll{
+		Success:     true,
+		Data:        users,
+		HasMore: hasMore,
 	})
 }
 

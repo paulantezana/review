@@ -17,6 +17,14 @@ type ResponsePaginate struct {
 	Limit       uint        `json:"limit"`
 }
 
+// ResponseScroll data scroll
+type ResponseScroll struct {
+    Message     string      `json:"message"`
+    Success     bool        `json:"success"`
+    Data        interface{} `json:"data"`
+    HasMore bool `json:"has_more"`
+}
+
 // SocketResponse
 type SocketResponse struct {
 	Type string      `json:"type"`
