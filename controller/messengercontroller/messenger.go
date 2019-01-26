@@ -11,23 +11,59 @@ import (
     "time"
 )
 
-func GetUsersMessage(c echo.Context) error {
+type chatMessage struct {
+    Body string `json:"body"`
+    IsRead bool `json:"is_read"`
+    CreatorID uint `json:"creator_id"`
+    Date time.Time `json:"date"`
+}
+
+type userMessage struct {
+    ID       uint   `json:"id"`
+    UserName string `json:"user_name"` //
+    Avatar   string `json:"avatar"`
+    LastActivity time.Time `json:"last_activity"`
+    LastMessages []chatMessage `json:"last_messages"`
+}
+
+func GetUsersMessageScroll(c echo.Context) error {
     // Get user token authenticate
-    //user := c.Get("user").(*jwt.Token)
-    //claims := user.Claims.(*utilities.Claim)
-    //currentUser := claims.User
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
 
     // get connection
     DB := config.GetConnection()
     defer DB.Close()
 
     // Query users
-    users := make([]models.User,0)
-    if err := DB.Find(&users).Error; err != nil {
+    users := make([]userMessage,0)
+    if err := DB.Table("users").Select("id, user_name, avatar").
+        Scan(&users).Error; err != nil {
         return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
     }
 
+    for i := range users {
+        // Find las activity
+        session := models.Session{}
+        DB.First(&session,models.Session{UserID:users[i].ID})
+        users[i].LastActivity = session.LastActivity
 
+        // Query semesters
+        chatMessage := make([]chatMessage, 0)
+        if err := DB.Table("messages").
+            Select("messages.body, message_recipients.is_read, messages.creator_id, messages.date").
+            Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
+            Where("messages.creator_id = ? AND message_recipients.recipient_id = ?", users[i].ID, currentUser.ID ).
+            Or("messages.creator_id = ? AND message_recipients.recipient_id = ?", currentUser.ID, users[i].ID).
+            Limit(1).
+            Order("messages.id desc").
+            Scan(&chatMessage).Error; err != nil {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+        }
+
+        users[i].LastMessages = chatMessage
+    }
 
     // Return response
     return c.JSON(http.StatusOK,utilities.Response{
@@ -40,7 +76,42 @@ type createMessageRequest struct {
     RecipientID      uint `json:"recipient_id"`
     Body string `json:"body"`
     ParentID uint `json:"parent_id"`
-} 
+}
+
+
+func GetMessages(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
+    // Get data request
+    requestUser := models.User{}
+    if err := c.Bind(&requestUser); err != nil {
+        return err
+    }
+
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Query semesters
+    chatMessage := make([]chatMessage, 0)
+    if err := DB.Table("messages").
+        Select("messages.body, message_recipients.is_read, messages.creator_id, messages.date").
+        Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
+        Where("messages.creator_id = ? AND message_recipients.recipient_id = ?", requestUser.ID, currentUser.ID ).
+        Or("messages.creator_id = ? AND message_recipients.recipient_id = ?", currentUser.ID, requestUser.ID).
+        Scan(&chatMessage).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Return response
+    return c.JSON(http.StatusOK,utilities.Response{
+        Success: true,
+        Data: chatMessage,
+    })
+}
 
 func CreateMessage(c echo.Context) error {
     // Get user token authenticate
@@ -92,3 +163,5 @@ func CreateMessage(c echo.Context) error {
         Message: "OK",
     })
 }
+
+

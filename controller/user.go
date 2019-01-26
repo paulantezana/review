@@ -106,7 +106,7 @@ func Login(c echo.Context) error {
 
 	// Insert new Session
 	session := models.Session{
-		UserName:     user.UserName,
+	    UserID: user.ID,
 		LastActivity: time.Now(),
 	}
 	if err := DB.Create(&session).Error; err != nil {
@@ -187,7 +187,7 @@ func LoginStudent(c echo.Context) error {
 
 	// Insert new Session
 	session := models.Session{
-		UserName:     user.UserName,
+		UserID:     user.ID,
 		LastActivity: time.Now(),
 	}
 	if err := DB.Create(&session).Error; err != nil {
