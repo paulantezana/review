@@ -34,21 +34,21 @@ func GetBooksPaginate(c echo.Context) error {
 	books := make([]models.Book, 0)
 
 	// Query in database
-    if len(request.IDs) == 0 {
-        if err := DB.Where("lower(name) LIKE lower(?)", "%"+request.Search+"%").
-            Order("id desc").
-            Offset(offset).Limit(request.Limit).Find(&books).
-            Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
-    }else {
-        if err := DB.Where("lower(name) LIKE lower(?) AND category_id in (?)", "%"+request.Search+"%", request.IDs).
-            Order("id desc").
-            Offset(offset).Limit(request.Limit).Find(&books).
-            Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
-    }
+	if len(request.IDs) == 0 {
+		if err := DB.Where("lower(name) LIKE lower(?)", "%"+request.Search+"%").
+			Order("id desc").
+			Offset(offset).Limit(request.Limit).Find(&books).
+			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	} else {
+		if err := DB.Where("lower(name) LIKE lower(?) AND category_id in (?)", "%"+request.Search+"%", request.IDs).
+			Order("id desc").
+			Offset(offset).Limit(request.Limit).Find(&books).
+			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	}
 
 	// Query book comments count
 	for i := range books {
@@ -91,21 +91,21 @@ func GetBooksPaginateByReading(c echo.Context) error {
 	books := make([]models.Book, 0)
 
 	// Query in database
-    if len(request.IDs) == 0 {
-        if err := DB.Where("lower(name) LIKE lower(?)", "%"+request.Search+"%").
-            Order("id desc").
-            Offset(offset).Limit(request.Limit).Find(&books).
-            Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
-    }else {
-        if err := DB.Where("lower(name) LIKE lower(?) AND category_id in (?)", "%"+request.Search+"%", request.IDs).
-            Order("id desc").
-            Offset(offset).Limit(request.Limit).Find(&books).
-            Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
-    }
+	if len(request.IDs) == 0 {
+		if err := DB.Where("lower(name) LIKE lower(?)", "%"+request.Search+"%").
+			Order("id desc").
+			Offset(offset).Limit(request.Limit).Find(&books).
+			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	} else {
+		if err := DB.Where("lower(name) LIKE lower(?) AND category_id in (?)", "%"+request.Search+"%", request.IDs).
+			Order("id desc").
+			Offset(offset).Limit(request.Limit).Find(&books).
+			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	}
 
 	// validates
 	for i := range books {
@@ -114,14 +114,14 @@ func GetBooksPaginateByReading(c echo.Context) error {
 			Where("book_id = ?", books[i].ID).
 			Count(&books[i].Detail.Comments)
 
-		// Average start
-        bStarts := make([]models.BStarts,0)
-        if err := DB.Raw("SELECT users.user_name, likes.stars FROM likes " +
-            "INNER JOIN users ON likes.user_id = users.id " +
-            "WHERE likes.book_id = ? LIMIT 15", books[i].ID).
+			// Average start
+		bStarts := make([]models.BStarts, 0)
+		if err := DB.Raw("SELECT users.user_name, likes.stars FROM likes "+
+			"INNER JOIN users ON likes.user_id = users.id "+
+			"WHERE likes.book_id = ? LIMIT 15", books[i].ID).
 			Scan(&bStarts).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
 		books[i].Detail.Starts = bStarts
 
 		// has like
@@ -149,10 +149,10 @@ func GetBooksPaginateByReading(c echo.Context) error {
 }
 
 func GetBookByID(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
 	// Get data request
 	book := models.Book{}
@@ -174,28 +174,28 @@ func GetBookByID(c echo.Context) error {
 		Where("book_id = ?", book.ID).
 		Count(&book.Detail.Comments)
 
-    // Query start
-    bStarts := make([]models.BStarts,0)
-    if err := DB.Raw("SELECT users.user_name, likes.stars FROM likes " +
-       "INNER JOIN users ON likes.user_id = users.id " +
-       "WHERE likes.book_id = ? LIMIT 15", book.ID).
-       Scan(&bStarts).Error; err != nil {
-       return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
-    book.Detail.Starts = bStarts
+	// Query start
+	bStarts := make([]models.BStarts, 0)
+	if err := DB.Raw("SELECT users.user_name, likes.stars FROM likes "+
+		"INNER JOIN users ON likes.user_id = users.id "+
+		"WHERE likes.book_id = ? LIMIT 15", book.ID).
+		Scan(&bStarts).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+	book.Detail.Starts = bStarts
 
-    // has like
-    like := models.Like{
-        UserID: currentUser.ID,
-        BookID: book.ID,
-    }
-    DB.Where(&like).First(&like)
-    book.Detail.StartValue = like.Stars
-    if like.ID >= 1 {
-        book.Detail.HasStart = 1
-    } else {
-        book.Detail.HasStart = 0
-    }
+	// has like
+	like := models.Like{
+		UserID: currentUser.ID,
+		BookID: book.ID,
+	}
+	DB.Where(&like).First(&like)
+	book.Detail.StartValue = like.Stars
+	if like.ID >= 1 {
+		book.Detail.HasStart = 1
+	} else {
+		book.Detail.HasStart = 0
+	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -241,33 +241,33 @@ func GetBookByIDReading(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-    // Comments count
-    DB.Model(&models.Comment{}).
-        Where("book_id = ?", book.ID).
-        Count(&book.Detail.Comments)
+	// Comments count
+	DB.Model(&models.Comment{}).
+		Where("book_id = ?", book.ID).
+		Count(&book.Detail.Comments)
 
-    // Query start
-    bStarts := make([]models.BStarts,0)
-    if err := DB.Raw("SELECT users.user_name, likes.stars FROM likes " +
-        "INNER JOIN users ON likes.user_id = users.id " +
-        "WHERE likes.book_id = ? LIMIT 15", book.ID).
-        Scan(&bStarts).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
-    book.Detail.Starts = bStarts
+	// Query start
+	bStarts := make([]models.BStarts, 0)
+	if err := DB.Raw("SELECT users.user_name, likes.stars FROM likes "+
+		"INNER JOIN users ON likes.user_id = users.id "+
+		"WHERE likes.book_id = ? LIMIT 15", book.ID).
+		Scan(&bStarts).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+	book.Detail.Starts = bStarts
 
-    // has like
-    like := models.Like{
-        UserID: currentUser.ID,
-        BookID: book.ID,
-    }
-    DB.Where(&like).First(&like)
-    book.Detail.StartValue = like.Stars
-    if like.ID >= 1 {
-        book.Detail.HasStart = 1
-    } else {
-        book.Detail.HasStart = 0
-    }
+	// has like
+	like := models.Like{
+		UserID: currentUser.ID,
+		BookID: book.ID,
+	}
+	DB.Where(&like).First(&like)
+	book.Detail.StartValue = like.Stars
+	if like.ID >= 1 {
+		book.Detail.HasStart = 1
+	} else {
+		book.Detail.HasStart = 0
+	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{

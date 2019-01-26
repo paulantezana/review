@@ -2,8 +2,8 @@ package reviewcontroller
 
 import (
 	"fmt"
-    "github.com/paulantezana/review/models"
-    "io"
+	"github.com/paulantezana/review/models"
+	"io"
 	"net/http"
 	"os"
 	"strings"

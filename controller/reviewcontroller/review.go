@@ -2,8 +2,8 @@ package reviewcontroller
 
 import (
 	"fmt"
-    "github.com/paulantezana/review/models"
-    "net/http"
+	"github.com/paulantezana/review/models"
+	"net/http"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -86,8 +86,8 @@ func GetReviews(c echo.Context) error {
 }
 
 type reviewRequest struct {
-	ProgramID uint               `json:"program_id"`
-	StudentID uint               `json:"student_id"`
+	ProgramID uint          `json:"program_id"`
+	StudentID uint          `json:"student_id"`
 	Review    models.Review `json:"review"`
 }
 
@@ -250,10 +250,10 @@ type moduleResponse struct {
 
 // consResponse struct
 type actResponse struct {
-	Student models.Student `json:"student"`
-	Module  moduleResponse         `json:"module"`
-	Details []detailResponse       `json:"details"`
-	Review  reviewResponse         `json:"review"`
+	Student models.Student   `json:"student"`
+	Module  moduleResponse   `json:"module"`
+	Details []detailResponse `json:"details"`
+	Review  reviewResponse   `json:"review"`
 }
 
 type semesterNames struct {
@@ -342,10 +342,10 @@ func GetActaReview(c echo.Context) error {
 
 // consResponse struct
 type consResponse struct {
-	Student models.Student `json:"student"`
-	Details []detailResponse       `json:"details"`
-	Review  models.Review     `json:"review"`
-	Module  models.Module  `json:"module"`
+	Student models.Student   `json:"student"`
+	Details []detailResponse `json:"details"`
+	Review  models.Review    `json:"review"`
+	Module  models.Module    `json:"module"`
 }
 
 // GetConstReview function get data constancy
@@ -429,7 +429,7 @@ type reviewModuleResponse struct {
 }
 
 type consolidateResponse struct {
-	Student models.Student `json:"student"`
+	Student models.Student         `json:"student"`
 	Reviews []reviewModuleResponse `json:"reviews"`
 }
 
@@ -577,10 +577,10 @@ func GetCertGraduated(c echo.Context) error {
 }
 
 type getCertModuleResponse struct {
-	Student models.Student `json:"student"`
-	Program models.Program `json:"program"`
-	Module  models.Module  `json:"module"`
-	Details []detailResponse       `json:"details"`
+	Student models.Student   `json:"student"`
+	Program models.Program   `json:"program"`
+	Module  models.Module    `json:"module"`
+	Details []detailResponse `json:"details"`
 }
 
 func GetCertModule(c echo.Context) error {

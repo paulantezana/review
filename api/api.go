@@ -9,8 +9,8 @@ import (
 	"github.com/paulantezana/review/controller/coursescontroller"
 	"github.com/paulantezana/review/controller/institutecontroller"
 	"github.com/paulantezana/review/controller/librarycontroller"
-    "github.com/paulantezana/review/controller/messengercontroller"
-    "github.com/paulantezana/review/controller/monitoringcontroller"
+	"github.com/paulantezana/review/controller/messengercontroller"
+	"github.com/paulantezana/review/controller/monitoringcontroller"
 	"github.com/paulantezana/review/controller/reviewcontroller"
 	"github.com/paulantezana/review/utilities"
 )
@@ -258,11 +258,11 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/admission/payment/update", admissioncontroller.UpdatePayment)
 	ar.DELETE("/admission/payment/delete", admissioncontroller.DeletePayment)
 
-    // ---------------------------------------------------------------------------
-    //      Messenger api -----------------------------------------------------
-    ar.POST("/messenger/user/scroll", messengercontroller.GetUsersMessageScroll)
-    ar.POST("/messenger/create", messengercontroller.CreateMessage)
-    ar.POST("/messenger/all", messengercontroller.GetMessages)
+	// ---------------------------------------------------------------------------
+	//      Messenger api -----------------------------------------------------
+	ar.POST("/messenger/user/scroll", messengercontroller.GetUsersMessageScroll)
+	ar.POST("/messenger/create", messengercontroller.CreateMessage)
+	ar.POST("/messenger/all", messengercontroller.GetMessages)
 
 	// ---------------------------------------------------------------------------
 	//      External api -----------------------------------------------------

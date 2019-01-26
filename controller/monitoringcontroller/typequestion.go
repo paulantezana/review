@@ -2,8 +2,8 @@ package monitoringcontroller
 
 import (
 	"fmt"
-    "github.com/paulantezana/review/models"
-    "net/http"
+	"github.com/paulantezana/review/models"
+	"net/http"
 
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"

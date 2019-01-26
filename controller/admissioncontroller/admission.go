@@ -190,7 +190,7 @@ func GetAdmissionsPaginateExam(c echo.Context) error {
 type createAdmissionRequest struct {
 	Student   models.Student   `json:"student"`
 	Admission models.Admission `json:"admission"`
-	User      models.User              `json:"user"`
+	User      models.User      `json:"user"`
 }
 
 type countValidate struct {

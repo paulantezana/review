@@ -190,8 +190,8 @@ func GetStudentSearch(c echo.Context) error {
 
 type customStudentRequest struct {
 	Student   models.Student `json:"student"`
-	User      models.User            `json:"user"`
-	ProgramID uint                   `json:"program_id"`
+	User      models.User    `json:"user"`
+	ProgramID uint           `json:"program_id"`
 }
 
 func CreateStudent(c echo.Context) error {

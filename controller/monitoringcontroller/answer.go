@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/models"
-    "github.com/paulantezana/review/utilities"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
 

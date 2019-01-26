@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/models"
-    "github.com/paulantezana/review/utilities"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/utilities"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -17,8 +17,8 @@ type reniecRequest struct {
 
 type reniecResponse struct {
 	Student models.Student `json:"student"`
-	User    models.User            `json:"user"`
-	Exist   bool                   `json:"exist"`
+	User    models.User    `json:"user"`
+	Exist   bool           `json:"exist"`
 }
 
 func Reniec(c echo.Context) error {

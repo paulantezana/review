@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/models"
-    "github.com/paulantezana/review/utilities"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
@@ -28,8 +28,8 @@ func GetSubsidiaries(c echo.Context) error {
 }
 
 type SubsidiariesTree struct {
-	ID       uint                     `json:"id" gorm:"primary_key"`
-	Name     string                   `json:"name"`
+	ID       uint             `json:"id" gorm:"primary_key"`
+	Name     string           `json:"name"`
 	Programs []models.Program `json:"programs"`
 }
 

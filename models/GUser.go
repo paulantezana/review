@@ -1,6 +1,5 @@
 package models
 
-
 // User -- Profiles sa / admin / teacher / secretary
 type User struct {
 	ID       uint   `json:"id" gorm:"primary_key"`
@@ -17,6 +16,6 @@ type User struct {
 
 	Students []Student `json:"students,omitempty"`
 	Teachers []Teacher `json:"teachers,omitempty"`
-	Reviews  []Review     `json:"reviews,omitempty"`
-	Comments []Comment                `json:"coos,omitempty"`
+	Reviews  []Review  `json:"reviews,omitempty"`
+	Comments []Comment `json:"coos,omitempty"`
 }
