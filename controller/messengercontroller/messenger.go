@@ -93,6 +93,19 @@ func GetUsersMessageScroll(c echo.Context) error {
 		}
 
 		users[i].LastMessages = chatMessage
+
+		// Query current student Name
+		student := models.Student{}
+		DB.First(&student,models.Student{UserID:users[i].ID})
+        if student.ID >= 1 {
+            users[i].UserName = student.FullName
+        }else {
+            teacher := models.Teacher{}
+            DB.First(&teacher,models.Teacher{UserID:users[i].ID})
+            if teacher.ID >= 1 {
+                users[i].UserName = fmt.Sprintf("%s %s",teacher.FirstName, teacher.LastName)
+            }
+        }
 	}
 
 	// Validate scroll
@@ -102,7 +115,6 @@ func GetUsersMessageScroll(c echo.Context) error {
             hasMore = true
         }
     }
-
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.ResponseScroll{

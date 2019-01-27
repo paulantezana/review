@@ -148,6 +148,7 @@ func ProtectedApi(e *echo.Echo) {
 
 	// User
 	ar.POST("/user/all", controller.GetUsers)
+	ar.POST("/user/search", controller.SearchUsers)
 	ar.POST("/user/create", controller.CreateUser)
 	ar.PUT("/user/update", controller.UpdateUser)
 	ar.DELETE("/user/delete", controller.DeleteUser)

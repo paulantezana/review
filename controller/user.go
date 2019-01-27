@@ -404,6 +404,56 @@ func GetUsers(c echo.Context) error {
 	})
 }
 
+// GetUsers function get all users
+type searchUsersResponse struct {
+    ID       uint   `json:"id"`
+    UserName string `json:"user_name"`
+    Avatar   string `json:"avatar"`
+}
+func SearchUsers(c echo.Context) error {
+    // Get data request
+    request := utilities.Request{}
+    if err := c.Bind(&request); err != nil {
+        return err
+    }
+
+    // Get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Find users
+    users := make([]searchUsersResponse,0)
+    if err := DB.Raw("SELECT id, user_name, avatar FROM users "+
+        "WHERE lower(user_name) LIKE lower(?) " +
+        "OR id IN (SELECT user_id FROM teachers WHERE lower(first_name) LIKE lower(?) LIMIT 20) " +
+        "OR id IN (SELECT user_id FROM students WHERE lower(full_name) LIKE lower(?) LIMIT 20) " +
+        "LIMIT 30", "%"+request.Search+"%", "%"+request.Search+"%", "%"+request.Search+"%").Scan(&users).Error; err != nil {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Queries
+    for i := range users {
+        // Query current student Name
+        student := models.Student{}
+        DB.First(&student,models.Student{UserID:users[i].ID})
+        if student.ID >= 1 {
+            users[i].UserName = student.FullName
+        }else {
+            teacher := models.Teacher{}
+            DB.First(&teacher,models.Teacher{UserID:users[i].ID})
+            if teacher.ID >= 1 {
+                users[i].UserName = fmt.Sprintf("%s %s",teacher.FirstName, teacher.LastName)
+            }
+        }
+    }
+
+    // Return response
+    return c.JSON(http.StatusCreated, utilities.Response{
+        Success: true,
+        Data:    users,
+    })
+}
+
 // GetUserByID function get user by id
 func GetUserByID(c echo.Context) error {
 	// Get data request
