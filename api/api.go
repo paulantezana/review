@@ -263,6 +263,8 @@ func ProtectedApi(e *echo.Echo) {
 	//      Messenger api -----------------------------------------------------
 	ar.POST("/messenger/user/scroll", messengercontroller.GetUsersMessageScroll)
 	ar.POST("/messenger/create", messengercontroller.CreateMessage)
+	ar.POST("/messenger/create/upload/file", messengercontroller.CreateMessageFileUpload)
+	ar.POST("/messenger/download/file", messengercontroller.DownloadFileMessage)
 	ar.POST("/messenger/all", messengercontroller.GetMessages)
 
 	// ---------------------------------------------------------------------------

@@ -1,14 +1,19 @@
 package messengercontroller
 
 import (
-	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/utilities"
-	"net/http"
-	"time"
+    "crypto/sha256"
+    "fmt"
+    "github.com/dgrijalva/jwt-go"
+    "github.com/labstack/echo"
+    "github.com/paulantezana/review/config"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
+    "io"
+    "net/http"
+    "os"
+    "path/filepath"
+    "strconv"
+    "time"
 )
 
 type chatMessage struct {
@@ -195,6 +200,86 @@ func GetMessages(c echo.Context) error {
 	})
 }
 
+func CreateMessageFileUpload(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
+    // Read form fields
+    recipientIDs := c.FormValue("recipient_ids")
+
+    // Read file
+    file, err := c.FormFile("fileList")
+    if err != nil {
+       return err
+    }
+    src, err := file.Open()
+    if err != nil {
+       return err
+    }
+    defer src.Close()
+
+    // Destination
+    ccc := sha256.Sum256([]byte(time.Now().String() + string(currentUser.ID) ))
+    name := fmt.Sprintf("%x%s", ccc, filepath.Ext(file.Filename))
+    fileSRC := "static/chat/" + name
+    dst, err := os.Create(fileSRC)
+    if err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+    defer dst.Close()
+
+    // Copy
+    if _, err = io.Copy(dst, src); err != nil {
+        return err
+    }
+
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Start transaction
+    TX := DB.Begin()
+
+    // create struct message
+    message := models.Message{
+        Body:      file.Filename,
+        BodyType: 1,
+        FilePath: fileSRC,
+        Date:      time.Now(),
+        CreatorID: currentUser.ID,
+    }
+    if err := TX.Create(&message).Error; err != nil {
+        TX.Rollback()
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // create message recipient
+    rIDs, err := strconv.ParseUint(recipientIDs, 0, 32)
+    if err != nil {
+        TX.Rollback()
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+    recipient := models.MessageRecipient{
+        RecipientID: uint(rIDs),
+        MessageID:   message.ID,
+    }
+    if err := TX.Create(&recipient).Error; err != nil {
+        TX.Rollback()
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Commit transaction
+    TX.Commit()
+
+    // Return response
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        Message: "OK",
+    })
+}
+
 func CreateMessage(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
@@ -244,4 +329,14 @@ func CreateMessage(c echo.Context) error {
 		Success: true,
 		Message: "OK",
 	})
+}
+
+func DownloadFileMessage(c echo.Context) error {
+    // Get data request
+    message := models.Message{}
+    if err := c.Bind(&message); err != nil {
+        return err
+    }
+
+    return c.File(message.FilePath)
 }
