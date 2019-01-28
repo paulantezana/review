@@ -19,10 +19,11 @@ type ResponsePaginate struct {
 
 // ResponseScroll data scroll
 type ResponseScroll struct {
-    Message     string      `json:"message"`
-    Success     bool        `json:"success"`
-    Data        interface{} `json:"data"`
-    HasMore bool `json:"has_more"`
+	Message     string      `json:"message"`
+	Success     bool        `json:"success"`
+	Data        interface{} `json:"data"`
+	HasMore     bool        `json:"has_more"`
+	CurrentPage uint        `json:"current_page"`
 }
 
 // SocketResponse

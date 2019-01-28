@@ -1,14 +1,14 @@
 package messengercontroller
 
 import (
-    "fmt"
-    "github.com/dgrijalva/jwt-go"
-    "github.com/labstack/echo"
-    "github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/models"
-    "github.com/paulantezana/review/utilities"
-    "net/http"
-    "time"
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/utilities"
+	"net/http"
+	"time"
 )
 
 type chatMessage struct {
@@ -52,25 +52,25 @@ func GetUsersMessageScroll(c echo.Context) error {
 
 	// Query users
 	users := make([]userMessage, 0)
-    if err := DB.Raw("SELECT id, user_name, avatar FROM users " +
-        "WHERE  id IN ( SELECT creator_id FROM messages " +
-        "INNER JOIN message_recipients ON messages.id = message_recipients.message_id " +
-        "WHERE message_recipients.recipient_id = ? " +
-        ") OR id IN ( SELECT recipient_id FROM message_recipients " +
-        "INNER JOIN messages ON message_recipients.message_id = messages.id " +
-        "WHERE creator_id = ?) " +
-        "OFFSET ? LIMIT ?", currentUser.ID, currentUser.ID, offset, request.Limit ).Scan(&users).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
-	if err := DB.Raw("SELECT count(*) FROM users " +
-        "WHERE  id IN ( SELECT creator_id FROM messages " +
-        "INNER JOIN message_recipients ON messages.id = message_recipients.message_id " +
-        "WHERE message_recipients.recipient_id = ? " +
-        ") OR id IN ( SELECT recipient_id FROM message_recipients " +
-        "INNER JOIN messages ON message_recipients.message_id = messages.id " +
-        "WHERE creator_id = ?)", currentUser.ID, currentUser.ID).Scan(&counter).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	if err := DB.Raw("SELECT id, user_name, avatar FROM users "+
+		"WHERE  id IN ( SELECT creator_id FROM messages "+
+		"INNER JOIN message_recipients ON messages.id = message_recipients.message_id "+
+		"WHERE message_recipients.recipient_id = ? "+
+		") OR id IN ( SELECT recipient_id FROM message_recipients "+
+		"INNER JOIN messages ON message_recipients.message_id = messages.id "+
+		"WHERE creator_id = ?) "+
+		"OFFSET ? LIMIT ?", currentUser.ID, currentUser.ID, offset, request.Limit).Scan(&users).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+	if err := DB.Raw("SELECT count(*) FROM users "+
+		"WHERE  id IN ( SELECT creator_id FROM messages "+
+		"INNER JOIN message_recipients ON messages.id = message_recipients.message_id "+
+		"WHERE message_recipients.recipient_id = ? "+
+		") OR id IN ( SELECT recipient_id FROM message_recipients "+
+		"INNER JOIN messages ON message_recipients.message_id = messages.id "+
+		"WHERE creator_id = ?)", currentUser.ID, currentUser.ID).Scan(&counter).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Users
 	for i := range users {
@@ -96,31 +96,32 @@ func GetUsersMessageScroll(c echo.Context) error {
 
 		// Query current student Name
 		student := models.Student{}
-		DB.First(&student,models.Student{UserID:users[i].ID})
-        if student.ID >= 1 {
-            users[i].UserName = student.FullName
-        }else {
-            teacher := models.Teacher{}
-            DB.First(&teacher,models.Teacher{UserID:users[i].ID})
-            if teacher.ID >= 1 {
-                users[i].UserName = fmt.Sprintf("%s %s",teacher.FirstName, teacher.LastName)
-            }
-        }
+		DB.First(&student, models.Student{UserID: users[i].ID})
+		if student.ID >= 1 {
+			users[i].UserName = student.FullName
+		} else {
+			teacher := models.Teacher{}
+			DB.First(&teacher, models.Teacher{UserID: users[i].ID})
+			if teacher.ID >= 1 {
+				users[i].UserName = fmt.Sprintf("%s %s", teacher.FirstName, teacher.LastName)
+			}
+		}
 	}
 
 	// Validate scroll
 	var hasMore = false
-    if request.CurrentPage < 10 {
-        if uint(len(users)) * request.CurrentPage < counter.Count {
-            hasMore = true
-        }
-    }
+	if request.CurrentPage < 10 {
+		if request.Limit * request.CurrentPage < counter.Count {
+			hasMore = true
+		}
+	}
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.ResponseScroll{
 		Success:     true,
 		Data:        users,
-		HasMore: hasMore,
+		HasMore:     hasMore,
+		CurrentPage: request.CurrentPage,
 	})
 }
 
@@ -138,8 +139,8 @@ func GetMessages(c echo.Context) error {
 	currentUser := claims.User
 
 	// Get data request
-	requestUser := models.User{}
-	if err := c.Bind(&requestUser); err != nil {
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
 		return err
 	}
 
@@ -147,15 +148,21 @@ func GetMessages(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
+	// Pagination calculate
+	offset := request.Validate()
+
 	// Query semesters
+	var total uint
 	chatMessages := make([]chatMessage, 0)
-	if err := DB.Debug().Table("messages").
+	if err := DB.Table("messages").
 		Select("messages.body, message_recipients.is_read, messages.creator_id, messages.date, message_recipients.id as re_id,  message_recipients.recipient_id  ").
 		Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
-		Where("messages.creator_id = ? AND message_recipients.recipient_id = ?", requestUser.ID, currentUser.ID).
-		Or("messages.creator_id = ? AND message_recipients.recipient_id = ?", currentUser.ID, requestUser.ID).
-	    Order("messages.id desc").Limit(20).
-		Scan(&chatMessages).Error; err != nil {
+		Where("messages.creator_id = ? AND message_recipients.recipient_id = ?", request.UserID, currentUser.ID).
+		Or("messages.creator_id = ? AND message_recipients.recipient_id = ?", currentUser.ID, request.UserID).
+		Order("messages.id desc").Limit(request.Limit).Offset(offset).
+		Scan(&chatMessages).
+		Offset(-1).Limit(-1).Count(&total).
+		Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -168,13 +175,23 @@ func GetMessages(c echo.Context) error {
 		}
 	}
 
+	// Validate scroll
+	var hasMore = false
+	if request.CurrentPage < 10 {
+		if request.Limit * request.CurrentPage < total {
+			hasMore = true
+		}
+	}
+
 	// Read message
 	DB.Model(models.MessageRecipient{}).Where("id in (?)", rIds).Update(models.MessageRecipient{IsRead: true})
 
-	// Return response
-	return c.JSON(http.StatusOK, utilities.Response{
-		Success: true,
-		Data:    chatMessages,
+	// Return response data scroll reverse
+	return c.JSON(http.StatusOK, utilities.ResponseScroll{
+		Success:     true,
+		Data:        chatMessages,
+		HasMore:     hasMore,
+		CurrentPage: request.CurrentPage,
 	})
 }
 
