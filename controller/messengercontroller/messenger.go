@@ -149,11 +149,12 @@ func GetMessages(c echo.Context) error {
 
 	// Query semesters
 	chatMessages := make([]chatMessage, 0)
-	if err := DB.Table("messages").
+	if err := DB.Debug().Table("messages").
 		Select("messages.body, message_recipients.is_read, messages.creator_id, messages.date, message_recipients.id as re_id,  message_recipients.recipient_id  ").
 		Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
 		Where("messages.creator_id = ? AND message_recipients.recipient_id = ?", requestUser.ID, currentUser.ID).
 		Or("messages.creator_id = ? AND message_recipients.recipient_id = ?", currentUser.ID, requestUser.ID).
+	    Order("messages.id desc").Limit(20).
 		Scan(&chatMessages).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
