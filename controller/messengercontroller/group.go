@@ -91,6 +91,7 @@ func GetGroupByID(c echo.Context) error {
 	})
 }
 
+
 func CreateGroup(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
