@@ -53,6 +53,7 @@ type lastMessage struct {
 	Mode    string    `json:"mode"` // user || group
 	IsRead  bool      `json:"is_read"`
 	Contact userShort  `json:"contact"`
+    CreatorID uint `json:"creator_id"`
 }
 type timeSlice []lastMessage
 
@@ -147,6 +148,7 @@ func GetUsersMessageScroll(c echo.Context) error {
             Date: chatMessageShort[0].Date,
             IsRead: chatMessageShort[0].IsRead,
             Mode: "user",
+            CreatorID: chatMessageShort[0].CreatorID,
             Contact: userShort{
                 ID: users[i].ID,
                 Name: users[i].UserName,

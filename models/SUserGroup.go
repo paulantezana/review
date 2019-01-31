@@ -9,4 +9,5 @@ type UserGroup struct {
 
 	UserID  uint `json:"user_id"`
 	GroupID uint `json:"group_id"`
+	IsAdmin bool `json:"is_admin"`
 }
