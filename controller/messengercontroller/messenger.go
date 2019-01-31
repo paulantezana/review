@@ -1,55 +1,71 @@
 package messengercontroller
 
 import (
-	"crypto/sha256"
-	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/utilities"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strconv"
-	"time"
+    "crypto/sha256"
+    "fmt"
+    "github.com/dgrijalva/jwt-go"
+    "github.com/labstack/echo"
+    "github.com/paulantezana/review/config"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
+    "io"
+    "net/http"
+    "os"
+    "path/filepath"
+    "sort"
+    "strconv"
+    "time"
 )
 
 type chatMessageShort struct {
-	Body        string    `json:"body"`
-	IsRead      bool      `json:"is_read"`
-	CreatorID   uint      `json:"creator_id"`
-	Date        time.Time `json:"date"`
-	RecipientId uint      `json:"-"`
-	ReID        uint      `json:"-"`
+	Body        string
+	IsRead      bool
+	CreatorID   uint
+	Date        time.Time 
+	RecipientId uint
+	ReID        uint
 }
 
-type userShot struct {
-    ID           uint               `json:"id"`
-    UserName     string             `json:"user_name"` //
-    Avatar       string             `json:"avatar"`
+type userShort struct {
+	ID          uint   `json:"id"`
+	Name    string `json:"name"` //
+	Avatar      string `json:"avatar"`
+	UserGroupID uint   `json:"-"`
 }
 
 type chatMessage struct {
-	Body        string    `json:"body"`
-	BodyType    uint8     `json:"body_type"` // 0 = plain string || 1 == file
-	FilePath    string    `json:"file_path"`
-	IsRead      bool      `json:"is_read"`
-	CreatorID   uint      `json:"creator_id"`
-	Date        time.Time `json:"date"`
-	RecipientId uint      `json:"-"`
-	ReID        uint      `json:"-"`
-	Creator userShot `json:"creator, omitempty"`
+	ID          uint       `json:"id"`
+	Body        string     `json:"body"`
+	BodyType    uint8      `json:"body_type"` // 0 = plain string || 1 == file
+	FilePath    string     `json:"file_path"`
+	IsRead      bool       `json:"is_read"`
+	Date        time.Time  `json:"date"`
+	CreatorID   uint       `json:"-"`
+	RecipientID uint       `json:"-"`
+	ReID        uint       `json:"-"`
+	Creator     userShort   `json:"creator, omitempty"`
+	Reads       []userShort `json:"reads, omitempty"`
 }
 
-//
-type UserMessage struct {
-	ID           uint               `json:"id"`
-	UserName     string             `json:"user_name"` //
-	Avatar       string             `json:"avatar"`
-	LastActivity time.Time          `json:"last_activity"`
-	LastMessages []chatMessageShort `json:"last_messages"`
+type lastMessage struct {
+	Body    string    `json:"body"`
+	Date    time.Time `json:"date"`
+	Mode    string    `json:"mode"` // user || group
+	IsRead  bool      `json:"is_read"`
+	Contact userShort  `json:"contact"`
+}
+type timeSlice []lastMessage
+
+func (p timeSlice) Len() int {
+    return len(p)
+}
+
+func (p timeSlice) Less(i, j int) bool {
+    return p[i].Date.After(p[j].Date)
+}
+
+func (p timeSlice) Swap(i, j int) {
+    p[i], p[j] = p[j], p[i]
 }
 
 func GetUsersMessageScroll(c echo.Context) error {
@@ -75,8 +91,8 @@ func GetUsersMessageScroll(c echo.Context) error {
 	counter := utilities.Counter{}
 
 	// Query users
-	users := make([]UserMessage, 0)
-	if err := DB.Raw("SELECT id, user_name, avatar FROM users "+
+	users := make([]models.User, 0)
+	if err := DB.Raw("SELECT * FROM users "+
 		"WHERE  id IN ( SELECT creator_id FROM messages "+
 		"INNER JOIN message_recipients ON messages.id = message_recipients.message_id "+
 		"WHERE message_recipients.recipient_id = ? "+
@@ -97,12 +113,8 @@ func GetUsersMessageScroll(c echo.Context) error {
 	}
 
 	// Users
+	lastMessages := make([]lastMessage,0)
 	for i := range users {
-		// Find las activity
-		session := models.Session{}
-		DB.First(&session, models.Session{UserID: users[i].ID})
-		users[i].LastActivity = session.LastActivity
-
 		// Query semesters
 		chatMessageShort := make([]chatMessageShort, 0)
 		if err := DB.Table("messages").
@@ -116,8 +128,6 @@ func GetUsersMessageScroll(c echo.Context) error {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
-		users[i].LastMessages = chatMessageShort
-
 		// Query current student Name
 		student := models.Student{}
 		DB.First(&student, models.Student{UserID: users[i].ID})
@@ -130,7 +140,28 @@ func GetUsersMessageScroll(c echo.Context) error {
 				users[i].UserName = fmt.Sprintf("%s %s", teacher.FirstName, teacher.LastName)
 			}
 		}
+
+		// struct
+        lastMessage := lastMessage{
+            Body: chatMessageShort[0].Body,
+            Date: chatMessageShort[0].Date,
+            IsRead: chatMessageShort[0].IsRead,
+            Mode: "user",
+            Contact: userShort{
+                ID: users[i].ID,
+                Name: users[i].UserName,
+                Avatar: users[i].Avatar,
+            },
+        }
+        lastMessages = append(lastMessages, lastMessage)
 	}
+
+	// Order By date
+    lastMessagesSorted := make(timeSlice, 0, len(lastMessages))
+    for _, lasM := range lastMessages {
+        lastMessagesSorted = append(lastMessagesSorted, lasM)
+    }
+    sort.Sort(lastMessagesSorted)
 
 	// Validate scroll
 	var hasMore = false
@@ -143,7 +174,7 @@ func GetUsersMessageScroll(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusOK, utilities.ResponseScroll{
 		Success:     true,
-		Data:        users,
+		Data:        lastMessagesSorted,
 		HasMore:     hasMore,
 		CurrentPage: request.CurrentPage,
 	})
@@ -168,12 +199,12 @@ func GetMessagesGroup(c echo.Context) error {
 	// Pagination calculate
 	offset := request.Validate()
 
-    // Check the number of matches
-    counter := utilities.Counter{}
+	// Check the number of matches
+	counter := utilities.Counter{}
 
-    // Query chatMessage scroll
+	// Query chatMessage scroll
 	chatMessages := make([]chatMessage, 0)
-	if err := DB.Raw("SELECT body, body_type, file_path, creator_id, date FROM messages WHERE id "+
+	if err := DB.Raw("SELECT id, body, body_type, file_path, creator_id, date FROM messages WHERE id "+
 		" IN ( "+
 		"   SELECT message_id FROM message_recipients WHERE recipient_group_id "+
 		" IN (SELECT id FROM user_groups WHERE group_id = ?) "+
@@ -181,42 +212,54 @@ func GetMessagesGroup(c echo.Context) error {
 		" OFFSET ? LIMIT ?", request.GroupID, offset, request.Limit).Scan(&chatMessages).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
-    if err := DB.Raw("SELECT count(*) FROM messages WHERE id "+
-        " IN ( "+
-        "   SELECT message_id FROM message_recipients WHERE recipient_group_id "+
-        " IN (SELECT id FROM user_groups WHERE group_id = ?) "+
-        " ) ", request.GroupID).Scan(&counter).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	if err := DB.Raw("SELECT count(*) FROM messages WHERE id "+
+		" IN ( "+
+		"   SELECT message_id FROM message_recipients WHERE recipient_group_id "+
+		" IN (SELECT id FROM user_groups WHERE group_id = ?) "+
+		" ) ", request.GroupID).Scan(&counter).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // find user creator info
-    for i := range chatMessages {
-        userShots := make([]userShot,0)
-        DB.Raw("SELECT * FROM users WHERE id = ?", chatMessages[i].CreatorID).Scan(&userShots)
-        if len(userShots) == 0 {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usuario no encontrado")})
-        }
-        chatMessages[i].Creator = userShots[0]
-    }
+	// find user creator info
+	for i := range chatMessages {
+		userShots := make([]userShort, 0)
+		DB.Raw("SELECT * FROM users WHERE id = ?", chatMessages[i].CreatorID).Scan(&userShots)
+		if len(userShots) == 0 {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usuario no encontrado")})
+		}
+		chatMessages[i].Creator = userShots[0]
 
-    // Validate scroll
-    var hasMore = false
-    if request.CurrentPage < 10 {
-        if request.Limit*request.CurrentPage < counter.Count {
-            hasMore = true
-        }
-    }
+		//// Find reads this message
+		//reads := make([]userShot, 0)
+		//DB.Raw("SELECT users.id, users.user_name, users.avatar, user_groups.id as user_group_id FROM message_recipients " +
+		//    "INNER JOIN user_groups ON user_groups.id = message_recipients.recipient_group_id " +
+		//    "INNER JOIN users on user_groups.user_id = users.id " +
+		//    "WHERE message_recipients.message_id = ?", chatMessages[i].ID).
+		//        Scan(&reads)
+		//if len(userShots) == 0 {
+		//    return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usuario no encontrado")})
+		//}
+		//chatMessages[i].Reads = reads
+	}
 
-    // Read message
-    //DB.Model(models.MessageRecipient{}).Where("id in (?)", rIds).Update(models.MessageRecipient{IsRead: true})
+	// Validate scroll
+	var hasMore = false
+	if request.CurrentPage < 10 {
+		if request.Limit*request.CurrentPage < counter.Count {
+			hasMore = true
+		}
+	}
 
-    // Return response data scroll reverse
-    return c.JSON(http.StatusOK, utilities.ResponseScroll{
-        Success:     true,
-        Data:        chatMessages,
-        HasMore:     hasMore,
-        CurrentPage: request.CurrentPage,
-    })
+	// Read message
+	//DB.Model(models.MessageRecipient{}).Where("id in (?)", rIds).Update(models.MessageRecipient{IsRead: true})
+
+	// Return response data scroll reverse
+	return c.JSON(http.StatusOK, utilities.ResponseScroll{
+		Success:     true,
+		Data:        chatMessages,
+		HasMore:     hasMore,
+		CurrentPage: request.CurrentPage,
+	})
 }
 
 // Get messages
@@ -258,10 +301,18 @@ func GetMessages(c echo.Context) error {
 	// Get ids and read true
 	var rIds = make([]uint, 0)
 	for i, m := range chatMessages {
-		if chatMessages[i].RecipientId == currentUser.ID {
+		if chatMessages[i].RecipientID == currentUser.ID {
 			rIds = append(rIds, m.ReID)
 			chatMessages[i].IsRead = true
 		}
+
+		// Find data creator
+		userShots := make([]userShort, 0)
+		DB.Raw("SELECT * FROM users WHERE id = ?", chatMessages[i].CreatorID).Scan(&userShots)
+		if len(userShots) == 0 {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usuario no encontrado")})
+		}
+		chatMessages[i].Creator = userShots[0]
 	}
 
 	// Validate scroll
