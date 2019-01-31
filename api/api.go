@@ -261,10 +261,16 @@ func ProtectedApi(e *echo.Echo) {
 
 	// ---------------------------------------------------------------------------
 	//      Messenger api -----------------------------------------------------
-	ar.POST("/messenger/user/scroll", messengercontroller.GetUsersMessageScroll)
-	ar.POST("/messenger/create", messengercontroller.CreateMessage)
-	ar.POST("/messenger/create/upload/file", messengercontroller.CreateMessageFileUpload)
-	ar.POST("/messenger/all", messengercontroller.GetMessages)
+	ar.POST("/messenger/message/user/scroll", messengercontroller.GetUsersMessageScroll)
+	ar.POST("/messenger/message/create", messengercontroller.CreateMessage)
+	ar.POST("/messenger/message/create/upload/file", messengercontroller.CreateMessageFileUpload)
+	ar.POST("/messenger/message/by/user", messengercontroller.GetMessages)
+	ar.POST("/messenger/message/by/group", messengercontroller.GetMessagesGroup)
+	ar.POST("/messenger/group/scroll", messengercontroller.GetGroupsScroll)
+	ar.POST("/messenger/group/by/id", messengercontroller.GetGroupByID)
+	ar.POST("/messenger/group/create", messengercontroller.CreateGroup)
+	ar.PUT("/messenger/group/update", messengercontroller.UpdateGroup)
+	ar.POST("/messenger/group/disable", messengercontroller.DisabelGroup)
 
 	// ---------------------------------------------------------------------------
 	//      External api -----------------------------------------------------

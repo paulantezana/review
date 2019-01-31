@@ -145,7 +145,7 @@ func Migrate() {
 	db.Model(&models.Like{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
 	db.Model(&models.Like{}).AddForeignKey("book_id", "books(id)", "CASCADE", "CASCADE")
 
-	// Messenger ===========================================================
+	// Messenger =================================s==========================
 	//db.Model(&models.MessageRecipient{}).AddForeignKey("recipient_id", "users(id)", "RESTRICT", "RESTRICT")
 	//db.Model(&models.MessageRecipient{}).AddForeignKey("recipient_group_id", "user_groups(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.MessageRecipient{}).AddForeignKey("message_id", "messages(id)", "RESTRICT", "RESTRICT")

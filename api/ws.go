@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"github.com/labstack/echo"
 	"github.com/olahol/melody"
 )
@@ -18,7 +17,6 @@ func PublicWs(e *echo.Echo) {
 	})
 
 	mel.HandleMessage(func(s *melody.Session, msg []byte) {
-		fmt.Println(msg)
 		mel.Broadcast(msg)
 	})
 }

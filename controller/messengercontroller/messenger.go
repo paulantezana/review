@@ -25,6 +25,12 @@ type chatMessageShort struct {
 	ReID        uint      `json:"-"`
 }
 
+type userShot struct {
+    ID           uint               `json:"id"`
+    UserName     string             `json:"user_name"` //
+    Avatar       string             `json:"avatar"`
+}
+
 type chatMessage struct {
 	Body        string    `json:"body"`
 	BodyType    uint8     `json:"body_type"` // 0 = plain string || 1 == file
@@ -34,9 +40,11 @@ type chatMessage struct {
 	Date        time.Time `json:"date"`
 	RecipientId uint      `json:"-"`
 	ReID        uint      `json:"-"`
+	Creator userShot `json:"creator, omitempty"`
 }
 
-type userMessage struct {
+//
+type UserMessage struct {
 	ID           uint               `json:"id"`
 	UserName     string             `json:"user_name"` //
 	Avatar       string             `json:"avatar"`
@@ -67,7 +75,7 @@ func GetUsersMessageScroll(c echo.Context) error {
 	counter := utilities.Counter{}
 
 	// Query users
-	users := make([]userMessage, 0)
+	users := make([]UserMessage, 0)
 	if err := DB.Raw("SELECT id, user_name, avatar FROM users "+
 		"WHERE  id IN ( SELECT creator_id FROM messages "+
 		"INNER JOIN message_recipients ON messages.id = message_recipients.message_id "+
@@ -141,10 +149,74 @@ func GetUsersMessageScroll(c echo.Context) error {
 	})
 }
 
-type createMessageRequest struct {
-	RecipientID uint   `json:"recipient_id"`
-	Body        string `json:"body"`
-	ParentID    uint   `json:"parent_id"`
+func GetMessagesGroup(c echo.Context) error {
+	//// Get user token authenticate
+	//user := c.Get("user").(*jwt.Token)
+	//claims := user.Claims.(*utilities.Claim)
+	//currentUser := claims.User
+
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
+
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
+
+	// Pagination calculate
+	offset := request.Validate()
+
+    // Check the number of matches
+    counter := utilities.Counter{}
+
+    // Query chatMessage scroll
+	chatMessages := make([]chatMessage, 0)
+	if err := DB.Raw("SELECT body, body_type, file_path, creator_id, date FROM messages WHERE id "+
+		" IN ( "+
+		"   SELECT message_id FROM message_recipients WHERE recipient_group_id "+
+		" IN (SELECT id FROM user_groups WHERE group_id = ?) "+
+		" ) ORDER BY messages.id desc "+
+		" OFFSET ? LIMIT ?", request.GroupID, offset, request.Limit).Scan(&chatMessages).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+    if err := DB.Raw("SELECT count(*) FROM messages WHERE id "+
+        " IN ( "+
+        "   SELECT message_id FROM message_recipients WHERE recipient_group_id "+
+        " IN (SELECT id FROM user_groups WHERE group_id = ?) "+
+        " ) ", request.GroupID).Scan(&counter).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // find user creator info
+    for i := range chatMessages {
+        userShots := make([]userShot,0)
+        DB.Raw("SELECT * FROM users WHERE id = ?", chatMessages[i].CreatorID).Scan(&userShots)
+        if len(userShots) == 0 {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usuario no encontrado")})
+        }
+        chatMessages[i].Creator = userShots[0]
+    }
+
+    // Validate scroll
+    var hasMore = false
+    if request.CurrentPage < 10 {
+        if request.Limit*request.CurrentPage < counter.Count {
+            hasMore = true
+        }
+    }
+
+    // Read message
+    //DB.Model(models.MessageRecipient{}).Where("id in (?)", rIds).Update(models.MessageRecipient{IsRead: true})
+
+    // Return response data scroll reverse
+    return c.JSON(http.StatusOK, utilities.ResponseScroll{
+        Success:     true,
+        Data:        chatMessages,
+        HasMore:     hasMore,
+        CurrentPage: request.CurrentPage,
+    })
 }
 
 // Get messages
@@ -171,8 +243,8 @@ func GetMessages(c echo.Context) error {
 	var total uint
 	chatMessages := make([]chatMessage, 0)
 	if err := DB.Table("messages").
-		Select("messages.body, messages.body_type, messages.file_path, message_recipients.is_read, messages.creator_id, messages.date, " +
-		    "message_recipients.id as re_id,  message_recipients.recipient_id  ").
+		Select("messages.body, messages.body_type, messages.file_path, message_recipients.is_read, messages.creator_id, messages.date, "+
+			"message_recipients.id as re_id,  message_recipients.recipient_id  ").
 		Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
 		Where("messages.creator_id = ? AND message_recipients.recipient_id = ?", request.UserID, currentUser.ID).
 		Or("messages.creator_id = ? AND message_recipients.recipient_id = ?", currentUser.ID, request.UserID).
@@ -219,7 +291,8 @@ func CreateMessageFileUpload(c echo.Context) error {
 	currentUser := claims.User
 
 	// Read form fields
-	recipientIDs := c.FormValue("recipient_id")
+	recipientID := c.FormValue("recipient_id")
+	mode := c.FormValue("mode")
 
 	// Read file
 	file, err := c.FormFile("file")
@@ -268,18 +341,38 @@ func CreateMessageFileUpload(c echo.Context) error {
 	}
 
 	// create message recipient
-	rIDs, err := strconv.ParseUint(recipientIDs, 0, 32)
+	rID, err := strconv.ParseUint(recipientID, 0, 32)
 	if err != nil {
 		TX.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
-	recipient := models.MessageRecipient{
-		RecipientID: uint(rIDs),
-		MessageID:   message.ID,
+
+	// if is user
+	if mode == "user" {
+		recipient := models.MessageRecipient{
+			RecipientID: uint(rID),
+			MessageID:   message.ID,
+		}
+		if err := TX.Create(&recipient).Error; err != nil {
+			TX.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
 	}
-	if err := TX.Create(&recipient).Error; err != nil {
-		TX.Rollback()
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+
+	// if is group
+	if mode == "group" {
+		userGroup := make([]models.UserGroup, 0)
+		DB.Find(&userGroup, models.UserGroup{GroupID: uint(rID)})
+		for _, uGroup := range userGroup {
+			recipient := models.MessageRecipient{
+				RecipientGroupID: uGroup.ID,
+				MessageID:        message.ID,
+			}
+			if err := TX.Create(&recipient).Error; err != nil {
+				TX.Rollback()
+				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+			}
+		}
 	}
 
 	// Commit transaction
@@ -290,6 +383,12 @@ func CreateMessageFileUpload(c echo.Context) error {
 		Success: true,
 		Message: "OK",
 	})
+}
+
+type createMessageRequest struct {
+	RecipientID uint   `json:"recipient_id"`
+	Body        string `json:"body"`
+	Mode        string `json:"mode"` // user || group
 }
 
 func CreateMessage(c echo.Context) error {
@@ -322,15 +421,33 @@ func CreateMessage(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	// create message recipient
-	recipient := models.MessageRecipient{
-		RecipientID: request.RecipientID,
-		MessageID:   message.ID,
+	// Create message recipient if USER
+	if request.Mode == "user" {
+		recipient := models.MessageRecipient{
+			RecipientID: request.RecipientID,
+			MessageID:   message.ID,
+		}
+
+		if err := TX.Create(&recipient).Error; err != nil {
+			TX.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
 	}
 
-	if err := TX.Create(&recipient).Error; err != nil {
-		TX.Rollback()
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	// Create Recipient IF GROUP
+	if request.Mode == "group" {
+		userGroup := make([]models.UserGroup, 0)
+		DB.Find(&userGroup, models.UserGroup{GroupID: request.RecipientID})
+		for _, uGroup := range userGroup {
+			recipient := models.MessageRecipient{
+				RecipientGroupID: uGroup.ID,
+				MessageID:        message.ID,
+			}
+			if err := TX.Create(&recipient).Error; err != nil {
+				TX.Rollback()
+				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+			}
+		}
 	}
 
 	// Commit transaction

@@ -12,6 +12,7 @@ type Request struct {
 	SubsidiaryID uint   `json:"subsidiary_id"`
 	StudentID    uint   `json:"student_id"`
 	UserID       uint   `json:"user_id"`
+	GroupID      uint   `json:"group_id"`
 	IDs          []uint `json:"i_ds"`
 }
 

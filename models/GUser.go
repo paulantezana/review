@@ -14,8 +14,8 @@ type User struct {
 	RoleID      uint   `json:"role_id"`
 	OldPassword string `json:"old_password" gorm:"-"`
 
-	Students []Student `json:"students,omitempty"`
-	Teachers []Teacher `json:"teachers,omitempty"`
-	Reviews  []Review  `json:"reviews,omitempty"`
-	Comments []Comment `json:"coos,omitempty"`
+	Students []Student `json:"students, omitempty"`
+	Teachers []Teacher `json:"teachers, omitempty"`
+	Reviews  []Review  `json:"reviews, omitempty"`
+	Comments []Comment `json:"coos, omitempty"`
 }
