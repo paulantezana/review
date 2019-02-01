@@ -29,5 +29,6 @@ type ResponseScroll struct {
 // SocketResponse
 type SocketResponse struct {
 	Type string      `json:"type"`
+	Action string `json:"action"`
 	Data interface{} `json:"data"`
 }

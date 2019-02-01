@@ -2,13 +2,17 @@ package messengercontroller
 
 import (
     "crypto/sha256"
+    "encoding/json"
     "fmt"
     "github.com/dgrijalva/jwt-go"
     "github.com/labstack/echo"
+    "github.com/olahol/melody"
     "github.com/paulantezana/review/config"
     "github.com/paulantezana/review/models"
     "github.com/paulantezana/review/utilities"
+    "golang.org/x/net/websocket"
     "io"
+    "log"
     "net/http"
     "os"
     "path/filepath"
@@ -41,7 +45,7 @@ type chatMessage struct {
 	IsRead      bool       `json:"is_read"`
 	Date        time.Time  `json:"date"`
 	CreatorID   uint       `json:"-"`
-	RecipientID uint       `json:"-"`
+	RecipientID uint `json:"recipient_id"`
 	ReID        uint       `json:"-"`
 	Creator     userShort   `json:"creator, omitempty"`
 	Reads       []userShort `json:"reads, omitempty"`
@@ -67,6 +71,13 @@ func (p timeSlice) Less(i, j int) bool {
 
 func (p timeSlice) Swap(i, j int) {
     p[i], p[j] = p[j], p[i]
+}
+
+var Melody *melody.Melody
+
+func init() {
+    Melody = melody.New()
+    Melody.Config.MaxMessageSize = 1024 * 1024 * 1024
 }
 
 func GetUsersMessageScroll(c echo.Context) error {
@@ -441,6 +452,41 @@ func CreateMessageFileUpload(c echo.Context) error {
 	// Commit transaction
 	TX.Commit()
 
+    // Socket init send data
+    chatMessage := chatMessage{}
+    if mode == "user" {
+        chatMessage.ID = message.ID
+        chatMessage.Body = message.Body
+        chatMessage.BodyType = message.BodyType
+        chatMessage.FilePath = message.FilePath
+        chatMessage.Date = message.Date
+        chatMessage.RecipientID = uint(rID)
+        chatMessage.Creator = userShort{
+            ID: currentUser.ID,
+            Name: currentUser.UserName,
+            Avatar: currentUser.Avatar,
+        }
+    }
+
+
+    json, err := json.Marshal(&utilities.SocketResponse{
+        Type: "chat",
+        Action: "create",
+        Data: chatMessage,
+    })
+
+    // Socket
+    origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
+    url := fmt.Sprintf("ws://localhost:%s/api/v1/ws/chat", config.GetConfig().Server.Port)
+
+    ws, err := websocket.Dial(url, "", origin)
+    if err != nil {
+        log.Fatal(err)
+    }
+    if _, err := ws.Write(json); err != nil {
+        log.Fatal(err)
+    }
+
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
@@ -526,6 +572,40 @@ func CreateMessage(c echo.Context) error {
 
 	// Commit transaction
 	TX.Commit()
+
+	// Socket init send data
+    chatMessage := chatMessage{}
+    if request.Mode == "user" {
+        chatMessage.ID = message.ID
+        chatMessage.Body = message.Body
+        chatMessage.BodyType = message.BodyType
+        chatMessage.FilePath = message.FilePath
+        chatMessage.Date = message.Date
+        chatMessage.RecipientID = request.RecipientID
+        chatMessage.Creator = userShort{
+            ID: currentUser.ID,
+            Name: currentUser.UserName,
+            Avatar: currentUser.Avatar,
+        }
+    }
+
+    json, err := json.Marshal(&utilities.SocketResponse{
+        Type: "chat",
+        Action: "create",
+        Data: chatMessage,
+    })
+
+    // Socket
+    origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
+    url := fmt.Sprintf("ws://localhost:%s/api/v1/ws/chat", config.GetConfig().Server.Port)
+
+    ws, err := websocket.Dial(url, "", origin)
+    if err != nil {
+        log.Fatal(err)
+    }
+    if _, err := ws.Write(json); err != nil {
+        log.Fatal(err)
+    }
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
