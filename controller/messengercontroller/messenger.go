@@ -347,6 +347,27 @@ func CreateMessageFileUpload(c echo.Context) error {
 	recipientID := c.FormValue("recipient_id")
 	mode := c.FormValue("mode")
 
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Convert string to int
+    rID, err := strconv.ParseUint(recipientID, 0, 32)
+    if err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Valida if user is active
+    if mode == "group" {
+        userGroup := models.UserGroup{}
+        if err := DB.First(&userGroup,models.UserGroup{ UserID: currentUser.ID, GroupID: uint(rID) }) .Error; err != nil {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+        }
+        if !userGroup.IsActive {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usted está bloqueado en este grupo")})
+        }
+    }
+
 	// Read file
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -373,10 +394,6 @@ func CreateMessageFileUpload(c echo.Context) error {
 		return err
 	}
 
-	// get connection
-	DB := config.GetConnection()
-	defer DB.Close()
-
 	// Start transaction
 	TX := DB.Begin()
 
@@ -389,13 +406,6 @@ func CreateMessageFileUpload(c echo.Context) error {
 		CreatorID: currentUser.ID,
 	}
 	if err := TX.Create(&message).Error; err != nil {
-		TX.Rollback()
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
-
-	// create message recipient
-	rID, err := strconv.ParseUint(recipientID, 0, 32)
-	if err != nil {
 		TX.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
@@ -459,6 +469,17 @@ func CreateMessage(c echo.Context) error {
 	// get connection
 	DB := config.GetConnection()
 	defer DB.Close()
+
+	// Valida if user is active
+    if request.Mode == "group" {
+        userGroup := models.UserGroup{}
+        if err := DB.First(&userGroup,models.UserGroup{ UserID: currentUser.ID, GroupID: request.RecipientID }) .Error; err != nil {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+        }
+        if !userGroup.IsActive {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usted está bloqueado en este grupo")})
+        }
+    }
 
 	// Start transaction
 	TX := DB.Begin()
