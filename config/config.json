@@ -9,7 +9,7 @@
     "Server" : {
         "port": "1323",
         "host": "http://localhost",
-        "socket": "wss://sn-review-server.herokuapp.com",
+        "socket": "ws://localhost",
         "key": "Mc]-7EEP}vJ{q{P@"
     },
     "Global": {
