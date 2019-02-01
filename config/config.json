@@ -8,7 +8,7 @@
     },
     "Server" : {
         "port": "1323",
-        "host": "https://sn-review-server.herokuapp.com",
+        "host": "http://localhost",
         "socket": "wss://sn-review-server.herokuapp.com",
         "key": "Mc]-7EEP}vJ{q{P@"
     },
