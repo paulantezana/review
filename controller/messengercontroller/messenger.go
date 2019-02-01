@@ -601,10 +601,10 @@ func CreateMessage(c echo.Context) error {
 
     ws, err := websocket.Dial(url, "", origin)
     if err != nil {
-        log.Fatal(err)
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
     }
     if _, err := ws.Write(json); err != nil {
-        log.Fatal(err)
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
     }
 
 	// Return response
