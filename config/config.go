@@ -36,6 +36,8 @@ type Config struct {
 
 type Server struct {
 	Port string
+    Host string
+	Socket string
 	Key  string
 }
 

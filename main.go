@@ -23,7 +23,7 @@ func main() {
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
 		AllowHeaders: []string{"X-Requested-With", "Content-Type", "Authorization"},
-		AllowMethods: []string{echo.GET, echo.POST, echo.DELETE, echo.PUT},
+		AllowMethods: []string{echo.GET, echo.POST, echo.DELETE, echo.PUT, echo.OPTIONS},
 	}))
 
 	// Assets
