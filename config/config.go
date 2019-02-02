@@ -45,7 +45,7 @@ type Server struct {
 func GetConfig() Config {
 	var c Config
 
-	file, err := os.Open("./config/config.json")
+	file, err := os.Open("./config.json")
 	if err != nil {
 		log.Fatal(err)
 	}

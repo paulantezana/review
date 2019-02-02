@@ -271,7 +271,7 @@ func ForgotSearch(c echo.Context) error {
 	}
 
 	// SEND EMAIL get html template
-	t, err := template.ParseFiles("utilities/email.html")
+	t, err := template.ParseFiles("templates/email.html")
 	if err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}

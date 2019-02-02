@@ -29,6 +29,9 @@ func PublicWs(e *echo.Echo) {
     me := melody.New()
     me.Config.MaxMessageSize = 1024 * 1024 * 1024
     me.Upgrader.CheckOrigin = func(r *http.Request) bool {
+       return true
+    }
+    me.Upgrader.CheckOrigin = func(r *http.Request) bool {
         return  true
     }
 
