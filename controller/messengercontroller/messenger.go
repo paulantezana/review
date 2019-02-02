@@ -1,83 +1,83 @@
 package messengercontroller
 
 import (
-    "crypto/sha256"
-    "encoding/json"
-    "fmt"
-    "github.com/dgrijalva/jwt-go"
-    "github.com/labstack/echo"
-    "github.com/olahol/melody"
-    "github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/models"
-    "github.com/paulantezana/review/utilities"
-    "golang.org/x/net/websocket"
-    "io"
-    "log"
-    "net/http"
-    "os"
-    "path/filepath"
-    "sort"
-    "strconv"
-    "time"
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo"
+	"github.com/olahol/melody"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/utilities"
+	"golang.org/x/net/websocket"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"time"
 )
 
 type chatMessageShort struct {
 	Body        string
 	IsRead      bool
 	CreatorID   uint
-	Date        time.Time 
+	Date        time.Time
 	RecipientId uint
 	ReID        uint
 }
 
 type userShort struct {
 	ID          uint   `json:"id"`
-	Name    string `json:"name"` //
+	Name        string `json:"name"` //
 	Avatar      string `json:"avatar"`
 	UserGroupID uint   `json:"-"`
 }
 
 type chatMessage struct {
-	ID          uint       `json:"id"`
-	Body        string     `json:"body"`
-	BodyType    uint8      `json:"body_type"` // 0 = plain string || 1 == file
-	FilePath    string     `json:"file_path"`
-	IsRead      bool       `json:"is_read"`
-	Date        time.Time  `json:"date"`
-	CreatorID   uint       `json:"-"`
-	RecipientID uint `json:"recipient_id"`
-	ReID        uint       `json:"-"`
+	ID          uint        `json:"id"`
+	Body        string      `json:"body"`
+	BodyType    uint8       `json:"body_type"` // 0 = plain string || 1 == file
+	FilePath    string      `json:"file_path"`
+	IsRead      bool        `json:"is_read"`
+	Date        time.Time   `json:"date"`
+	CreatorID   uint        `json:"-"`
+	RecipientID uint        `json:"recipient_id"`
+	ReID        uint        `json:"-"`
 	Creator     userShort   `json:"creator, omitempty"`
 	Reads       []userShort `json:"reads, omitempty"`
 }
 
 type lastMessage struct {
-	Body    string    `json:"body"`
-	Date    time.Time `json:"date"`
-	Mode    string    `json:"mode"` // user || group
-	IsRead  bool      `json:"is_read"`
-	Contact userShort  `json:"contact"`
-    CreatorID uint `json:"creator_id"`
+	Body      string    `json:"body"`
+	Date      time.Time `json:"date"`
+	Mode      string    `json:"mode"` // user || group
+	IsRead    bool      `json:"is_read"`
+	Contact   userShort `json:"contact"`
+	CreatorID uint      `json:"creator_id"`
 }
 type timeSlice []lastMessage
 
 func (p timeSlice) Len() int {
-    return len(p)
+	return len(p)
 }
 
 func (p timeSlice) Less(i, j int) bool {
-    return p[i].Date.After(p[j].Date)
+	return p[i].Date.After(p[j].Date)
 }
 
 func (p timeSlice) Swap(i, j int) {
-    p[i], p[j] = p[j], p[i]
+	p[i], p[j] = p[j], p[i]
 }
 
 var Melody *melody.Melody
 
 func init() {
-    Melody = melody.New()
-    Melody.Config.MaxMessageSize = 1024 * 1024 * 1024
+	Melody = melody.New()
+	Melody.Config.MaxMessageSize = 1024 * 1024 * 1024
 }
 
 func GetUsersMessageScroll(c echo.Context) error {
@@ -125,7 +125,7 @@ func GetUsersMessageScroll(c echo.Context) error {
 	}
 
 	// Users
-	lastMessages := make([]lastMessage,0)
+	lastMessages := make([]lastMessage, 0)
 	for i := range users {
 		// Query semesters
 		chatMessageShort := make([]chatMessageShort, 0)
@@ -154,27 +154,27 @@ func GetUsersMessageScroll(c echo.Context) error {
 		}
 
 		// struct
-        lastMessage := lastMessage{
-            Body: chatMessageShort[0].Body,
-            Date: chatMessageShort[0].Date,
-            IsRead: chatMessageShort[0].IsRead,
-            Mode: "user",
-            CreatorID: chatMessageShort[0].CreatorID,
-            Contact: userShort{
-                ID: users[i].ID,
-                Name: users[i].UserName,
-                Avatar: users[i].Avatar,
-            },
-        }
-        lastMessages = append(lastMessages, lastMessage)
+		lastMessage := lastMessage{
+			Body:      chatMessageShort[0].Body,
+			Date:      chatMessageShort[0].Date,
+			IsRead:    chatMessageShort[0].IsRead,
+			Mode:      "user",
+			CreatorID: chatMessageShort[0].CreatorID,
+			Contact: userShort{
+				ID:     users[i].ID,
+				Name:   users[i].UserName,
+				Avatar: users[i].Avatar,
+			},
+		}
+		lastMessages = append(lastMessages, lastMessage)
 	}
 
 	// Order By date
-    lastMessagesSorted := make(timeSlice, 0, len(lastMessages))
-    for _, lasM := range lastMessages {
-        lastMessagesSorted = append(lastMessagesSorted, lasM)
-    }
-    sort.Sort(lastMessagesSorted)
+	lastMessagesSorted := make(timeSlice, 0, len(lastMessages))
+	for _, lasM := range lastMessages {
+		lastMessagesSorted = append(lastMessagesSorted, lasM)
+	}
+	sort.Sort(lastMessagesSorted)
 
 	// Validate scroll
 	var hasMore = false
@@ -358,26 +358,26 @@ func CreateMessageFileUpload(c echo.Context) error {
 	recipientID := c.FormValue("recipient_id")
 	mode := c.FormValue("mode")
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Convert string to int
-    rID, err := strconv.ParseUint(recipientID, 0, 32)
-    if err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Convert string to int
+	rID, err := strconv.ParseUint(recipientID, 0, 32)
+	if err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Valida if user is active
-    if mode == "group" {
-        userGroup := models.UserGroup{}
-        if err := DB.First(&userGroup,models.UserGroup{ UserID: currentUser.ID, GroupID: uint(rID) }) .Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
-        if !userGroup.IsActive {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usted está bloqueado en este grupo")})
-        }
-    }
+	// Valida if user is active
+	if mode == "group" {
+		userGroup := models.UserGroup{}
+		if err := DB.First(&userGroup, models.UserGroup{UserID: currentUser.ID, GroupID: uint(rID)}).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+		if !userGroup.IsActive {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usted está bloqueado en este grupo")})
+		}
+	}
 
 	// Read file
 	file, err := c.FormFile("file")
@@ -452,40 +452,39 @@ func CreateMessageFileUpload(c echo.Context) error {
 	// Commit transaction
 	TX.Commit()
 
-    // Socket init send data
-    chatMessage := chatMessage{}
-    if mode == "user" {
-        chatMessage.ID = message.ID
-        chatMessage.Body = message.Body
-        chatMessage.BodyType = message.BodyType
-        chatMessage.FilePath = message.FilePath
-        chatMessage.Date = message.Date
-        chatMessage.RecipientID = uint(rID)
-        chatMessage.Creator = userShort{
-            ID: currentUser.ID,
-            Name: currentUser.UserName,
-            Avatar: currentUser.Avatar,
-        }
-    }
+	// Socket init send data
+	chatMessage := chatMessage{}
+	if mode == "user" {
+		chatMessage.ID = message.ID
+		chatMessage.Body = message.Body
+		chatMessage.BodyType = message.BodyType
+		chatMessage.FilePath = message.FilePath
+		chatMessage.Date = message.Date
+		chatMessage.RecipientID = uint(rID)
+		chatMessage.Creator = userShort{
+			ID:     currentUser.ID,
+			Name:   currentUser.UserName,
+			Avatar: currentUser.Avatar,
+		}
+	}
 
+	json, err := json.Marshal(&utilities.SocketResponse{
+		Type:   "chat",
+		Action: "create",
+		Data:   chatMessage,
+	})
 
-    json, err := json.Marshal(&utilities.SocketResponse{
-        Type: "chat",
-        Action: "create",
-        Data: chatMessage,
-    })
+	// Socket
+	origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
+	url := fmt.Sprintf("ws://localhost:%s/api/v1/ws/chat", config.GetConfig().Server.Port)
 
-    // Socket
-    origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
-    url := fmt.Sprintf("ws://localhost:%s/api/v1/ws/chat", config.GetConfig().Server.Port)
-
-    ws, err := websocket.Dial(url, "", origin)
-    if err != nil {
-        log.Fatal(err)
-    }
-    if _, err := ws.Write(json); err != nil {
-        log.Fatal(err)
-    }
+	ws, err := websocket.Dial(url, "", origin)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if _, err := ws.Write(json); err != nil {
+		log.Fatal(err)
+	}
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
@@ -517,15 +516,15 @@ func CreateMessage(c echo.Context) error {
 	defer DB.Close()
 
 	// Valida if user is active
-    if request.Mode == "group" {
-        userGroup := models.UserGroup{}
-        if err := DB.First(&userGroup,models.UserGroup{ UserID: currentUser.ID, GroupID: request.RecipientID }) .Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
-        if !userGroup.IsActive {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usted está bloqueado en este grupo")})
-        }
-    }
+	if request.Mode == "group" {
+		userGroup := models.UserGroup{}
+		if err := DB.First(&userGroup, models.UserGroup{UserID: currentUser.ID, GroupID: request.RecipientID}).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+		if !userGroup.IsActive {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usted está bloqueado en este grupo")})
+		}
+	}
 
 	// Start transaction
 	TX := DB.Begin()
@@ -574,42 +573,124 @@ func CreateMessage(c echo.Context) error {
 	TX.Commit()
 
 	// Socket init send data
-    chatMessage := chatMessage{}
-    if request.Mode == "user" {
-        chatMessage.ID = message.ID
-        chatMessage.Body = message.Body
-        chatMessage.BodyType = message.BodyType
-        chatMessage.FilePath = message.FilePath
-        chatMessage.Date = message.Date
-        chatMessage.RecipientID = request.RecipientID
-        chatMessage.Creator = userShort{
-            ID: currentUser.ID,
-            Name: currentUser.UserName,
-            Avatar: currentUser.Avatar,
-        }
-    }
+	chatMessage := chatMessage{}
+	if request.Mode == "user" {
+		chatMessage.ID = message.ID
+		chatMessage.Body = message.Body
+		chatMessage.BodyType = message.BodyType
+		chatMessage.FilePath = message.FilePath
+		chatMessage.Date = message.Date
+		chatMessage.RecipientID = request.RecipientID
+		chatMessage.Creator = userShort{
+			ID:     currentUser.ID,
+			Name:   currentUser.UserName,
+			Avatar: currentUser.Avatar,
+		}
+	}
 
-    json, err := json.Marshal(&utilities.SocketResponse{
-        Type: "chat",
-        Action: "create",
-        Data: chatMessage,
-    })
+	json, err := json.Marshal(&utilities.SocketResponse{
+		Type:   "chat",
+		Action: "create",
+		Data:   chatMessage,
+	})
 
-    // Socket
-    origin := fmt.Sprintf("%s:%s/", config.GetConfig().Server.Host, config.GetConfig().Server.Port)
-    url := fmt.Sprintf("%s:%s/api/v1/ws/chat", config.GetConfig().Server.Socket, config.GetConfig().Server.Port)
+	// Socket
+	origin := fmt.Sprintf("%s:%s/", config.GetConfig().Server.Host, config.GetConfig().Server.Port)
+	url := fmt.Sprintf("%s:%s/api/v1/ws/chat", config.GetConfig().Server.Socket, config.GetConfig().Server.Port)
 
-    ws, err := websocket.Dial(url, "", origin)
-    if err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("ERROR 1 == %s", err)})
-    }
-    if _, err := ws.Write(json); err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("ERROR 2 == %s", err)})
-    }
+	ws, err := websocket.Dial(url, "", origin)
+	if err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("ERROR 1 == %s", err)})
+	}
+	if _, err := ws.Write(json); err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("ERROR 2 == %s", err)})
+	}
+
+	// Send chat Notices
+	// Websocket las notices
+    getUnreadMessages(models.User{ID: request.RecipientID},true)
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Message: "OK",
 	})
+}
+
+
+func UnreadMessages(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
+    // Get  unread last messages
+    notices := getUnreadMessages(models.User{ID:currentUser.ID},false)
+
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        Message: "OK",
+        Data: notices,
+    })
+}
+
+func getUnreadMessages(u models.User, socket bool) []utilities.Notice {
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
+
+	// query
+    chatMessageShort := make([]chatMessageShort, 0)
+    if err := DB.Table("messages").
+        Select("messages.body, message_recipients.is_read, messages.creator_id, messages.date").
+        Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
+        Where("message_recipients.recipient_id = ? AND message_recipients.is_read = false", u.ID).
+        Limit(1).
+        Order("messages.id desc").
+        Scan(&chatMessageShort).Error; err != nil {
+        log.Fatal(err)
+    }
+
+    notices := make([]utilities.Notice,0)
+    for i := range chatMessageShort {
+        user := models.User{}
+        if err := DB.Debug().First(&user,models.User{ID: chatMessageShort[i].CreatorID}).Error; err != nil {
+            log.Fatal(err)
+        }
+
+        notice := utilities.Notice{
+            ID: chatMessageShort[i].CreatorID,
+            Title: user.UserName,
+            Avatar: user.Avatar,
+            Description: chatMessageShort[i].Body,
+            Date: chatMessageShort[i].Date,
+            RecipientID: u.ID,
+            Type: "message",
+        }
+
+        notices = append(notices, notice)
+    }
+
+    // Socket prepare data
+    if socket {
+        json, err := json.Marshal(&utilities.SocketResponse{
+            Type:   "notice",
+            Action: "info",
+            Data:   notices,
+        })
+
+        // Socket
+        origin := fmt.Sprintf("%s:%s/", config.GetConfig().Server.Host, config.GetConfig().Server.Port)
+        url := fmt.Sprintf("%s:%s/api/v1/ws/chat", config.GetConfig().Server.Socket, config.GetConfig().Server.Port)
+
+        ws, err := websocket.Dial(url, "", origin)
+        if err != nil {
+            log.Fatal(err)
+        }
+        if _, err := ws.Write(json); err != nil {
+            log.Fatal(err)
+        }
+    }
+
+    return notices
 }

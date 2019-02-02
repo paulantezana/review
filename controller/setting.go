@@ -2,7 +2,8 @@ package controller
 
 import (
 	"fmt"
-	"io"
+    "github.com/dgrijalva/jwt-go"
+    "io"
 	"net/http"
 	"os"
 	"path"
@@ -15,9 +16,7 @@ import (
 )
 
 // GlobalSettings struct
-type globalSettings struct {
-	Message string         `json:"message"`
-	Success bool           `json:"success"`
+type gSettingsResponse struct {
 	Roles   []models.Role  `json:"roles"`
 	Setting models.Setting `json:"setting"`
 	User    models.User    `json:"user"`
@@ -25,9 +24,14 @@ type globalSettings struct {
 
 // GetGlobalSettings function
 func GetGlobalSettings(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
 	// Get data request
-	user := models.User{}
-	if err := c.Bind(&user); err != nil {
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
 		return err
 	}
 
@@ -35,30 +39,25 @@ func GetGlobalSettings(c echo.Context) error {
 	db := config.GetConnection()
 	defer db.Close()
 
-	// Execute instructions
-	if err := db.First(&user, user.ID).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
-	user.Password = ""
-	user.Key = ""
-
 	// Find settings
 	con := models.Setting{}
 	db.First(&con)
 
 	// Find settings
 	roles := make([]models.Role, 0)
-	if err := db.Where("id >= ?", user.RoleID).Find(&roles).Error; err != nil {
+	if err := db.Where("id >= ?", currentUser.RoleID).Find(&roles).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Set object response
-	return c.JSON(http.StatusOK, globalSettings{
-		User:    user,
-		Setting: con,
-		Roles:   roles,
+	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Message: "OK",
+		Data: gSettingsResponse{
+            User:    currentUser,
+            Setting: con,
+            Roles:   roles,
+        },
 	})
 }
 

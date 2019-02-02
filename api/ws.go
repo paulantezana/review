@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/labstack/echo"
 	"github.com/olahol/melody"
-    "net/http"
+	"net/http"
 )
 
 func PublicWs(e *echo.Echo) {
@@ -13,8 +13,8 @@ func PublicWs(e *echo.Echo) {
 	mel := melody.New()
 	mel.Config.MaxMessageSize = 1024 * 1024 * 1024
 	mel.Upgrader.CheckOrigin = func(r *http.Request) bool {
-       return  true
-    }
+		return true
+	}
 	// Path
 	ws.GET("/comment", func(c echo.Context) error {
 		mel.HandleRequest(c.Response(), c.Request())
@@ -25,24 +25,23 @@ func PublicWs(e *echo.Echo) {
 		mel.Broadcast(msg)
 	})
 
-
-    me := melody.New()
-    me.Config.MaxMessageSize = 1024 * 1024 * 1024
-    me.Upgrader.CheckOrigin = func(r *http.Request) bool {
-       return true
-    }
-    me.Upgrader.CheckOrigin = func(r *http.Request) bool {
-        return  true
-    }
+	me := melody.New()
+	me.Config.MaxMessageSize = 1024 * 1024 * 1024
+	me.Upgrader.CheckOrigin = func(r *http.Request) bool {
+		return true
+	}
+	me.Upgrader.CheckOrigin = func(r *http.Request) bool {
+		return true
+	}
 
 	// Chat
-    ws.GET("/chat", func(c echo.Context) error {
-        me.HandleRequest(c.Response(), c.Request())
-        return nil
-    })
+	ws.GET("/chat", func(c echo.Context) error {
+		me.HandleRequest(c.Response(), c.Request())
+		return nil
+	})
 
-    // Handle message
-    me.HandleMessage(func(s *melody.Session, msg []byte) {
-    	me.Broadcast(msg)
-    })
+	// Handle message
+	me.HandleMessage(func(s *melody.Session, msg []byte) {
+		me.Broadcast(msg)
+	})
 }

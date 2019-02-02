@@ -35,10 +35,10 @@ type Config struct {
 }
 
 type Server struct {
-	Port string
-    Host string
+	Port   string
+	Host   string
 	Socket string
-	Key  string
+	Key    string
 }
 
 // GetConfig return configuration from database json
