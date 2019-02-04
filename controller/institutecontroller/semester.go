@@ -22,9 +22,10 @@ func GetSemesters(c echo.Context) error {
 
 	// Execute instructions
 	semesters := make([]models.Semester, 0)
-	if err := db.Debug().Where("program_id = ?", semester.ProgramID).Order("sequence asc").Find(&semesters).
+	if err := db.Where("program_id = ?", semester.ProgramID).
+	    Order("sequence asc").Find(&semesters).
 		Error; err != nil {
-		return err
+		    return err
 	}
 
 	// Return response
@@ -54,7 +55,7 @@ func CreateSemester(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    semester.ID,
-		Message: fmt.Sprintf("El semestera de estudios %s se registro exitosamente", semester.Name),
+		Message: fmt.Sprintf("El registro %s se registro exitosamente", semester.Name),
 	})
 }
 
@@ -78,10 +79,10 @@ func UpdateSemester(c echo.Context) error {
 	}
 
 	// Return response
-	return c.JSON(http.StatusCreated, utilities.Response{
+	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    semester.ID,
-		Message: fmt.Sprintf("Los datos del semestera de estudios %s se actualizaron correctamente", semester.Name),
+		Message: fmt.Sprintf("Los datos del registro %s se actualizaron correctamente", semester.Name),
 	})
 }
 
@@ -105,6 +106,6 @@ func DeleteSemester(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    semester.ID,
-		Message: fmt.Sprintf("The semester %s was successfully deleted", semester.Name),
+		Message: fmt.Sprintf("El semestre %s se elimino correctamente", semester.Name),
 	})
 }

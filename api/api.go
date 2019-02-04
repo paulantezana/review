@@ -246,6 +246,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/admission/admission/by/id", admissioncontroller.GetAdmissionsByID)
 	ar.POST("/admission/admission/paginate/exam", admissioncontroller.GetAdmissionsPaginateExam)
 	ar.POST("/admission/admission/create", admissioncontroller.CreateAdmission)
+	ar.POST("/admission/admission/update/student", admissioncontroller.UpdateStudentAdmission)
 	ar.POST("/admission/admission/cancel", admissioncontroller.CancelAdmission)
 	ar.PUT("/admission/admission/update", admissioncontroller.UpdateAdmission)
 	ar.PUT("/admission/admission/update/exam", admissioncontroller.UpdateExamAdmission)

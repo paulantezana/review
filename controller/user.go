@@ -377,8 +377,8 @@ func GetUsers(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
-	defer db.Close()
+    DB := config.GetConnection()
+	defer DB.Close()
 
 	// Pagination calculate
 	offset := request.Validate()
@@ -388,11 +388,26 @@ func GetUsers(c echo.Context) error {
 	users := make([]models.User, 0)
 
 	// Find users
-	if err := db.Where("user_name LIKE ? AND role_id >= ?", "%"+request.Search+"%", currentUser.RoleID).
+	if err := DB.Where("user_name LIKE ? AND role_id >= ?", "%"+request.Search+"%", currentUser.RoleID).
 		Order("id desc").Offset(offset).Limit(request.Limit).Find(&users).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
+
+    // find
+    for i := range users {
+        student := models.Student{}
+        DB.First(&student, models.Student{UserID: users[i].ID})
+        if student.ID >= 1 {
+            users[i].UserName = student.FullName
+        } else {
+            teacher := models.Teacher{}
+            DB.First(&teacher, models.Teacher{UserID: users[i].ID})
+            if teacher.ID >= 1 {
+                users[i].UserName = fmt.Sprintf("%s %s", teacher.FirstName, teacher.LastName)
+            }
+        }
+    }
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
