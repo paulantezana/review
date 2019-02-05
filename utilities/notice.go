@@ -9,6 +9,6 @@ type Notice struct {
 	Date        time.Time `json:"date"`
 	Status      string    `json:"status"`
 	RecipientID uint      `json:"recipient_id"`
-	Avatar string `json:"avatar"`
-	Type string `json:"type"`
+	Avatar      string    `json:"avatar"`
+	Type        string    `json:"type"`
 }

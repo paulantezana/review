@@ -112,10 +112,11 @@ type admissionsPaginateExamResponse struct {
 }
 
 type admisionModelRequest struct {
-    Admission models.Admission `json:"admission"`
-    Student models.Student `json:"student"`
-    User models.User `json:"user"`
+	Admission models.Admission `json:"admission"`
+	Student   models.Student   `json:"student"`
+	User      models.User      `json:"user"`
 }
+
 func GetAdmissionsByID(c echo.Context) error {
 	// Get data request
 	admission := models.Admission{}
@@ -193,79 +194,79 @@ func GetAdmissionsPaginateExam(c echo.Context) error {
 }
 
 type updateStudentAdmissionRequest struct {
-    Student   models.Student   `json:"student"`
-    User      models.User      `json:"user"`
+	Student models.Student `json:"student"`
+	User    models.User    `json:"user"`
 }
 
 func UpdateStudentAdmission(c echo.Context) error {
-    // Get data request
-    request := updateStudentAdmissionRequest{}
-    if err := c.Bind(&request); err != nil {
-        return err
-    }
+	// Get data request
+	request := updateStudentAdmissionRequest{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // start transaction
-    TX := DB.Begin()
+	// start transaction
+	TX := DB.Begin()
 
-    // find if exist student
-    st := models.Student{}
-    DB.First(&st, models.Student{DNI: request.Student.DNI})
+	// find if exist student
+	//st := models.Student{}
+    //if request.Student.ID >= 1 {
+	//    DB.First(&st, models.Student{ID: request.Student.ID})
+    //}else {
+	//    DB.First(&st, models.Student{DNI: request.Student.DNI})
+    //}
 
-    // Validate if exist student
-    if st.ID == 0 {
-        // has password new user account
-        cc := sha256.Sum256([]byte(request.Student.DNI + "ST"))
-        pwd := fmt.Sprintf("%x", cc)
+	// Validate if exist student
+	if request.Student.ID == 0 {
+		// has password new user account
+		cc := sha256.Sum256([]byte(request.Student.DNI + "ST"))
+		pwd := fmt.Sprintf("%x", cc)
 
-        // Insert user in database
-        request.User.UserName = request.Student.DNI + "ST"
-        request.User.Password = pwd
-        request.User.RoleID = 5
+		// Insert user in database
+		request.User.UserName = request.Student.DNI + "ST"
+		request.User.Password = pwd
+		request.User.RoleID = 5
 
-        if err := TX.Create(&request.User).Error; err != nil {
-            TX.Rollback()
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
+		if err := TX.Create(&request.User).Error; err != nil {
+			TX.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
 
-        // Insert student in database
-        request.Student.UserID = request.User.ID
-        request.Student.StudentStatusID = 2
-        if err := TX.Create(&request.Student).Error; err != nil {
-            TX.Rollback()
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
-    } else {
-        request.Student.ID = st.ID
-        request.Student.UserID = st.UserID
-        request.User.ID = st.UserID
+		// Insert student in database
+		request.Student.UserID = request.User.ID
+		request.Student.StudentStatusID = 2
+		if err := TX.Create(&request.Student).Error; err != nil {
+			TX.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	} else {
+		// Update data
+		rows := TX.Model(&request.Student).Update(request.Student).RowsAffected
+		if rows == 0 {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", "No se pudo actualizar los datos del es")})
+		}
+		rows = TX.Model(&request.User).Update(request.User).RowsAffected
+		if rows == 0 {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", "No se pudo actualizar los datos del es")})
+		}
 
-        // Update data
-        rows := TX.Model(&request.Student).Update(&request.Student).RowsAffected
-        if rows == 0 {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", "No se pudo actualizar los datos del es")})
-        }
-        rows = TX.Model(&request.User).Update(&request.User).RowsAffected
-        if rows == 0 {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", "No se pudo actualizar los datos del es")})
-        }
+		// Query data user
+		DB.First(&request.User, models.User{ID: request.User.ID})
+	}
 
-        // Query data user
-        DB.First(&request.User, models.User{ID: request.User.ID})
-    }
+	// Commit transaction
+	TX.Commit()
 
-    // Commit transaction
-    TX.Commit()
-
-    // Return response
-    return c.JSON(http.StatusCreated, utilities.Response{
-        Success: true,
-        Data:    request,
-        Message: fmt.Sprintf("El estudiante %s se registro correctamente", request.Student.FullName),
-    })
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    request,
+		Message: fmt.Sprintf("El estudiante %s se registro correctamente", request.Student.FullName),
+	})
 }
 
 func CreateAdmission(c echo.Context) error {
@@ -288,7 +289,7 @@ func CreateAdmission(c echo.Context) error {
 	currentYear := uint(time.Now().Year())
 
 	student := models.Student{}
-	DB.First(&student,models.Student{ID: admission.StudentID})
+	DB.First(&student, models.Student{ID: admission.StudentID})
 
 	// Validation admission
 	countV := utilities.Counter{}
@@ -307,8 +308,8 @@ func CreateAdmission(c echo.Context) error {
 
 	// Insert admission
 	admission.AdmissionDate = time.Now()
-    admission.Year = currentYear
-    admission.UserID = currentUser.ID
+	admission.Year = currentYear
+	admission.UserID = currentUser.ID
 	if err := TX.Create(&admission).Error; err != nil {
 		TX.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -355,7 +356,7 @@ func CreateAdmission(c echo.Context) error {
 
 func UpdateAdmission(c echo.Context) error {
 	// Get data request
-    admission := models.Admission{}
+	admission := models.Admission{}
 	if err := c.Bind(&admission); err != nil {
 		return err
 	}
@@ -513,6 +514,53 @@ func FileAdmission(c echo.Context) error {
 			Subsidiary: subsidiary,
 			Program:    program,
 		},
+	})
+}
+
+type licenceADF struct {
+	ID            uint      `json:"id" gorm:"primary_key"`
+	Observation   string    `json:"observation"`
+	Exonerated    bool      `json:"exonerated"`
+	AdmissionDate time.Time `json:"admission_date"`
+	Year          uint      `json:"year"`
+    Classroom     uint      `json:"classroom"`
+    Seat          uint      `json:"seat"`
+
+	DNI      string `json:"dni"`
+	FullName string `json:"full_name"`
+	Avatar   string `json:"avatar"`
+	Program  string `json:"program"`
+}
+
+func LicenseAdmissionDF(c echo.Context) error {
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
+
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
+
+	// Query all students
+	licenceADFs := make([]licenceADF, 0)
+	if err := DB.Table("admissions").
+		Select("admissions.id, admissions.observation, admissions.exonerated, admissions.admission_date, admissions.year, admissions.classroom, admissions.seat, "+
+			"students.dni, students.full_name, programs.name as program, "+
+			"users.avatar").
+		Joins("INNER JOIN students ON admissions.student_id = students.id").
+		Joins("INNER JOIN users ON students.user_id = users.id").
+		Joins("INNER JOIN programs ON admissions.program_id = programs.id").
+		Where("admissions.id IN (?)", request.IDs).
+		Scan(&licenceADFs).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+	// Response data
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    licenceADFs,
 	})
 }
 

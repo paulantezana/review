@@ -608,7 +608,7 @@ func CreateMessage(c echo.Context) error {
 
 	// Send chat Notices
 	// Websocket las notices
-    getUnreadMessages(models.User{ID: request.RecipientID},true)
+	getUnreadMessages(models.User{ID: request.RecipientID}, true)
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
@@ -617,21 +617,20 @@ func CreateMessage(c echo.Context) error {
 	})
 }
 
-
 func UnreadMessages(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
-    // Get  unread last messages
-    notices := getUnreadMessages(models.User{ID:currentUser.ID},false)
+	// Get  unread last messages
+	notices := getUnreadMessages(models.User{ID: currentUser.ID}, false)
 
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Message: "OK",
-        Data: notices,
-    })
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: "OK",
+		Data:    notices,
+	})
 }
 
 func getUnreadMessages(u models.User, socket bool) []utilities.Notice {
@@ -640,57 +639,57 @@ func getUnreadMessages(u models.User, socket bool) []utilities.Notice {
 	defer DB.Close()
 
 	// query
-    chatMessageShort := make([]chatMessageShort, 0)
-    if err := DB.Table("messages").
-        Select("messages.body, message_recipients.is_read, messages.creator_id, messages.date").
-        Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
-        Where("message_recipients.recipient_id = ? AND message_recipients.is_read = false", u.ID).
-        Limit(1).
-        Order("messages.id desc").
-        Scan(&chatMessageShort).Error; err != nil {
-        log.Fatal(err)
-    }
+	chatMessageShort := make([]chatMessageShort, 0)
+	if err := DB.Table("messages").
+		Select("messages.body, message_recipients.is_read, messages.creator_id, messages.date").
+		Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
+		Where("message_recipients.recipient_id = ? AND message_recipients.is_read = false", u.ID).
+		Limit(1).
+		Order("messages.id desc").
+		Scan(&chatMessageShort).Error; err != nil {
+		log.Fatal(err)
+	}
 
-    notices := make([]utilities.Notice,0)
-    for i := range chatMessageShort {
-        user := models.User{}
-        if err := DB.Debug().First(&user,models.User{ID: chatMessageShort[i].CreatorID}).Error; err != nil {
-            log.Fatal(err)
-        }
+	notices := make([]utilities.Notice, 0)
+	for i := range chatMessageShort {
+		user := models.User{}
+		if err := DB.Debug().First(&user, models.User{ID: chatMessageShort[i].CreatorID}).Error; err != nil {
+			log.Fatal(err)
+		}
 
-        notice := utilities.Notice{
-            ID: chatMessageShort[i].CreatorID,
-            Title: user.UserName,
-            Avatar: user.Avatar,
-            Description: chatMessageShort[i].Body,
-            Date: chatMessageShort[i].Date,
-            RecipientID: u.ID,
-            Type: "message",
-        }
+		notice := utilities.Notice{
+			ID:          chatMessageShort[i].CreatorID,
+			Title:       user.UserName,
+			Avatar:      user.Avatar,
+			Description: chatMessageShort[i].Body,
+			Date:        chatMessageShort[i].Date,
+			RecipientID: u.ID,
+			Type:        "message",
+		}
 
-        notices = append(notices, notice)
-    }
+		notices = append(notices, notice)
+	}
 
-    // Socket prepare data
-    if socket {
-        json, err := json.Marshal(&utilities.SocketResponse{
-            Type:   "notice",
-            Action: "info",
-            Data:   notices,
-        })
+	// Socket prepare data
+	if socket {
+		json, err := json.Marshal(&utilities.SocketResponse{
+			Type:   "notice",
+			Action: "info",
+			Data:   notices,
+		})
 
-        // Socket
-        origin := fmt.Sprintf("%s:%s/", config.GetConfig().Server.Host, config.GetConfig().Server.Port)
-        url := fmt.Sprintf("%s:%s/api/v1/ws/chat", config.GetConfig().Server.Socket, config.GetConfig().Server.Port)
+		// Socket
+		origin := fmt.Sprintf("%s:%s/", config.GetConfig().Server.Host, config.GetConfig().Server.Port)
+		url := fmt.Sprintf("%s:%s/api/v1/ws/chat", config.GetConfig().Server.Socket, config.GetConfig().Server.Port)
 
-        ws, err := websocket.Dial(url, "", origin)
-        if err != nil {
-            log.Fatal(err)
-        }
-        if _, err := ws.Write(json); err != nil {
-            log.Fatal(err)
-        }
-    }
+		ws, err := websocket.Dial(url, "", origin)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if _, err := ws.Write(json); err != nil {
+			log.Fatal(err)
+		}
+	}
 
-    return notices
+	return notices
 }

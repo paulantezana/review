@@ -23,9 +23,9 @@ func GetSemesters(c echo.Context) error {
 	// Execute instructions
 	semesters := make([]models.Semester, 0)
 	if err := db.Where("program_id = ?", semester.ProgramID).
-	    Order("sequence asc").Find(&semesters).
+		Order("sequence asc").Find(&semesters).
 		Error; err != nil {
-		    return err
+		return err
 	}
 
 	// Return response

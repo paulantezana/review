@@ -2,8 +2,8 @@ package controller
 
 import (
 	"fmt"
-    "github.com/dgrijalva/jwt-go"
-    "io"
+	"github.com/dgrijalva/jwt-go"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -24,10 +24,10 @@ type gSettingsResponse struct {
 
 // GetGlobalSettings function
 func GetGlobalSettings(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
 	// Get data request
 	request := utilities.Request{}
@@ -54,10 +54,10 @@ func GetGlobalSettings(c echo.Context) error {
 		Success: true,
 		Message: "OK",
 		Data: gSettingsResponse{
-            User:    currentUser,
-            Setting: con,
-            Roles:   roles,
-        },
+			User:    currentUser,
+			Setting: con,
+			Roles:   roles,
+		},
 	})
 }
 
@@ -324,4 +324,15 @@ func DownloadNationalEmblemSetting(c echo.Context) error {
 		})
 	}
 	return c.File(setting.NationalEmblem)
+}
+
+func DownloadFile(c echo.Context) error {
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
+
+	// Return request
+	return c.File(request.Search)
 }

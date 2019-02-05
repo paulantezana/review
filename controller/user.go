@@ -377,7 +377,7 @@ func GetUsers(c echo.Context) error {
 	}
 
 	// Get connection
-    DB := config.GetConnection()
+	DB := config.GetConnection()
 	defer DB.Close()
 
 	// Pagination calculate
@@ -394,20 +394,20 @@ func GetUsers(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-    // find
-    for i := range users {
-        student := models.Student{}
-        DB.First(&student, models.Student{UserID: users[i].ID})
-        if student.ID >= 1 {
-            users[i].UserName = student.FullName
-        } else {
-            teacher := models.Teacher{}
-            DB.First(&teacher, models.Teacher{UserID: users[i].ID})
-            if teacher.ID >= 1 {
-                users[i].UserName = fmt.Sprintf("%s %s", teacher.FirstName, teacher.LastName)
-            }
-        }
-    }
+	// find
+	for i := range users {
+		student := models.Student{}
+		DB.First(&student, models.Student{UserID: users[i].ID})
+		if student.ID >= 1 {
+			users[i].UserName = student.FullName
+		} else {
+			teacher := models.Teacher{}
+			DB.First(&teacher, models.Teacher{UserID: users[i].ID})
+			if teacher.ID >= 1 {
+				users[i].UserName = fmt.Sprintf("%s %s", teacher.FirstName, teacher.LastName)
+			}
+		}
+	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{

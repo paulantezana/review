@@ -10,6 +10,8 @@ type Admission struct {
 	ExamDate      time.Time `json:"exam_date"`
 	AdmissionDate time.Time `json:"admission_date"`
 	Year          uint      `json:"year"`
+	Classroom     uint      `json:"classroom"`
+	Seat          uint      `json:"seat"`
 
 	StudentID uint `json:"student_id"`
 	ProgramID uint `json:"program_id"`
