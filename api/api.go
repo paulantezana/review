@@ -258,7 +258,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/admission/admission/cancel", admissioncontroller.CancelAdmission)
 	ar.PUT("/admission/admission/update", admissioncontroller.UpdateAdmission)
 	ar.PUT("/admission/admission/update/exam", admissioncontroller.UpdateExamAdmission)
-	ar.POST("/admission/admission/df/file", admissioncontroller.FileAdmission)
+	ar.POST("/admission/admission/df/file", admissioncontroller.FileAdmissionDF)
 	ar.POST("/admission/admission/df/license", admissioncontroller.LicenseAdmissionDF)
 	ar.POST("/admission/admission/df/list", admissioncontroller.ListAdmissionDF)
 	ar.POST("/admission/admission/export", admissioncontroller.ExportAdmission)

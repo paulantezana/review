@@ -33,11 +33,11 @@ type admissionsPaginateResponse struct {
 }
 
 type admissionsPaginateRequest struct {
-	Search      string `json:"search"`
-	CurrentPage uint   `json:"current_page"`
-	Limit       uint   `json:"limit"`
-    AdmissionSettingID uint `json:"admission_setting_id"`
-	ProgramID   uint   `json:"program_id"`
+	Search             string `json:"search"`
+	CurrentPage        uint   `json:"current_page"`
+	Limit              uint   `json:"limit"`
+	AdmissionSettingID uint   `json:"admission_setting_id"`
+	ProgramID          uint   `json:"program_id"`
 }
 
 func (r *admissionsPaginateRequest) validate() uint {
@@ -433,48 +433,48 @@ func CancelAdmission(c echo.Context) error {
 }
 
 type getNextClassroom struct {
-    Classroom     uint      `json:"classroom"`
-    Seat          uint      `json:"seat"`
+	Classroom uint `json:"classroom"`
+	Seat      uint `json:"seat"`
 }
 
 func GetNextClassroomAdmission(c echo.Context) error {
-    // Get data request
-    admission := models.Admission{}
-    if err := c.Bind(&admission); err != nil {
-        return err
-    }
+	// Get data request
+	admission := models.Admission{}
+	if err := c.Bind(&admission); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // get admission setting
-    admissionSetting := models.AdmissionSetting{}
-    DB.First(&admissionSetting, models.AdmissionSetting{ID: admission.AdmissionSettingID})
+	// get admission setting
+	admissionSetting := models.AdmissionSetting{}
+	DB.First(&admissionSetting, models.AdmissionSetting{ID: admission.AdmissionSettingID})
 
-    // query las admission
-    DB.Last(&admission,models.Admission{AdmissionSettingID: admissionSetting.ID})
+	// query las admission
+	DB.Last(&admission, models.Admission{AdmissionSettingID: admissionSetting.ID})
 
-    // increment
-    admission.Seat++
+	// increment
+	admission.Seat++
 
-    // Calculate validations
-    if admission.Classroom == 0 {
-       admission.Classroom = 1
-    }
-    if admission.Seat > admissionSetting.Seats {
-        admission.Seat = 1
-        admission.Classroom++
-    }
+	// Calculate validations
+	if admission.Classroom == 0 {
+		admission.Classroom = 1
+	}
+	if admission.Seat > admissionSetting.Seats {
+		admission.Seat = 1
+		admission.Classroom++
+	}
 
-    // return query
-    return c.JSON(http.StatusOK,utilities.Response{
-        Success: true,
-        Data: getNextClassroom{
-            Classroom: admission.Classroom,
-            Seat: admission.Seat,
-        },
-    })
+	// return query
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data: getNextClassroom{
+			Classroom: admission.Classroom,
+			Seat:      admission.Seat,
+		},
+	})
 }
 
 func UpdateExamAdmission(c echo.Context) error {
@@ -507,16 +507,47 @@ func UpdateExamAdmission(c echo.Context) error {
 	})
 }
 
-type fileAdmissionResponse struct {
-	Students   []models.Student  `json:"students"`
-	Subsidiary models.Subsidiary `json:"subsidiary"`
-	Program    models.Program    `json:"program"`
+type aStudentDFResponse struct {
+	ID          uint      `json:"id"`
+	DNI         string    `json:"dni"`
+	FullName    string    `json:"full_name"`
+	Phone       string    `json:"phone"`
+	Gender      string    `json:"gender"`
+	Address     string    `json:"address"`
+	BirthDate   time.Time `json:"birth_date"`
+	BirthPlace  string    `json:"birth_place"`
+	Country     string    `json:"country"`
+	District    string    `json:"district"`
+	Province    string    `json:"province"`
+	Region      string    `json:"region"`
+	MarketStall string    `json:"market_stall"`
+	CivilStatus string    `json:"civil_status"`
+	IsWork      string    `json:"is_work"` // y si || n = no
 }
 
-func FileAdmission(c echo.Context) error {
+type aDFResponse struct {
+	ID            uint      `json:"id" gorm:"primary_key"`
+	Observation   string    `json:"observation"`
+	Exonerated    bool      `json:"exonerated"`
+	AdmissionDate time.Time `json:"admission_date"`
+	Year          uint      `json:"year"`
+
+	StudentID uint `json:"-"`
+	ProgramID uint `json:"-"`
+
+	Student     aStudentDFResponse `json:"student"`
+	ProgramName string             `json:"program_name"`
+}
+
+type fileADFResponse struct {
+	Subsidiary models.Subsidiary `json:"subsidiary"`
+	Admission  []aDFResponse     `json:"admission"`
+}
+
+func FileAdmissionDF(c echo.Context) error {
 	// Get data request
-	admissions := make([]models.Admission, 0)
-	if err := c.Bind(&admissions); err != nil {
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
 		return err
 	}
 
@@ -524,36 +555,39 @@ func FileAdmission(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
-	students := make([]models.Student, 0)
+	// Response slice
+	aDFResponses := make([]aDFResponse, 0)
 
 	// Query all students
-	for _, admission := range admissions {
-		// Query get admission all data --- current admission
-		DB.First(&admission, models.Admission{ID: admission.ID})
+	for _, ID := range request.IDs {
+		// Query admission
+		aDFResponse := aDFResponse{}
+		DB.Raw("SELECT * FROM admissions WHERE id = ? LIMIT 1", ID).Scan(&aDFResponse)
 
-		// Query get student all data
-		student := models.Student{}
-		DB.First(&student, models.Student{ID: admission.StudentID})
+		// Query student
+		aStudentDFResponse := aStudentDFResponse{}
+		DB.Raw("SELECT * FROM students WHERE id = ? LIMIT 1", aDFResponse.StudentID).Scan(&aStudentDFResponse)
+		aDFResponse.Student = aStudentDFResponse
+
+		// Query program
+		program := models.Program{}
+		DB.First(&program, models.Program{ID: aDFResponse.ProgramID})
+		aDFResponse.ProgramName = program.Name
 
 		// Append array
-		students = append(students, student)
+		aDFResponses = append(aDFResponses, aDFResponse)
 	}
 
 	// Query program
-	program := models.Program{}
 	subsidiary := models.Subsidiary{}
-	if len(admissions) >= 1 {
-		DB.First(&program, models.Program{ID: admissions[0].ProgramID})
-		DB.First(&subsidiary, models.Subsidiary{ID: program.SubsidiaryID})
-	}
+	DB.First(&subsidiary, models.Subsidiary{ID: request.SubsidiaryID})
 
 	// Response data
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data: fileAdmissionResponse{
-			Students:   students,
+		Data: fileADFResponse{
+			Admission:  aDFResponses,
 			Subsidiary: subsidiary,
-			Program:    program,
 		},
 	})
 }
@@ -606,47 +640,47 @@ func LicenseAdmissionDF(c echo.Context) error {
 }
 
 type listADF struct {
-    ID            uint      `json:"id"`
-    Observation   string    `json:"observation"`
-    Exonerated    bool      `json:"exonerated"`
-    AdmissionDate time.Time `json:"admission_date"`
-    Year          uint      `json:"year"`
-    Classroom     uint      `json:"classroom"`
-    Seat          uint      `json:"seat"`
+	ID            uint      `json:"id"`
+	Observation   string    `json:"observation"`
+	Exonerated    bool      `json:"exonerated"`
+	AdmissionDate time.Time `json:"admission_date"`
+	Year          uint      `json:"year"`
+	Classroom     uint      `json:"classroom"`
+	Seat          uint      `json:"seat"`
 
-    DNI      string `json:"dni"`
-    FullName string `json:"full_name"`
-    Program  string `json:"program"`
+	DNI      string `json:"dni"`
+	FullName string `json:"full_name"`
+	Program  string `json:"program"`
 }
 
 func ListAdmissionDF(c echo.Context) error {
-    // Get data request
-    admission := models.Admission{}
-    if err := c.Bind(&admission); err != nil {
-        return err
-    }
+	// Get data request
+	admission := models.Admission{}
+	if err := c.Bind(&admission); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Query all students
-    listADFs := make([]listADF, 0)
-    if err := DB.Table("admissions").
-        Select("admissions.id, admissions.observation, admissions.exonerated, admissions.admission_date, admissions.year, admissions.classroom, admissions.seat, "+
-            "students.dni, students.full_name, programs.name as program ").
-        Joins("INNER JOIN students ON admissions.student_id = students.id").
-        Joins("INNER JOIN programs ON admissions.program_id = programs.id").
-        Where("admissions.admission_setting_id = ? AND admissions.state = true", admission.AdmissionSettingID).
-        Scan(&listADFs).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query all students
+	listADFs := make([]listADF, 0)
+	if err := DB.Table("admissions").
+		Select("admissions.id, admissions.observation, admissions.exonerated, admissions.admission_date, admissions.year, admissions.classroom, admissions.seat, "+
+			"students.dni, students.full_name, programs.name as program ").
+		Joins("INNER JOIN students ON admissions.student_id = students.id").
+		Joins("INNER JOIN programs ON admissions.program_id = programs.id").
+		Where("admissions.admission_setting_id = ? AND admissions.state = true", admission.AdmissionSettingID).
+		Scan(&listADFs).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Response data
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    listADFs,
-    })
+	// Response data
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    listADFs,
+	})
 }
 
 type exportAdmissionRequest struct {
@@ -778,4 +812,3 @@ func ExportAdmissionByIds(c echo.Context) error {
 	// Return object
 	return c.File("temp/admission.xlsx")
 }
-

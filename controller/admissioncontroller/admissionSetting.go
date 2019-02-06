@@ -33,26 +33,26 @@ func GetAdmissionSettings(c echo.Context) error {
 
 // GetStudentDetailByID get student detail
 func GetAdmissionSettingByID(c echo.Context) error {
-    // Get data request
-    admSetting := models.AdmissionSetting{}
-    if err := c.Bind(&admSetting); err != nil {
-        return err
-    }
+	// Get data request
+	admSetting := models.AdmissionSetting{}
+	if err := c.Bind(&admSetting); err != nil {
+		return err
+	}
 
-    // Get connection
-    db := config.GetConnection()
-    defer db.Close()
+	// Get connection
+	db := config.GetConnection()
+	defer db.Close()
 
-    // Execute instructions
-    if err := db.First(&admSetting, admSetting.ID).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Execute instructions
+	if err := db.First(&admSetting, admSetting.ID).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Return response
-    return c.JSON(http.StatusCreated, utilities.Response{
-        Success: true,
-        Data:    admSetting,
-    })
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    admSetting,
+	})
 }
 
 func CreateAdmissionSetting(c echo.Context) error {
