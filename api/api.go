@@ -242,6 +242,13 @@ func ProtectedApi(e *echo.Echo) {
 
 	// ---------------------------------------------------------------------------
 	//      Admission routes -----------------------------------------------------
+	// Admission setting
+	ar.POST("/admission/setting/all", admissioncontroller.GetAdmissionSettings)
+	ar.POST("/admission/setting/by/id", admissioncontroller.GetAdmissionSettingByID)
+	ar.POST("/admission/setting/create", admissioncontroller.CreateAdmissionSetting)
+	ar.PUT("/admission/setting/update", admissioncontroller.UpdateAdmissionSetting)
+	ar.DELETE("/admission/setting/delete", admissioncontroller.DeleteAdmissionSetting)
+
 	// Admission
 	ar.POST("/admission/admission/paginate", admissioncontroller.GetAdmissionsPaginate)
 	ar.POST("/admission/admission/by/id", admissioncontroller.GetAdmissionsByID)
@@ -253,8 +260,10 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/admission/admission/update/exam", admissioncontroller.UpdateExamAdmission)
 	ar.POST("/admission/admission/df/file", admissioncontroller.FileAdmission)
 	ar.POST("/admission/admission/df/license", admissioncontroller.LicenseAdmissionDF)
+	ar.POST("/admission/admission/df/list", admissioncontroller.ListAdmissionDF)
 	ar.POST("/admission/admission/export", admissioncontroller.ExportAdmission)
 	ar.POST("/admission/admission/export/by/ids", admissioncontroller.ExportAdmissionByIds)
+	ar.POST("/admission/admission/next/classroom", admissioncontroller.GetNextClassroomAdmission)
 
 	// Payment
 	ar.POST("/admission/payment/all", admissioncontroller.GetPayments)
