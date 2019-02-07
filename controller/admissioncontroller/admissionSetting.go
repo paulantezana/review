@@ -11,8 +11,8 @@ import (
 
 func GetAdmissionSettings(c echo.Context) error {
 	// Get data request
-	admSetting := models.AdmissionSetting{}
-	if err := c.Bind(&admSetting); err != nil {
+    request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
 		return err
 	}
 
@@ -22,7 +22,7 @@ func GetAdmissionSettings(c echo.Context) error {
 
 	// Execute instructions
 	admSettings := make([]models.AdmissionSetting, 0)
-	DB.Order("year asc").Find(&admSettings)
+	DB.Order("year asc").Find(&admSettings,models.AdmissionSetting{SubsidiaryID:request.SubsidiaryID})
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{

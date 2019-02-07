@@ -7,5 +7,6 @@ type AdmissionSetting struct {
 	Seats           uint   `json:"seats"`
 	Description     string `json:"description"`
 
+	SubsidiaryID uint `json:"subsidiary_id"`
 	Admissions []Admission `json:"admissions, omitempty"`
 }
