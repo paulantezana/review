@@ -727,6 +727,34 @@ func ExportAdmissionByIds(c echo.Context) error {
 	return c.File(file)
 }
 
+func ReportAdmissionGeneral(c echo.Context) error {
+    // Get data request
+    request := models.Admission{}
+    if err := c.Bind(&request); err != nil {
+        return err
+    }
+
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    reports := make([]listADF, 0)
+    if err := DB.Table("admissions").
+        Select("admissions.id, admissions.observation, admissions.year, admissions.admission_date, admissions.exonerated, admissions.state, "+
+            "students.full_name, students.dni, programs.name as program ").
+        Joins("INNER JOIN students ON admissions.student_id = students.id").
+        Joins("INNER JOIN programs ON admissions.program_id = programs.id").
+        Where("admissions.admission_setting_id = ?", request.AdmissionSettingID).
+        Scan(&reports).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    return c.JSON(http.StatusOK,utilities.Response{
+        Success: true,
+        Data: reports,
+    })
+}
+
 func exportExcel(admissions []models.Admission) string {
     // get connection
     DB := config.GetConnection()

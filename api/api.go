@@ -264,6 +264,8 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/admission/admission/export", admissioncontroller.ExportAdmission)
 	ar.POST("/admission/admission/export/by/ids", admissioncontroller.ExportAdmissionByIds)
 	ar.POST("/admission/admission/next/classroom", admissioncontroller.GetNextClassroomAdmission)
+	// Admission reports
+	ar.POST("/admission/admission/report/general/by/settings", admissioncontroller.ReportAdmissionGeneral)
 
 	// Payment
 	ar.POST("/admission/payment/all", admissioncontroller.GetPayments)
