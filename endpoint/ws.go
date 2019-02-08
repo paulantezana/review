@@ -1,13 +1,13 @@
-package api
+package endpoint
 
 import (
-	"github.com/labstack/echo"
-	"github.com/olahol/melody"
-	"net/http"
+    "github.com/labstack/echo"
+    "github.com/olahol/melody"
+    "net/http"
 )
 
 func PublicWs(e *echo.Echo) {
-	ws := e.Group("/api/v1/ws")
+	ws := e.Group("/ws")
 
 	// Comment comment
 	mel := melody.New()
@@ -27,9 +27,6 @@ func PublicWs(e *echo.Echo) {
 
 	me := melody.New()
 	me.Config.MaxMessageSize = 1024 * 1024 * 1024
-	me.Upgrader.CheckOrigin = func(r *http.Request) bool {
-		return true
-	}
 	me.Upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
 	}

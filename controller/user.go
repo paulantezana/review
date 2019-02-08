@@ -45,7 +45,9 @@ func Login(c echo.Context) error {
 	// Get data request
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
-		return err
+		return c.JSON(http.StatusBadRequest,utilities.Response{
+		    Message: "La estructura no es válida",
+        })
 	}
 
 	// get connection
@@ -142,7 +144,9 @@ func LoginStudent(c echo.Context) error {
 	// Get data request
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
-		return err
+        return c.JSON(http.StatusBadRequest,utilities.Response{
+            Message: "La estructura no es válida",
+        })
 	}
 
 	// get connection
@@ -214,7 +218,9 @@ func LoginCheck(c echo.Context) error {
 	// Get data request
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
-		return err
+        return c.JSON(http.StatusBadRequest,utilities.Response{
+            Message: "La estructura no es válida",
+        })
 	}
 
 	// get connection
@@ -247,7 +253,9 @@ func LoginCheck(c echo.Context) error {
 func ForgotSearch(c echo.Context) error {
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
-		return err
+        return c.JSON(http.StatusBadRequest,utilities.Response{
+            Message: "La estructura no es válida",
+        })
 	}
 
 	// Get connection
@@ -300,7 +308,9 @@ func ForgotSearch(c echo.Context) error {
 func ForgotValidate(c echo.Context) error {
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
-		return err
+        return c.JSON(http.StatusBadRequest,utilities.Response{
+            Message: "La estructura no es válida",
+        })
 	}
 
 	// get connection
@@ -325,7 +335,9 @@ func ForgotValidate(c echo.Context) error {
 func ForgotChange(c echo.Context) error {
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
-		return err
+        return c.JSON(http.StatusBadRequest,utilities.Response{
+            Message: "La estructura no es válida",
+        })
 	}
 
 	// get connection
@@ -373,7 +385,9 @@ func GetUsers(c echo.Context) error {
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
-		return err
+        return c.JSON(http.StatusBadRequest,utilities.Response{
+            Message: "La estructura no es válida",
+        })
 	}
 
 	// Get connection
@@ -430,7 +444,9 @@ func SearchUsers(c echo.Context) error {
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
-		return err
+        return c.JSON(http.StatusBadRequest,utilities.Response{
+            Message: "La estructura no es válida",
+        })
 	}
 
 	// Get connection
@@ -475,7 +491,9 @@ func GetUserByID(c echo.Context) error {
 	// Get data request
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
-		return err
+        return c.JSON(http.StatusBadRequest,utilities.Response{
+            Message: "La estructura no es válida",
+        })
 	}
 
 	// Get connection
@@ -499,7 +517,9 @@ func CreateUser(c echo.Context) error {
 	// Get data request
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
-		return err
+        return c.JSON(http.StatusBadRequest,utilities.Response{
+            Message: "La estructura no es válida",
+        })
 	}
 
 	// Default empty values
@@ -534,7 +554,9 @@ func UpdateUser(c echo.Context) error {
 	// Get data request
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
-		return err
+        return c.JSON(http.StatusBadRequest,utilities.Response{
+            Message: "La estructura no es válida",
+        })
 	}
 
 	// get connection
@@ -571,7 +593,9 @@ func DeleteUser(c echo.Context) error {
 	// Get data request
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
-		return err
+        return c.JSON(http.StatusBadRequest,utilities.Response{
+            Message: "La estructura no es válida",
+        })
 	}
 
 	// get connection
@@ -661,7 +685,9 @@ func ResetPasswordUser(c echo.Context) error {
 	// Get data request
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
-		return err
+        return c.JSON(http.StatusBadRequest,utilities.Response{
+            Message: "La estructura no es válida",
+        })
 	}
 
 	// get connection
@@ -696,7 +722,9 @@ func ChangePasswordUser(c echo.Context) error {
 	// Get data request
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
-		return err
+        return c.JSON(http.StatusBadRequest,utilities.Response{
+            Message: "La estructura no es válida",
+        })
 	}
 
 	// get connection

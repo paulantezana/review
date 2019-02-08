@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/paulantezana/review/api"
-	"github.com/paulantezana/review/migration"
-	"net/http"
+    "github.com/paulantezana/review/endpoint"
+    "github.com/paulantezana/review/migration"
+    "net/http"
 	"os"
 
 	"github.com/labstack/echo"
@@ -36,9 +36,9 @@ func main() {
 	})
 
 	// Sting API services
-	api.PublicApi(e)
-	api.ProtectedApi(e)
-	api.PublicWs(e)
+	endpoint.PublicApi(e)
+	endpoint.ProtectedApi(e)
+	endpoint.PublicWs(e)
 
 	// Custom port
 	port := os.Getenv("PORT")

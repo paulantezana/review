@@ -476,7 +476,7 @@ func CreateMessageFileUpload(c echo.Context) error {
 
 	// Socket
 	origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
-	url := fmt.Sprintf("ws://localhost:%s/api/v1/ws/chat", config.GetConfig().Server.Port)
+	url := fmt.Sprintf("ws://localhost:%s/ws/chat", config.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -596,7 +596,7 @@ func CreateMessage(c echo.Context) error {
 
 	// Socket
 	origin := fmt.Sprintf("%s:%s/", config.GetConfig().Server.Host, config.GetConfig().Server.Port)
-	url := fmt.Sprintf("%s:%s/api/v1/ws/chat", config.GetConfig().Server.Socket, config.GetConfig().Server.Port)
+	url := fmt.Sprintf("%s:%s/ws/chat", config.GetConfig().Server.Socket, config.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -680,7 +680,7 @@ func getUnreadMessages(u models.User, socket bool) []utilities.Notice {
 
 		// Socket
 		origin := fmt.Sprintf("%s:%s/", config.GetConfig().Server.Host, config.GetConfig().Server.Port)
-		url := fmt.Sprintf("%s:%s/api/v1/ws/chat", config.GetConfig().Server.Socket, config.GetConfig().Server.Port)
+		url := fmt.Sprintf("%s:%s/ws/chat", config.GetConfig().Server.Socket, config.GetConfig().Server.Port)
 
 		ws, err := websocket.Dial(url, "", origin)
 		if err != nil {
