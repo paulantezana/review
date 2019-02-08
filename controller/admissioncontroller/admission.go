@@ -212,14 +212,6 @@ func UpdateStudentAdmission(c echo.Context) error {
 	// start transaction
 	TX := DB.Begin()
 
-	// find if exist student
-	//st := models.Student{}
-	//if request.Student.ID >= 1 {
-	//    DB.First(&st, models.Student{ID: request.Student.ID})
-	//}else {
-	//    DB.First(&st, models.Student{DNI: request.Student.DNI})
-	//}
-
 	// Validate if exist student
 	if request.Student.ID == 0 {
 		// has password new user account
@@ -290,7 +282,7 @@ func CreateAdmission(c echo.Context) error {
 
 	// Validation admission
 	countV := utilities.Counter{}
-	if err := DB.Raw("SELECT count(*) as count FROM admissions WHERE student_id = ? AND year = ? AND state = true", admission.StudentID, admission.Year).
+	if err := DB.Raw("SELECT count(*) as count FROM admissions WHERE student_id = ? AND admission_setting_id = ? AND state = true", admission.StudentID, admission.AdmissionSettingID).
 		Scan(&countV).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}

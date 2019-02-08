@@ -75,7 +75,7 @@ func CreateAdmissionSetting(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    admSetting.ID,
-		Message: fmt.Sprintf("El paymenta de estudios %s se registro exitosamente", admSetting.ID),
+		Message: fmt.Sprintf("El paymenta de estudios %d se registro exitosamente", admSetting.ID),
 	})
 }
 
@@ -102,7 +102,7 @@ func UpdateAdmissionSetting(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    admSetting.ID,
-		Message: fmt.Sprintf("Los datos del paymenta de estudios %s se actualizaron correctamente", admSetting.ID),
+		Message: fmt.Sprintf("Los datos del paymenta de estudios %d se actualizaron correctamente", admSetting.ID),
 	})
 }
 
@@ -126,6 +126,6 @@ func DeleteAdmissionSetting(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    admSetting.ID,
-		Message: fmt.Sprintf("The payment %s was successfully deleted", admSetting.ID),
+		Message: fmt.Sprintf("The payment %d was successfully deleted", admSetting.ID),
 	})
 }
