@@ -161,8 +161,8 @@ func DeleteCompany(c echo.Context) error {
 
 func MultipleDeleteCompany(c echo.Context) error {
 	// Get data request
-	deleteRequest := utilities.DeleteRequest{}
-	if err := c.Bind(&deleteRequest); err != nil {
+    request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
 		return err
 	}
 
@@ -171,7 +171,7 @@ func MultipleDeleteCompany(c echo.Context) error {
 	defer db.Close()
 
 	tx := db.Begin()
-	for _, value := range deleteRequest.Ids {
+	for _, value := range request.IDs {
 		company := models.Company{
 			ID: value,
 		}
@@ -186,11 +186,11 @@ func MultipleDeleteCompany(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Message: fmt.Sprintf("Sel eliminaron %d registros", len(deleteRequest.Ids)),
+		Message: fmt.Sprintf("Sel eliminaron %d registros", len(request.IDs)),
 	})
 }
 
-// GetTempUploadStudent dowloand template
+// GetTempUploadStudent download template
 func GetTempUploadCompany(c echo.Context) error {
 	// Return file admin
 	return c.File("templates/templateCompany.xlsx")
@@ -232,7 +232,7 @@ func SetTempUploadCompany(c echo.Context) error {
 
 	// Prepare
 	companies := make([]models.Company, 0)
-	ignoreCols := 1
+	ignoreCols := 5
 
 	// Get all the rows in the student.
 	rows := excel.GetRows("empresa")
@@ -243,6 +243,8 @@ func SetTempUploadCompany(c echo.Context) error {
 				NameSocialReason: strings.TrimSpace(row[1]),
 				Address:          strings.TrimSpace(row[2]),
 				Manager:          strings.TrimSpace(row[3]),
+				Phone:          strings.TrimSpace(row[4]),
+				CompanyType:          strings.TrimSpace(row[5]),
 			})
 		}
 	}
@@ -258,7 +260,7 @@ func SetTempUploadCompany(c echo.Context) error {
 			tr.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{
 				Message: fmt.Sprintf("Ocurrió un error al insertar al empresa %s con "+
-					"RUC: %s es posible que este alumno ya este en la base de datos o los datos son incorrectos, "+
+					"RUC: %s es posible que esta empresa ya este en la base de datos o los datos son incorrectos, "+
 					"Error: %s, no se realizo ninguna cambio en la base de datos", company.NameSocialReason, company.RUC, err),
 			})
 		}
@@ -296,6 +298,8 @@ func ExportAllCompanies(c echo.Context) error {
 	excel.SetCellValue("Sheet1", "B1", "Nombre o razón social")
 	excel.SetCellValue("Sheet1", "C1", "Dirección")
 	excel.SetCellValue("Sheet1", "D1", "Gerente")
+	excel.SetCellValue("Sheet1", "E1", "Telefono")
+	excel.SetCellValue("Sheet1", "F1", "Tipo")
 
 	currentRow := 2
 	for k, company := range companies {
@@ -303,6 +307,8 @@ func ExportAllCompanies(c echo.Context) error {
 		excel.SetCellValue("Sheet1", fmt.Sprintf("B%d", currentRow+k), company.NameSocialReason)
 		excel.SetCellValue("Sheet1", fmt.Sprintf("C%d", currentRow+k), company.Address)
 		excel.SetCellValue("Sheet1", fmt.Sprintf("D%d", currentRow+k), company.Manager)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("E%d", currentRow+k), company.Phone)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("F%d", currentRow+k), company.CompanyType)
 	}
 
 	// Set active sheet of the workbook.

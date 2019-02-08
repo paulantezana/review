@@ -27,8 +27,3 @@ func (r *Request) Validate() uint {
 	offset := r.Limit*r.CurrentPage - r.Limit
 	return offset
 }
-
-// DeleteRequest use in multiple deletes
-type DeleteRequest struct {
-	Ids []uint `json:"ids"`
-}
