@@ -1,0 +1,16 @@
+.main-header{
+    background: var(--dark-color-alt);
+    height: 4rem;
+    &__content{
+        @extend %container;
+        display: flex;
+        height: 100%;
+        align-items: center;
+        justify-content: space-between;
+        &__brand{
+            img{
+                height: 2.1rem;
+            }
+        }
+    }
+}

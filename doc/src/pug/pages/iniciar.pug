@@ -1,0 +1,11 @@
+extends ../layout/template
+append config
+    -title = "Sedna | Iniciar"
+    -description = "Sistema"
+    // -ogUrl= "/css.html"
+
+block main
+    .main-doc
+        include ../includes/docsMenu
+        main(itemscope itemprop="mainContentOfPage" role="main").main-doc__content
+            include:markdown-it(html) ../../md/docs/iniciar.md

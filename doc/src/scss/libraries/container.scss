@@ -16,7 +16,7 @@
 }
 
 // mixin para crear un sn-container
-@mixin edContainer {
+@mixin snContainer {
     @extend %sn-container;
 }
 
@@ -29,7 +29,7 @@
     max-width : 100%;
 }
 
-@mixin edItemWidth($currentBp, $prevBp, $coreBp){
+@mixin snItemWidth($currentBp, $prevBp, $coreBp){
     // Si el tamaño actual es diferente al previo
     // asignará el ancho en porcentaje
     @if $currentBp != $prevBp{
@@ -47,7 +47,7 @@
 }
 
 // mixin para crear un sn-item
-@mixin edItem($s:100,$m:$s,$l:$m,$xl:$l) {
+@mixin snItem($s:100,$m:$s,$l:$m,$xl:$l) {
     @extend %sn-item;
 
     // calcular el ancho para el primer breakpoint
@@ -63,9 +63,9 @@
 
     // widths for others breakpoints
     // anchos para los demás breakpoints
-    @include edItemWidth($m, $s, m); //medium
-    @include edItemWidth($l, $m, l); //large
-    @include edItemWidth($xl, $l, xl); //xlarge
+    @include snItemWidth($m, $s, m); //medium
+    @include snItemWidth($l, $m, l); //large
+    @include snItemWidth($xl, $l, xl); //xlarge
 }
 
 @mixin sn-item($s:100,$m:$s,$l:$m,$xl:$l) {
@@ -84,9 +84,9 @@
 
     // widths for others breakpoints
     // anchos para los demás breakpoints
-    @include edItemWidth($m, $s, m); //medium
-    @include edItemWidth($l, $m, l); //large
-    @include edItemWidth($xl, $l, xl); //xlarge
+    @include snItemWidth($m, $s, m); //medium
+    @include snItemWidth($l, $m, l); //large
+    @include snItemWidth($xl, $l, xl); //xlarge
 }
 
 // crear un sn-container

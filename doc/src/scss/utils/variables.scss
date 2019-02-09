@@ -9,21 +9,30 @@
     --heading-line-height: 1.3;
     --body-line-height: 1.6;
 
-    --normal-font-size: 0.9375rem;
+    --normal-font-size: 0.9rem;
 }
 :root{
-    --first-color: #007BDF;
-    --first-color-alt: #006DC6;
-    --second-color: #00CBFF;
-    --second-color-alt: #00BFF0;
+    //--first-color: #1890FF;
+    //--first-color-alt: #00CBFF;
+    //--accent-color: #FBA905;
+    //--accent-color-alt: #F1A000;
+    //--light-color: #EAEAEA;
+    //--dark-color: #282D31;
+    //--dark-color-alt: #141618;
+    //--border-color: #DFE0E0;
+    //--text-color: #53575A;
+    //--body-bg: #FCFCFC;
+
+    --first-color: #1890FF;
+    --first-color-alt: #00CBFF;
     --accent-color: #FBA905;
     --accent-color-alt: #F1A000;
     --light-color: #EAEAEA;
     --dark-color: #282D31;
     --dark-color-alt: #141618;
-    --border-color: #DFE0E0;
-    --text-color: #53575A;
-    --body-bg: #FCFCFC;
+    --border-color: #53575A;
+    --text-color: #A7A9AB;
+    --body-bg: #282D31;
 }
 
 // Setting
@@ -38,6 +47,9 @@ $sizes: map-keys($breakpoints);
 
 $max-width : 1200px;
 $fractions : 3 6;
-$gap : 2rem;
+$gap : 1.5rem;
 $container : sn-container;
 $item : sn-item;
+:root{
+    --gap: 1.5rem;
+}

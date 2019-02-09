@@ -1,0 +1,37 @@
+.main-doc{
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: var(--gap);
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    @extend %container;
+    &__content{
+        grid-column: 2 / span 3;
+    }
+    &__aside{
+        border-right: 1px solid var(--border-color);
+    }
+}
+
+.main-doc{
+    &__aside{
+        ul{
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        a{
+            display: block;
+            line-height: 40px;
+            text-decoration: none;
+            color: var(--text-color);
+            &:hover{
+                color: var(--first-color);
+            }
+        }
+        a.active{
+            border-right: 2px solid var(--first-color);
+            color: var(--first-color);
+        }
+    }
+}
