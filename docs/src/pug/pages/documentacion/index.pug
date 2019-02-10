@@ -1,0 +1,12 @@
+extends ../../layout/template
+include ../../includes/banner
+append config
+    -title = "Institucional | Versiones"
+    -description = "Lanzamiento de las nuevas versiones de"
+    -docsMenu = true
+    -ogUrl= "/documentacion"
+
+block main
+    main(itemscope itemprop="mainContentOfPage" role="main").main-doc__content
+        img(src="../../../assets/images/certificacion.png")
+        include:markdown-it(html) ../../../md/docs/index.md

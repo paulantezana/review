@@ -1,0 +1,51 @@
+:root{
+    --heading-font: 'Open Sans', sans-serif;
+    --body-font: Lato, sans-serif;
+
+    --h1-font-size: 1.5rem;
+    --h2-font-size: 1.25rem;
+    --h3-font-size: 1rem;
+
+    --heading-line-height: 1.3;
+    --body-line-height: 1.6;
+
+    --normal-font-size: 0.9rem;
+}
+:root{
+    //--first-color: #1890FF;
+    //--first-color-alt: #00CBFF;
+    //--accent-color: #FBA905;
+    //--accent-color-alt: #F1A000;
+    //--border-color: #DFE0E0;
+    //--text-color: #53575A;
+    //--body-bg: #F0F2F5;
+    //--body-bg-alt: #FFF;
+
+    --first-color: #1890FF;
+    --first-color-alt: #00CBFF;
+    --accent-color: #FBA905;
+    --accent-color-alt: #F1A000;
+    --border-color: #53575A;
+    --text-color: #A7A9AB;
+    --body-bg: #282D31;
+    --body-bg-alt: #141618;
+}
+
+// Setting
+$breakpoints : (
+    s : 0,
+    m : 640px,
+    l : 1024px,
+    lg : 1024px,
+    xl : 1440px
+);
+$sizes: map-keys($breakpoints);
+
+$max-width : 1200px;
+$fractions : 3 6;
+$gap : 1.5rem;
+$container : sn-container;
+$item : sn-item;
+:root{
+    --gap: 1.5rem;
+}

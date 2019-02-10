@@ -1,0 +1,16 @@
+block link-section
+    - var active = 'Documentación';
+
+-
+    var menu = {
+        'Documentación' : '/documentacion',
+        'Versiones'     : '/versiones',
+        'Créditos'      : '/creditos',
+        // 'Ir a PaulAntezana': 'https://paulantezana.com',
+    }
+
+ul
+    each val, key in menu
+        - var target = val === 'https://paulantezana.com' ? '"_blank"' : ''
+        li(itemprop="url")
+            a(href=val target=target itemprop="name" title= "Enlace de " + key)= key
