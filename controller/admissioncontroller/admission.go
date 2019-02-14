@@ -747,6 +747,82 @@ func ReportAdmissionGeneral(c echo.Context) error {
 	})
 }
 
+func ExportAdmissionExamResults(c echo.Context) error {
+    // Get data request
+    request := models.AdmissionSetting{}
+    if err := c.Bind(&request); err != nil {
+        return err
+    }
+
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Details admission settings
+    if err := DB.First(&request,models.AdmissionSetting{ID: request.ID}).Error; err != nil {
+        return err
+    }
+
+    // Query programs
+    programs := make([]models.Program,0)
+    if err := DB.Raw("SELECT * FROM programs WHERE subsidiary_id = ?", request.SubsidiaryID).Scan(&programs).Error; err != nil {
+        return err
+    }
+
+    // CREATE EXCEL FILE
+    excel := excelize.NewFile()
+
+    // Create sheets
+    for _, program := range programs {
+        // Create sheet name
+        sheetName := program.Name
+
+        // Create new sheet
+        excel.NewSheet(sheetName)
+
+        // Query all admission by admission setting
+        admissions := make([]models.Admission, 0)
+        if err := DB.Where("program_id = ? AND admission_setting_id = ?", program.ID, request.ID).Find(&admissions).Error; err != nil {
+           return err
+        }
+
+        // Set header values
+        excel.SetCellValue(sheetName, "A1", "ID")
+        excel.SetCellValue(sheetName, "B1", "DNI")
+        excel.SetCellValue(sheetName, "C1", "Apellidos y Nombres")
+        excel.SetCellValue(sheetName, "D1", "Nota")
+
+        // Format style sheets
+        excel.SetColWidth(sheetName,"B","B",10)
+        excel.SetColWidth(sheetName,"C","C",35)
+        excel.SetColWidth(sheetName,"D","D",8)
+
+        for key, admission := range admissions {
+            // Query get student all data
+            student := models.Student{}
+            DB.First(&student, models.Student{ID: admission.StudentID})
+
+            // Fills data
+            excel.SetCellValue(sheetName, fmt.Sprintf("A%d", key+2), admission.ID)
+            excel.SetCellValue(sheetName, fmt.Sprintf("B%d", key+2), student.DNI)
+            excel.SetCellValue(sheetName, fmt.Sprintf("C%d", key+2), student.FullName)
+            excel.SetCellValue(sheetName, fmt.Sprintf("D%d", key+2), admission.ExamNote)
+        }
+    }
+
+    // Default sheet active
+    excel.SetActiveSheet(1)
+
+    // save file
+    err := excel.SaveAs("temp/admission.xlsx")
+    if err != nil {
+        fmt.Println(err)
+    }
+
+    // Return string directory
+    return c.File("temp/admission.xlsx")
+}
+
 func exportExcel(admissions []models.Admission) string {
 	// get connection
 	DB := config.GetConnection()
