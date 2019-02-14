@@ -782,7 +782,7 @@ func ExportAdmissionExamResults(c echo.Context) error {
 
         // Query all admission by admission setting
         admissions := make([]models.Admission, 0)
-        if err := DB.Where("program_id = ? AND admission_setting_id = ?", program.ID, request.ID).Find(&admissions).Error; err != nil {
+        if err := DB.Where("program_id = ? AND admission_setting_id = ? AND state = true", program.ID, request.ID).Order("exam_note desc").Find(&admissions).Error; err != nil {
            return err
         }
 
@@ -791,11 +791,13 @@ func ExportAdmissionExamResults(c echo.Context) error {
         excel.SetCellValue(sheetName, "B1", "DNI")
         excel.SetCellValue(sheetName, "C1", "Apellidos y Nombres")
         excel.SetCellValue(sheetName, "D1", "Nota")
+        excel.SetCellValue(sheetName, "E1", "Observación")
 
         // Format style sheets
         excel.SetColWidth(sheetName,"B","B",10)
         excel.SetColWidth(sheetName,"C","C",35)
         excel.SetColWidth(sheetName,"D","D",8)
+        excel.SetColWidth(sheetName,"E","E",15)
 
         for key, admission := range admissions {
             // Query get student all data
@@ -807,6 +809,9 @@ func ExportAdmissionExamResults(c echo.Context) error {
             excel.SetCellValue(sheetName, fmt.Sprintf("B%d", key+2), student.DNI)
             excel.SetCellValue(sheetName, fmt.Sprintf("C%d", key+2), student.FullName)
             excel.SetCellValue(sheetName, fmt.Sprintf("D%d", key+2), admission.ExamNote)
+            if uint(key) < request.VacantByProgram {
+                excel.SetCellValue(sheetName, fmt.Sprintf("E%d", key+2), "ingresante")
+            }
         }
     }
 
