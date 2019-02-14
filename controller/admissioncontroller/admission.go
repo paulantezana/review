@@ -527,13 +527,13 @@ type aDFResponse struct {
 	StudentID uint `json:"-"`
 	ProgramID uint `json:"-"`
 
-	Student     aStudentDFResponse `json:"student"`
-	Program models.Program `json:"program"`
+	Student aStudentDFResponse `json:"student"`
+	Program models.Program     `json:"program"`
 }
 
 type fileADFResponse struct {
 	Subsidiary models.Subsidiary `json:"subsidiary"`
-	Admissions  []aDFResponse `json:"admissions"`
+	Admissions []aDFResponse     `json:"admissions"`
 }
 
 func FileAdmissionDF(c echo.Context) error {
@@ -578,7 +578,7 @@ func FileAdmissionDF(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data: fileADFResponse{
-			Admissions:  aDFResponses,
+			Admissions: aDFResponses,
 			Subsidiary: subsidiary,
 		},
 	})
@@ -677,7 +677,7 @@ func ListAdmissionDF(c echo.Context) error {
 
 func ExportAdmission(c echo.Context) error {
 	// Get data request
-    request := models.Admission{}
+	request := models.Admission{}
 	if err := c.Bind(&request); err != nil {
 		return err
 	}
@@ -687,11 +687,11 @@ func ExportAdmission(c echo.Context) error {
 	defer DB.Close()
 
 	// get admissions
-	admissions := make([]models.Admission,0)
-    DB.Where("state = ? AND admission_setting_id = ?",request.State,request.AdmissionSettingID).Find(&admissions)
+	admissions := make([]models.Admission, 0)
+	DB.Where("state = ? AND admission_setting_id = ?", request.State, request.AdmissionSettingID).Find(&admissions)
 
 	// Create file excel
-    file := exportExcel(admissions)
+	file := exportExcel(admissions)
 
 	// Return object
 	return c.File(file)
@@ -699,7 +699,7 @@ func ExportAdmission(c echo.Context) error {
 
 func ExportAdmissionByIds(c echo.Context) error {
 	// Get data request
-    request := utilities.Request{}
+	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
 		return err
 	}
@@ -708,118 +708,118 @@ func ExportAdmissionByIds(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
-    // get admissions
-    admissions := make([]models.Admission,0)
-    DB.Where("id IN (?)",request.IDs).Find(&admissions)
+	// get admissions
+	admissions := make([]models.Admission, 0)
+	DB.Where("id IN (?)", request.IDs).Find(&admissions)
 
-    // Create file excel
-    file := exportExcel(admissions)
+	// Create file excel
+	file := exportExcel(admissions)
 
 	// Return object
 	return c.File(file)
 }
 
 func ReportAdmissionGeneral(c echo.Context) error {
-    // Get data request
-    request := models.Admission{}
-    if err := c.Bind(&request); err != nil {
-        return err
-    }
+	// Get data request
+	request := models.Admission{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    reports := make([]listADF, 0)
-    if err := DB.Table("admissions").
-        Select("admissions.id, admissions.observation, admissions.year, admissions.admission_date, admissions.exonerated, admissions.state, "+
-            "students.full_name, students.dni, programs.name as program ").
-        Joins("INNER JOIN students ON admissions.student_id = students.id").
-        Joins("INNER JOIN programs ON admissions.program_id = programs.id").
-        Where("admissions.admission_setting_id = ?", request.AdmissionSettingID).
-        Scan(&reports).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	reports := make([]listADF, 0)
+	if err := DB.Table("admissions").
+		Select("admissions.id, admissions.observation, admissions.year, admissions.admission_date, admissions.exonerated, admissions.state, "+
+			"students.full_name, students.dni, programs.name as program ").
+		Joins("INNER JOIN students ON admissions.student_id = students.id").
+		Joins("INNER JOIN programs ON admissions.program_id = programs.id").
+		Where("admissions.admission_setting_id = ?", request.AdmissionSettingID).
+		Scan(&reports).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    return c.JSON(http.StatusOK,utilities.Response{
-        Success: true,
-        Data: reports,
-    })
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    reports,
+	})
 }
 
 func exportExcel(admissions []models.Admission) string {
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // CREATE EXCEL FILE
-    excel := excelize.NewFile()
+	// CREATE EXCEL FILE
+	excel := excelize.NewFile()
 
-    // Create new sheet
-    sheet1 := excel.NewSheet("Sheet1")
+	// Create new sheet
+	sheet1 := excel.NewSheet("Sheet1")
 
-    // Set header values
-    excel.SetCellValue("Sheet1", "A1", "ID")
-    excel.SetCellValue("Sheet1", "B1", "Programa de estudios")
-    excel.SetCellValue("Sheet1", "C1", "DNI")
-    excel.SetCellValue("Sheet1", "D1", "Apellidos y Nombres")
-    excel.SetCellValue("Sheet1", "E1", "Celular")
-    excel.SetCellValue("Sheet1", "F1", "Email")
-    excel.SetCellValue("Sheet1", "G1", "Sexo")
-    excel.SetCellValue("Sheet1", "H1", "Fecha Nacimiento")
-    excel.SetCellValue("Sheet1", "I1", "Lugar de nacimiento")
-    excel.SetCellValue("Sheet1", "J1", "Distrito")
-    excel.SetCellValue("Sheet1", "K1", "Provincia")
-    excel.SetCellValue("Sheet1", "L1", "Región")
-    excel.SetCellValue("Sheet1", "M1", "Pais")
-    excel.SetCellValue("Sheet1", "N1", "Direccion")
-    excel.SetCellValue("Sheet1", "O1", "Estado civil")
-    excel.SetCellValue("Sheet1", "P1", "Trabaja")
-    excel.SetCellValue("Sheet1", "Q1", "Puesto")
+	// Set header values
+	excel.SetCellValue("Sheet1", "A1", "ID")
+	excel.SetCellValue("Sheet1", "B1", "Programa de estudios")
+	excel.SetCellValue("Sheet1", "C1", "DNI")
+	excel.SetCellValue("Sheet1", "D1", "Apellidos y Nombres")
+	excel.SetCellValue("Sheet1", "E1", "Celular")
+	excel.SetCellValue("Sheet1", "F1", "Email")
+	excel.SetCellValue("Sheet1", "G1", "Sexo")
+	excel.SetCellValue("Sheet1", "H1", "Fecha Nacimiento")
+	excel.SetCellValue("Sheet1", "I1", "Lugar de nacimiento")
+	excel.SetCellValue("Sheet1", "J1", "Distrito")
+	excel.SetCellValue("Sheet1", "K1", "Provincia")
+	excel.SetCellValue("Sheet1", "L1", "Región")
+	excel.SetCellValue("Sheet1", "M1", "Pais")
+	excel.SetCellValue("Sheet1", "N1", "Direccion")
+	excel.SetCellValue("Sheet1", "O1", "Estado civil")
+	excel.SetCellValue("Sheet1", "P1", "Trabaja")
+	excel.SetCellValue("Sheet1", "Q1", "Puesto")
 
-    // query
-    for key, admission := range admissions {
-        // Query get student all data
-        student := models.Student{}
-        DB.First(&student, models.Student{ID: admission.StudentID})
+	// query
+	for key, admission := range admissions {
+		// Query get student all data
+		student := models.Student{}
+		DB.First(&student, models.Student{ID: admission.StudentID})
 
-        // Query user
-        user := models.User{}
-        DB.First(&user, models.User{ID: student.UserID})
+		// Query user
+		user := models.User{}
+		DB.First(&user, models.User{ID: student.UserID})
 
-        // Query user
-        program := models.Program{}
-        DB.First(&program, models.Program{ID: admission.ProgramID})
+		// Query user
+		program := models.Program{}
+		DB.First(&program, models.Program{ID: admission.ProgramID})
 
-        // Set values in excel file
-        excel.SetCellValue("Sheet1", fmt.Sprintf("A%d", key+2), admission.ID)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("B%d", key+2), program.Name)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("C%d", key+2), student.DNI)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("D%d", key+2), student.FullName)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("E%d", key+2), student.Phone)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("F%d", key+2), user.Email)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("G%d", key+2), student.Gender)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("H%d", key+2), student.BirthDate)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("I%d", key+2), student.BirthPlace)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("J%d", key+2), student.District)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("K%d", key+2), student.Province)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("L%d", key+2), student.Region)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("M%d", key+2), student.Country)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("N%d", key+2), student.Address)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("O%d", key+2), student.CivilStatus)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("P%d", key+2), student.IsWork)
-        excel.SetCellValue("Sheet1", fmt.Sprintf("Q%d", key+2), student.MarketStall)
-    }
+		// Set values in excel file
+		excel.SetCellValue("Sheet1", fmt.Sprintf("A%d", key+2), admission.ID)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("B%d", key+2), program.Name)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("C%d", key+2), student.DNI)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("D%d", key+2), student.FullName)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("E%d", key+2), student.Phone)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("F%d", key+2), user.Email)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("G%d", key+2), student.Gender)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("H%d", key+2), student.BirthDate)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("I%d", key+2), student.BirthPlace)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("J%d", key+2), student.District)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("K%d", key+2), student.Province)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("L%d", key+2), student.Region)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("M%d", key+2), student.Country)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("N%d", key+2), student.Address)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("O%d", key+2), student.CivilStatus)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("P%d", key+2), student.IsWork)
+		excel.SetCellValue("Sheet1", fmt.Sprintf("Q%d", key+2), student.MarketStall)
+	}
 
-    // Default active sheet
-    excel.SetActiveSheet(sheet1)
+	// Default active sheet
+	excel.SetActiveSheet(sheet1)
 
-    // save file
-    err := excel.SaveAs("temp/admission.xlsx")
-    if err != nil {
-        fmt.Println(err)
-    }
+	// save file
+	err := excel.SaveAs("temp/admission.xlsx")
+	if err != nil {
+		fmt.Println(err)
+	}
 
-    // Return string directory
-    return "temp/admission.xlsx"
+	// Return string directory
+	return "temp/admission.xlsx"
 }

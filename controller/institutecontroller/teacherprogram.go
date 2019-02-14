@@ -85,7 +85,7 @@ func CreateTeacherProgram(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    teacherProgram.ID,
-		Message: fmt.Sprintf("El teacherPrograma de estudios %d se registro exitosamente", teacherProgram.ID),
+		Message: fmt.Sprintf("El profesor con el id = %d se asigno a este programa de estudios", teacherProgram.ID),
 	})
 }
 
@@ -112,7 +112,7 @@ func UpdateTeacherProgram(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    teacherProgram.ID,
-		Message: fmt.Sprintf("Los datos del teacherPrograma de estudios %s se actualizaron correctamente", teacherProgram.ID),
+		Message: fmt.Sprintf("Los datos de de asignación %d se actualizaron correctamente", teacherProgram.ID),
 	})
 }
 
@@ -136,6 +136,6 @@ func DeleteTeacherProgram(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    teacherProgram.ID,
-		Message: fmt.Sprintf("The teacherProgram %s was successfully deleted", teacherProgram.ID),
+		Message: fmt.Sprintf("Se quito la asignacion del profesor con el id %d was successfully deleted", teacherProgram.ID),
 	})
 }

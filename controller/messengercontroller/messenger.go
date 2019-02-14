@@ -45,8 +45,10 @@ type chatMessage struct {
 	IsRead      bool        `json:"is_read"`
 	Date        time.Time   `json:"date"`
 	CreatorID   uint        `json:"-"`
-	RecipientID uint        `json:"recipient_id"`
+	RecipientID uint        `json:"-"`
+	Mode string `json:"mode"`
 	ReID        uint        `json:"-"`
+	Recipient   userShort   `json:"recipient, omitempty"`
 	Creator     userShort   `json:"creator, omitempty"`
 	Reads       []userShort `json:"reads, omitempty"`
 }
@@ -452,6 +454,12 @@ func CreateMessageFileUpload(c echo.Context) error {
 	// Commit transaction
 	TX.Commit()
 
+    // Find recipient user detail
+    userRecipient := userShort{}
+    if mode == "user" {
+        DB.Raw("SELECT id, user_name as name, avatar FROM users WHERE id = ? LIMIT 1", uint(rID)).Scan(&userRecipient)
+    }
+
 	// Socket init send data
 	chatMessage := chatMessage{}
 	if mode == "user" {
@@ -460,7 +468,11 @@ func CreateMessageFileUpload(c echo.Context) error {
 		chatMessage.BodyType = message.BodyType
 		chatMessage.FilePath = message.FilePath
 		chatMessage.Date = message.Date
-		chatMessage.RecipientID = uint(rID)
+		chatMessage.Recipient = userShort{
+		    ID: userRecipient.ID,
+		    Name: userRecipient.Name,
+		    Avatar: userRecipient.Avatar,
+        }
 		chatMessage.Creator = userShort{
 			ID:     currentUser.ID,
 			Name:   currentUser.UserName,
@@ -572,6 +584,12 @@ func CreateMessage(c echo.Context) error {
 	// Commit transaction
 	TX.Commit()
 
+	// Find recipient user detail
+	userRecipient := userShort{}
+    if request.Mode == "user" {
+	    DB.Raw("SELECT id, user_name as name, avatar FROM users WHERE id = ? LIMIT 1", request.RecipientID).Scan(&userRecipient)
+    }
+
 	// Socket init send data
 	chatMessage := chatMessage{}
 	if request.Mode == "user" {
@@ -580,7 +598,12 @@ func CreateMessage(c echo.Context) error {
 		chatMessage.BodyType = message.BodyType
 		chatMessage.FilePath = message.FilePath
 		chatMessage.Date = message.Date
-		chatMessage.RecipientID = request.RecipientID
+		chatMessage.Mode = request.Mode
+        chatMessage.Recipient = userShort{
+            ID: userRecipient.ID,
+            Name: userRecipient.Name,
+            Avatar: userRecipient.Avatar,
+        }
 		chatMessage.Creator = userShort{
 			ID:     currentUser.ID,
 			Name:   currentUser.UserName,
@@ -653,7 +676,7 @@ func getUnreadMessages(u models.User, socket bool) []utilities.Notice {
 	notices := make([]utilities.Notice, 0)
 	for i := range chatMessageShort {
 		user := models.User{}
-		if err := DB.Debug().First(&user, models.User{ID: chatMessageShort[i].CreatorID}).Error; err != nil {
+		if err := DB.First(&user, models.User{ID: chatMessageShort[i].CreatorID}).Error; err != nil {
 			log.Fatal(err)
 		}
 

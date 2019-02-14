@@ -1,9 +1,9 @@
 package endpoint
 
 import (
-    "github.com/labstack/echo"
-    "github.com/olahol/melody"
-    "net/http"
+	"github.com/labstack/echo"
+	"github.com/olahol/melody"
+	"net/http"
 )
 
 func PublicWs(e *echo.Echo) {

@@ -161,7 +161,7 @@ func DeleteCompany(c echo.Context) error {
 
 func MultipleDeleteCompany(c echo.Context) error {
 	// Get data request
-    request := utilities.Request{}
+	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
 		return err
 	}
@@ -243,8 +243,8 @@ func SetTempUploadCompany(c echo.Context) error {
 				NameSocialReason: strings.TrimSpace(row[1]),
 				Address:          strings.TrimSpace(row[2]),
 				Manager:          strings.TrimSpace(row[3]),
-				Phone:          strings.TrimSpace(row[4]),
-				CompanyType:          strings.TrimSpace(row[5]),
+				Phone:            strings.TrimSpace(row[4]),
+				CompanyType:      strings.TrimSpace(row[5]),
 			})
 		}
 	}

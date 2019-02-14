@@ -1,9 +1,9 @@
 package main
 
 import (
-    "github.com/paulantezana/review/endpoint"
-    "github.com/paulantezana/review/migration"
-    "net/http"
+	"github.com/paulantezana/review/endpoint"
+	"github.com/paulantezana/review/migration"
+	"net/http"
 	"os"
 
 	"github.com/labstack/echo"
