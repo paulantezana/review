@@ -11,7 +11,8 @@ import (
 	"github.com/paulantezana/review/controller/librarycontroller"
 	"github.com/paulantezana/review/controller/messengercontroller"
 	"github.com/paulantezana/review/controller/monitoringcontroller"
-	"github.com/paulantezana/review/controller/reviewcontroller"
+    "github.com/paulantezana/review/controller/publiccontroller"
+    "github.com/paulantezana/review/controller/reviewcontroller"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -25,6 +26,10 @@ func PublicApi(e *echo.Echo) {
 	pb.POST("/user/forgot/change", controller.ForgotChange)
 	pb.POST("/library/paginate", controller.ForgotChange)
 	pb.POST("/library/by/id", controller.ForgotChange)
+
+	pb.GET("/subsidiaries",institutecontroller.GetSubsidiaries)
+	pb.POST("/programs",institutecontroller.GetPrograms)
+	pb.POST("/admission/exam/results",publiccontroller.GetAdmissionExamResults)
 }
 
 // ProtectedApi function protected urls
