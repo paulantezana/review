@@ -92,7 +92,8 @@ func ProtectedApi(e *echo.Echo) {
 	ar.DELETE("/semester/delete", institutecontroller.DeleteSemester)
 
 	// Student
-	ar.POST("/student/all", institutecontroller.GetStudentsPaginate)
+	ar.POST("/student/paginate", institutecontroller.GetStudentsPaginate)
+	ar.POST("/student/paginate/by/subsidiary", institutecontroller.GetStudentsPaginateBySubsidiary)
 	ar.POST("/student/paginate/program", institutecontroller.GetStudentsPaginateByProgram)
 	ar.POST("/student/history", institutecontroller.GetStudentHistory)
 	ar.POST("/student/programs", institutecontroller.GetStudentPrograms)

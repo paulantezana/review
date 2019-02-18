@@ -55,6 +55,56 @@ func GetStudentsPaginate(c echo.Context) error {
 	})
 }
 
+func GetStudentsPaginateBySubsidiary(c echo.Context) error {
+    // Get data request
+    request := utilities.Request{}
+    if err := c.Bind(&request); err != nil {
+        return err
+    }
+
+    // Get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Pagination calculate
+    offset := request.Validate()
+
+    // Execute instructions
+    var total uint
+    students := make([]models.Student, 0)
+
+    // Query Programs by subsidiary
+    counters := make([]utilities.Counter,0)
+    if err := DB.Raw("SELECT student_id as id FROM student_programs " +
+        "INNER JOIN programs ON student_programs.program_id = programs.id " +
+        "WHERE programs.subsidiary_id = ?",request.SubsidiaryID).Scan(&counters).Error; err != nil {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    IDS := make([]uint,0)
+    for _, count := range counters {
+        IDS = append(IDS, count.ID)
+    }
+
+    // Query in database
+    if err := DB.Where("lower(full_name) LIKE lower(?) AND id IN (?)", "%"+request.Search+"%",IDS).
+        Or("dni LIKE ? AND id IN (?)", "%"+request.Search+"%",IDS).
+        Order("id desc").
+        Offset(offset).Limit(request.Limit).Find(&students).
+        Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Return response
+    return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
+        Success:     true,
+        Data:        students,
+        Total:       total,
+        CurrentPage: request.CurrentPage,
+        Limit:       request.Limit,
+    })
+}
+
 type studentByProgramResponse struct {
 	ID            uint      `json:"id"`
 	DNI           string    `json:"dni"`
