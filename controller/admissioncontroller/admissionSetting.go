@@ -75,7 +75,7 @@ func CreateAdmissionSetting(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    admSetting.ID,
-		Message: fmt.Sprintf("El paymenta de estudios %d se registro exitosamente", admSetting.ID),
+		Message: fmt.Sprintf("La admisión con el id %d se registro exitosamente", admSetting.ID),
 	})
 }
 
@@ -102,7 +102,7 @@ func UpdateAdmissionSetting(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    admSetting.ID,
-		Message: fmt.Sprintf("Los datos del paymenta de estudios %d se actualizaron correctamente", admSetting.ID),
+		Message: fmt.Sprintf("La admisión con el id %d se actualizaron correctamente", admSetting.ID),
 	})
 }
 
@@ -126,6 +126,35 @@ func DeleteAdmissionSetting(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    admSetting.ID,
-		Message: fmt.Sprintf("The payment %d was successfully deleted", admSetting.ID),
+		Message: fmt.Sprintf("La admisión con el id %d se elimino correctamente", admSetting.ID),
+	})
+}
+
+func ShowInWebAdmissionSetting(c echo.Context) error {
+	// Get data request
+	admissionSetting := models.AdmissionSetting{}
+	if err := c.Bind(&admissionSetting); err != nil {
+		return err
+	}
+
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
+
+	//  all subsidiaries main = false
+	if err := DB.Exec("UPDATE admission_settings SET show_in_web = false").Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+	//  current subsidiary main = true
+	if err := DB.Model(admissionSetting).UpdateColumn("show_in_web", admissionSetting.ShowInWeb).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    admissionSetting.ID,
+		Message: fmt.Sprintf("La admisión del año %d se mostraran de forma predeterminada en la web", admissionSetting.Year),
 	})
 }

@@ -55,54 +55,92 @@ func GetStudentsPaginate(c echo.Context) error {
 	})
 }
 
+type customStudentSubsidiary struct {
+	ID        uint      `json:"id"`
+	DNI       string    `json:"dni"`
+	FullName  string    `json:"full_name"`
+	Phone     string    `json:"phone"`
+	Gender    string    `json:"gender"`
+	Address   string    `json:"address"`
+	BirthDate time.Time `json:"birth_date"`
+	Email     string    `json:"email"`
+	UserId    uint      `json:"user_id"`
+	Programs  []struct {
+		ID            uint   `json:"id" gorm:"primary_key"`
+		Name          string `json:"name" type:varchar(255); unique; not null"`
+		ByDefault     bool   `json:"by_default"`
+		YearAdmission uint   `json:"year_admission"`
+		YearPromotion uint   `json:"year_promotion"`
+	} `json:"programs"`
+}
+
 func GetStudentsPaginateBySubsidiary(c echo.Context) error {
-    // Get data request
-    request := utilities.Request{}
-    if err := c.Bind(&request); err != nil {
-        return err
-    }
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
 
-    // Get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// Get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Pagination calculate
-    offset := request.Validate()
+	// Pagination calculate
+	offset := request.Validate()
 
-    // Execute instructions
-    var total uint
-    students := make([]models.Student, 0)
+	// Query Programs by subsidiary
+	counters := make([]utilities.Counter, 0)
+	if err := DB.Raw("SELECT student_id as id FROM student_programs "+
+		"INNER JOIN programs ON student_programs.program_id = programs.id "+
+		"WHERE programs.subsidiary_id = ?", request.SubsidiaryID).Scan(&counters).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Query Programs by subsidiary
-    counters := make([]utilities.Counter,0)
-    if err := DB.Raw("SELECT student_id as id FROM student_programs " +
-        "INNER JOIN programs ON student_programs.program_id = programs.id " +
-        "WHERE programs.subsidiary_id = ?",request.SubsidiaryID).Scan(&counters).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Get only id
+	IDS := make([]uint, 0)
+	for _, count := range counters {
+		IDS = append(IDS, count.ID)
+	}
 
-    IDS := make([]uint,0)
-    for _, count := range counters {
-        IDS = append(IDS, count.ID)
-    }
+	// Query in database
+	students := make([]customStudentSubsidiary, 0)
+	if err := DB.Raw("SELECT students.id, students.dni, students.full_name, students.birth_date, students.gender, students.phone, users.email, users.id as user_id FROM students "+
+		"INNER JOIN users ON students.user_id = users.id "+
+		"WHERE lower(students.full_name) LIKE lower(?) AND students.id IN (?) OR "+
+		"students.dni LIKE ? AND students.id IN (?) "+
+		"ORDER BY students.id desc "+
+		"OFFSET ? LIMIT ?", "%"+request.Search+"%", IDS, "%"+request.Search+"%", IDS, offset, request.Limit).
+		Scan(&students).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Query in database
-    if err := DB.Where("lower(full_name) LIKE lower(?) AND id IN (?)", "%"+request.Search+"%",IDS).
-        Or("dni LIKE ? AND id IN (?)", "%"+request.Search+"%",IDS).
-        Order("id desc").
-        Offset(offset).Limit(request.Limit).Find(&students).
-        Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// total count
+	counter := utilities.Counter{}
+	if err := DB.Raw("SELECT count(*) as count FROM students "+
+		"INNER JOIN users ON students.user_id = users.id "+
+		"WHERE lower(students.full_name) LIKE lower(?) AND students.id IN (?) OR "+
+		"students.dni LIKE ? AND students.id IN (?)", "%"+request.Search+"%", IDS, "%"+request.Search+"%", IDS).
+		Scan(&counter).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Return response
-    return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
-        Success:     true,
-        Data:        students,
-        Total:       total,
-        CurrentPage: request.CurrentPage,
-        Limit:       request.Limit,
-    })
+	// Query programs by students
+	for k, student := range students {
+		if err := DB.Raw("SELECT programs.id, programs.name, student_programs.by_default, student_programs.year_admission, student_programs.year_promotion FROM student_programs "+
+			"INNER JOIN programs ON student_programs.program_id = programs.id "+
+			"WHERE student_programs.student_id = ?", student.ID).Scan(&students[k].Programs).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	}
+
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
+		Success:     true,
+		Data:        students,
+		Total:       counter.Count,
+		CurrentPage: request.CurrentPage,
+		Limit:       request.Limit,
+	})
 }
 
 type studentByProgramResponse struct {
@@ -186,6 +224,13 @@ func GetStudentByID(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
+	// Execute instructions
+	if err := db.First(&student.User, student.UserID).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+	student.User.Password = ""
+	student.User.Key = ""
+
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
@@ -252,7 +297,7 @@ func GetStudentSearch(c echo.Context) error {
 	})
 }
 
-type customStudentRequest struct {
+type customStudent struct {
 	Student   models.Student `json:"student"`
 	User      models.User    `json:"user"`
 	ProgramID uint           `json:"program_id"`
@@ -260,7 +305,7 @@ type customStudentRequest struct {
 
 func CreateStudent(c echo.Context) error {
 	// Get data request
-	request := customStudentRequest{}
+	request := customStudent{}
 	if err := c.Bind(&request); err != nil {
 		return err
 	}
@@ -278,18 +323,16 @@ func CreateStudent(c echo.Context) error {
 	pwd := fmt.Sprintf("%x", cc)
 
 	// Insert user in database
-	userAccount := models.User{
-		UserName: request.Student.DNI + "ST",
-		Password: pwd,
-		RoleID:   5,
-	}
-	if err := TX.Create(&userAccount).Error; err != nil {
+	request.User.UserName = request.Student.DNI + "ST"
+	request.User.Password = pwd
+	request.User.RoleID = 5
+	if err := TX.Create(&request.User).Error; err != nil {
 		TX.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Insert student in database
-	request.Student.UserID = userAccount.ID
+	request.Student.UserID = request.User.ID
 	request.Student.StudentStatusID = 1
 	if err := TX.Create(&request.Student).Error; err != nil {
 		TX.Rollback()
@@ -322,8 +365,8 @@ func CreateStudent(c echo.Context) error {
 
 func UpdateStudent(c echo.Context) error {
 	// Get data request
-	student := models.Student{}
-	if err := c.Bind(&student); err != nil {
+	request := customStudent{}
+	if err := c.Bind(&request); err != nil {
 		return err
 	}
 
@@ -332,7 +375,7 @@ func UpdateStudent(c echo.Context) error {
 	defer db.Close()
 
 	// Update student in database
-	rows := db.Model(&student).Update(student).RowsAffected
+	rows := db.Model(&request.Student).Update(request.Student).RowsAffected
 	if rows == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", "No se pudo actualizar")})
 	}
@@ -340,8 +383,8 @@ func UpdateStudent(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    student.ID,
-		Message: fmt.Sprintf("Los datos del estudiante %s se actualizaron correctamente", student.FullName),
+		Data:    request.Student.ID,
+		Message: fmt.Sprintf("Los datos del estudiante %s se actualizaron correctamente", request.Student.FullName),
 	})
 }
 

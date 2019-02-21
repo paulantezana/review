@@ -20,12 +20,11 @@ type Student struct {
 	Region      string    `json:"region"`
 	MarketStall string    `json:"market_stall"`
 	CivilStatus string    `json:"civil_status"`
-	IsWork      string    `json:"is_work"` // y yes || n = no
+	IsWork      string    `json:"is_work"` // si || no
 
 	UserID          uint `json:"user_id"`
 	StudentStatusID uint `json:"student_status_id"`
 
-	ProgramID uint `json:"program_id" gorm:"-"` // Only use in JSON
-
-	Reviews []Review `json:"reviews"`
+	Reviews []Review `json:"reviews, omitempty"`
+	User    User     `json:"user"`
 }

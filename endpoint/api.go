@@ -11,8 +11,8 @@ import (
 	"github.com/paulantezana/review/controller/librarycontroller"
 	"github.com/paulantezana/review/controller/messengercontroller"
 	"github.com/paulantezana/review/controller/monitoringcontroller"
-    "github.com/paulantezana/review/controller/publiccontroller"
-    "github.com/paulantezana/review/controller/reviewcontroller"
+	"github.com/paulantezana/review/controller/publiccontroller"
+	"github.com/paulantezana/review/controller/reviewcontroller"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -27,9 +27,9 @@ func PublicApi(e *echo.Echo) {
 	pb.POST("/library/paginate", controller.ForgotChange)
 	pb.POST("/library/by/id", controller.ForgotChange)
 
-	pb.GET("/subsidiaries",institutecontroller.GetSubsidiaries)
-	pb.POST("/programs",institutecontroller.GetPrograms)
-	pb.POST("/admission/exam/results",publiccontroller.GetAdmissionExamResults)
+	pb.GET("/subsidiaries", institutecontroller.GetSubsidiaries)
+	pb.POST("/programs", institutecontroller.GetPrograms)
+	pb.POST("/admission/exam/results", publiccontroller.GetAdmissionExamResults)
 }
 
 // ProtectedApi function protected urls
@@ -43,7 +43,7 @@ func ProtectedApi(e *echo.Echo) {
 	}
 	ar.Use(middleware.JWTWithConfig(con))
 
-	// Check Login
+	// Check Loginreport
 	ar.POST("/login/check", controller.LoginCheck)
 
 	// Global settings
@@ -251,6 +251,7 @@ func ProtectedApi(e *echo.Echo) {
 	// Admission setting
 	ar.POST("/admission/setting/all", admissioncontroller.GetAdmissionSettings)
 	ar.POST("/admission/setting/by/id", admissioncontroller.GetAdmissionSettingByID)
+	ar.PUT("/admission/setting/default/in/web", admissioncontroller.ShowInWebAdmissionSetting)
 	ar.POST("/admission/setting/create", admissioncontroller.CreateAdmissionSetting)
 	ar.PUT("/admission/setting/update", admissioncontroller.UpdateAdmissionSetting)
 	ar.DELETE("/admission/setting/delete", admissioncontroller.DeleteAdmissionSetting)

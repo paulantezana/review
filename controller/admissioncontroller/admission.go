@@ -719,6 +719,18 @@ func ExportAdmissionByIds(c echo.Context) error {
 	return c.File(file)
 }
 
+type reportAdmissionGeneralResponse struct {
+	ByProgram []struct {
+		Count   uint   `json:"count"`
+		Program string `json:"program"`
+	} `json:"by_program"`
+	ByAdmissionDate []struct {
+		AdmissionDate time.Time `json:"admission_date"`
+		Count         uint      `json:"count"`
+		Program       string    `json:"program"`
+	} `json:"by_admission_date"`
+}
+
 func ReportAdmissionGeneral(c echo.Context) error {
 	// Get data request
 	request := models.Admission{}
@@ -730,102 +742,116 @@ func ReportAdmissionGeneral(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
-	reports := make([]listADF, 0)
+	// data
+	scanData := reportAdmissionGeneralResponse{}
+
+	// Query data by program
 	if err := DB.Table("admissions").
-		Select("admissions.id, admissions.observation, admissions.year, admissions.admission_date, admissions.exonerated, admissions.state, "+
-			"students.full_name, students.dni, programs.name as program ").
-		Joins("INNER JOIN students ON admissions.student_id = students.id").
+		Select("count(*) as count, programs.name as program ").
 		Joins("INNER JOIN programs ON admissions.program_id = programs.id").
-		Where("admissions.admission_setting_id = ?", request.AdmissionSettingID).
-		Scan(&reports).Error; err != nil {
+		Where("admissions.admission_setting_id = ? AND admissions.state = true", request.AdmissionSettingID).
+		Group("admissions.program_id, programs.name").
+		Scan(&scanData.ByProgram).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+	// Query data by day
+	// Reference:
+	// http://ben.goodacre.name/tech/Group_by_day,_week_or_month_(PostgreSQL)
+	if err := DB.Raw("SELECT date_trunc('day',admissions.admission_date) as admission_date, count(*) as count, programs.name as program FROM admissions "+
+		"INNER JOIN programs ON admissions.program_id = programs.id "+
+		"WHERE admissions.admission_date > now() - interval '3 months' AND  admissions.admission_setting_id = ? AND admissions.state = true "+
+		"GROUP BY 1, programs.name "+
+		"ORDER BY 1", request.AdmissionSettingID).
+		Scan(&scanData.ByAdmissionDate).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    reports,
+		Data:    scanData,
 	})
 }
 
 func ExportAdmissionExamResults(c echo.Context) error {
-    // Get data request
-    request := models.AdmissionSetting{}
-    if err := c.Bind(&request); err != nil {
-        return err
-    }
+	// Get data request
+	request := models.AdmissionSetting{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Details admission settings
-    if err := DB.First(&request,models.AdmissionSetting{ID: request.ID}).Error; err != nil {
-        return err
-    }
+	// Details admission settings
+	if err := DB.First(&request, models.AdmissionSetting{ID: request.ID}).Error; err != nil {
+		return err
+	}
 
-    // Query programs
-    programs := make([]models.Program,0)
-    if err := DB.Raw("SELECT * FROM programs WHERE subsidiary_id = ?", request.SubsidiaryID).Scan(&programs).Error; err != nil {
-        return err
-    }
+	// Query programs
+	programs := make([]models.Program, 0)
+	if err := DB.Raw("SELECT * FROM programs WHERE subsidiary_id = ?", request.SubsidiaryID).Scan(&programs).Error; err != nil {
+		return err
+	}
 
-    // CREATE EXCEL FILE
-    excel := excelize.NewFile()
+	// CREATE EXCEL FILE
+	excel := excelize.NewFile()
 
-    // Create sheets
-    for _, program := range programs {
-        // Create sheet name
-        sheetName := program.Name
+	// Create sheets
+	for _, program := range programs {
+		// Create sheet name
+		sheetName := program.Name
 
-        // Create new sheet
-        excel.NewSheet(sheetName)
+		// Create new sheet
+		excel.NewSheet(sheetName)
 
-        // Query all admission by admission setting
-        admissions := make([]models.Admission, 0)
-        if err := DB.Where("program_id = ? AND admission_setting_id = ? AND state = true", program.ID, request.ID).Order("exam_note desc").Find(&admissions).Error; err != nil {
-           return err
-        }
+		// Query all admission by admission setting
+		admissions := make([]models.Admission, 0)
+		if err := DB.Where("program_id = ? AND admission_setting_id = ? AND state = true", program.ID, request.ID).Order("exam_note desc").Find(&admissions).Error; err != nil {
+			return err
+		}
 
-        // Set header values
-        excel.SetCellValue(sheetName, "A1", "ID")
-        excel.SetCellValue(sheetName, "B1", "DNI")
-        excel.SetCellValue(sheetName, "C1", "Apellidos y Nombres")
-        excel.SetCellValue(sheetName, "D1", "Nota")
-        excel.SetCellValue(sheetName, "E1", "Observación")
+		// Set header values
+		excel.SetCellValue(sheetName, "A1", "ID")
+		excel.SetCellValue(sheetName, "B1", "DNI")
+		excel.SetCellValue(sheetName, "C1", "Apellidos y Nombres")
+		excel.SetCellValue(sheetName, "D1", "Nota")
+		excel.SetCellValue(sheetName, "E1", "Observación")
 
-        // Format style sheets
-        excel.SetColWidth(sheetName,"B","B",10)
-        excel.SetColWidth(sheetName,"C","C",35)
-        excel.SetColWidth(sheetName,"D","D",8)
-        excel.SetColWidth(sheetName,"E","E",15)
+		// Format style sheets
+		excel.SetColWidth(sheetName, "B", "B", 10)
+		excel.SetColWidth(sheetName, "C", "C", 35)
+		excel.SetColWidth(sheetName, "D", "D", 8)
+		excel.SetColWidth(sheetName, "E", "E", 15)
 
-        for key, admission := range admissions {
-            // Query get student all data
-            student := models.Student{}
-            DB.First(&student, models.Student{ID: admission.StudentID})
+		for key, admission := range admissions {
+			// Query get student all data
+			student := models.Student{}
+			DB.First(&student, models.Student{ID: admission.StudentID})
 
-            // Fills data
-            excel.SetCellValue(sheetName, fmt.Sprintf("A%d", key+2), admission.ID)
-            excel.SetCellValue(sheetName, fmt.Sprintf("B%d", key+2), student.DNI)
-            excel.SetCellValue(sheetName, fmt.Sprintf("C%d", key+2), student.FullName)
-            excel.SetCellValue(sheetName, fmt.Sprintf("D%d", key+2), admission.ExamNote)
-            if uint(key) < request.VacantByProgram {
-                excel.SetCellValue(sheetName, fmt.Sprintf("E%d", key+2), "ingresante")
-            }
-        }
-    }
+			// Fills data
+			excel.SetCellValue(sheetName, fmt.Sprintf("A%d", key+2), admission.ID)
+			excel.SetCellValue(sheetName, fmt.Sprintf("B%d", key+2), student.DNI)
+			excel.SetCellValue(sheetName, fmt.Sprintf("C%d", key+2), student.FullName)
+			excel.SetCellValue(sheetName, fmt.Sprintf("D%d", key+2), admission.ExamNote)
+			if uint(key) < request.VacantByProgram {
+				excel.SetCellValue(sheetName, fmt.Sprintf("E%d", key+2), "ingresante")
+			}
+		}
+	}
 
-    // Default sheet active
-    excel.SetActiveSheet(1)
+	// Default sheet active
+	excel.SetActiveSheet(1)
 
-    // save file
-    err := excel.SaveAs("temp/admission.xlsx")
-    if err != nil {
-        fmt.Println(err)
-    }
+	// save file
+	err := excel.SaveAs("temp/admission.xlsx")
+	if err != nil {
+		fmt.Println(err)
+	}
 
-    // Return string directory
-    return c.File("temp/admission.xlsx")
+	// Return string directory
+	return c.File("temp/admission.xlsx")
 }
 
 func exportExcel(admissions []models.Admission) string {
