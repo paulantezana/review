@@ -316,7 +316,7 @@ func DeleteTeacher(c echo.Context) error {
 	})
 }
 
-func GetTempUploadTeacher(c echo.Context) error {
+func GetTempUploadTeacherBySubsidiary(c echo.Context) error {
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
@@ -327,43 +327,43 @@ func GetTempUploadTeacher(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
-	// Execute instructions
-	programs := make([]models.Program, 0)
-	if err := DB.Find(&programs, models.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
+    // Execute instructions
+    programs := make([]models.Program, 0)
+    if err := DB.Find(&programs, models.Program{SubsidiaryID: request.SubsidiaryID}).Order("id desc").Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
 
-	// Get template excel
-	fileDir := "templates/templateTeacherSA.xlsx"
-	excel, err := excelize.OpenFile(fileDir)
-	if err != nil {
-		fmt.Println(err)
-	}
-	excel.DeleteSheet("ProgramIDS") // Delete sheet
-	excel.NewSheet("ProgramIDS")    // Create new sheet
+    // Get excel file
+    fileDir := "templates/templateTeacherSubsidiary.xlsx"
+    excel, err := excelize.OpenFile(fileDir)
+    if err != nil {
+        fmt.Println(err)
+    }
+    excel.DeleteSheet("ProgramIDS") // Delete sheet
+    excel.NewSheet("ProgramIDS")    // Create new sheet
 
-	excel.SetCellValue("ProgramIDS", "A1", "ID")
-	excel.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
+    excel.SetCellValue("ProgramIDS", "A1", "ID")
+    excel.SetCellValue("ProgramIDS", "B1", "Programa De Estudios")
 
-	// Set styles
-	excel.SetColWidth("ProgramIDS", "B", "B", 35)
-	excel.SetCellStyle("ProgramIDS", "A1", "B1", 2)
+    // Set styles
+    excel.SetColWidth("ProgramIDS", "B", "B", 35)
+    excel.SetCellStyle("ProgramIDS", "A1", "B1", 2)
 
-	// Set data
-	for i := 0; i < len(programs); i++ {
-		excel.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
-		excel.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)
-	}
-	excel.SetActiveSheet(1)
+    // Set data
+    for i := 0; i < len(programs); i++ {
+        excel.SetCellValue("ProgramIDS", fmt.Sprintf("A%d", i+2), programs[i].ID)
+        excel.SetCellValue("ProgramIDS", fmt.Sprintf("B%d", i+2), programs[i].Name)
+    }
+    excel.SetActiveSheet(1)
 
-	// Save excel file by the given path.
-	err = excel.SaveAs(fileDir)
-	if err != nil {
-		fmt.Println(err)
-	}
+    // Save excel file by the given path.
+    err = excel.SaveAs(fileDir)
+    if err != nil {
+        fmt.Println(err)
+    }
 
-	// Return file excel
-	return c.File(fileDir)
+    // Return file excel
+    return c.File(fileDir)
 }
 
 func GetTempUploadTeacherByProgram(c echo.Context) error {
@@ -371,12 +371,8 @@ func GetTempUploadTeacherByProgram(c echo.Context) error {
 	return c.File("templates/templateTeacher.xlsx")
 }
 
-func SetTempUploadTeacher(c echo.Context) error {
-	// Get user token authenticate
-	//user := c.Get("user").(*jwt.Token)
-	//claims := user.Claims.(*utilities.Claim)
-	//currentUser := claims.User
-
+// Set SetTempUploadTeacherBySubsidiary upload teacher
+func SetTempUploadTeacherBySubsidiary(c echo.Context) error {
 	// Source
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -409,28 +405,29 @@ func SetTempUploadTeacher(c echo.Context) error {
 		return err
 	}
 
+    // GET CONNECTION DATABASE
+    DB := config.GetConnection()
+    defer DB.Close()
+
 	// Prepare
-	teachers := make([]models.Teacher, 0)
-	ignoreCols := 1
+    ignoreCols := 5
+    counter := 0
+    TX := DB.Begin()
 
 	// Get all the rows in the Sheet1.
-	rows := excel.GetRows("teacher")
+	rows := excel.GetRows("Teacher")
 	for k, row := range rows {
+
 		if k >= ignoreCols {
 
-			// Validate required fields
-			if row[0] == "" {
-				break
-			}
+            // Validate required fields
+            if row[0] == "" || row[1] == "" {
+                break
+            }
 
-			// program id
-			var currentProgram uint
-			//currentProgram = currentUser.DefaultProgramID
-
-			if currentProgram == 0 {
-				u, _ := strconv.ParseUint(strings.TrimSpace(row[12]), 0, 32)
-				currentProgram = uint(u)
-			}
+            // program id
+            u, _ := strconv.ParseUint(strings.TrimSpace(row[0]), 0, 32)
+            currentProgram := uint(u)
 
 			// Create model teacherPrograms
 			teacherPrograms := make([]models.TeacherProgram, 0)
@@ -439,65 +436,79 @@ func SetTempUploadTeacher(c echo.Context) error {
 				Type:      "career",
 			})
 
-			// Create AND Append model Teacher
-			teachers = append(teachers, models.Teacher{
-				DNI:             strings.TrimSpace(row[0]),
-				LastName:        strings.TrimSpace(row[1]),
-				FirstName:       strings.TrimSpace(row[2]),
-				Gender:          strings.TrimSpace(row[4]),
-				Address:         strings.TrimSpace(row[5]),
-				Phone:           strings.TrimSpace(row[6]),
-				WorkConditions:  strings.TrimSpace(row[7]),
-				EducationLevel:  strings.TrimSpace(row[8]),
-				Specialty:       strings.TrimSpace(row[11]),
-				TeacherPrograms: teacherPrograms,
-			})
+            // Create model teacher
+            teacher := models.Teacher{
+                DNI:             strings.TrimSpace(row[1]),
+                LastName:        strings.TrimSpace(row[2]),
+                FirstName:       strings.TrimSpace(row[3]),
+                Phone:           strings.TrimSpace(row[4]),
+                Gender:          strings.TrimSpace(row[6]),
+
+                Address:         strings.TrimSpace(row[8]),
+                WorkConditions:  strings.TrimSpace(row[9]),
+                EducationLevel:  strings.TrimSpace(row[10]),
+                Specialty:       strings.TrimSpace(row[13]),
+            }
+
+            // has password new user account
+            cc := sha256.Sum256([]byte(teacher.DNI + "TA"))
+            pwd := fmt.Sprintf("%x", cc)
+
+            // New Account
+            userAccount := models.User{
+                UserName: teacher.DNI + "TA",
+                Email:    strings.TrimSpace(row[4]),
+                Password: pwd,
+                RoleID:   5,
+            }
+
+            // Insert user in database
+            if err := TX.Create(&userAccount).Error; err != nil {
+                TX.Rollback()
+                return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+            }
+            teacher.UserID = userAccount.ID // Set new user id
+
+            // Create teacher
+            if err := TX.Create(&teacher).Error; err != nil {
+                TX.Rollback()
+                return c.JSON(http.StatusOK, utilities.Response{
+                    Success: false,
+                    Message: fmt.Sprintf("Ocurrió un error al insertar el profesor %s con "+
+                        "DNI: %s es posible que este profesor ya este en la base de datos o los datos son incorrectos, "+
+                        "Error: %s, no se realizo ninguna cambio en la base de datos", teacher.FirstName, teacher.DNI, err),
+                })
+            }
+
+            // Relation student
+            teacherProgram := models.TeacherProgram{
+                ProgramID: currentProgram,
+                TeacherID: teacher.ID,
+            }
+            if err := TX.Create(&teacherProgram).Error; err != nil {
+                TX.Rollback()
+                return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+            }
+
+            // Counter total operations success
+            counter++
 		}
 	}
-
-	// get connection
-	db := config.GetConnection()
-	defer db.Close()
-
-	// Insert teachers in database
-	tr := db.Begin()
-	for _, teacher := range teachers {
-		// has password new user account
-		cc := sha256.Sum256([]byte(teacher.DNI + "TA"))
-		pwd := fmt.Sprintf("%x", cc)
-
-		// New Account
-		userAccount := models.User{
-			UserName: teacher.DNI + "TA",
-			Password: pwd,
-			RoleID:   4,
-		}
-
-		// Insert user in database
-		if err := tr.Create(&userAccount).Error; err != nil {
-			tr.Rollback()
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-		}
-
-		// Insert teacher in database
-		teacher.UserID = userAccount.ID
-		if err := tr.Create(&teacher).Error; err != nil {
-			tr.Rollback()
-			return c.JSON(http.StatusOK, utilities.Response{
-				Success: false,
-				Message: fmt.Sprintf("Ocurrió un error al insertar el profesor %s con "+
-					"DNI: %s es posible que este profesor ya este en la base de datos o los datos son incorrectos, "+
-					"Error: %s, no se realizo ninguna cambio en la base de datos", teacher.FirstName, teacher.DNI, err),
-			})
-		}
-	}
-	tr.Commit()
+    TX.Commit()
 
 	// Response success
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Message: fmt.Sprintf("Se guardo %d registros den la base de datos", len(teachers)),
+		Message: fmt.Sprintf("Se guardo %d registros den la base de datos", counter),
 	})
+}
+
+func SetTempUploadTeacherByProgram(c echo.Context) error {
+    // Response success
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        //Message: fmt.Sprintf("Se guardo %d registros den la base de datos",'s'),
+    })
 }
 
 func ExportAllTeachers(c echo.Context) error {

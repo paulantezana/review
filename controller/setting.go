@@ -1,18 +1,16 @@
 package controller
 
 import (
-	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"io"
-	"net/http"
-	"os"
-	"path"
-	"time"
-
-	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/utilities"
+    "fmt"
+    "github.com/dgrijalva/jwt-go"
+    "github.com/labstack/echo"
+    "github.com/paulantezana/review/config"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
+    "io"
+    "net/http"
+    "os"
+    "path"
 )
 
 // GlobalSettings struct
@@ -61,19 +59,10 @@ func GetGlobalSettings(c echo.Context) error {
 	})
 }
 
-type studentSettings struct {
-	ID        uint      `json:"id"`
-	DNI       string    `json:"dni"`
-	FullName  string    `json:"full_name"`
-	Phone     string    `json:"phone"`
-	Gender    string    `json:"gender"`
-	BirthDate time.Time `json:"birth_date"`
-}
-
 type studentSettingsResponse struct {
 	Setting models.Setting  `json:"setting"`
 	User    models.User     `json:"user"`
-	Student studentSettings `json:"student"`
+	Student models.Student `json:"student"`
 	Message string          `json:"message"`
 	Success bool            `json:"success"`
 }
@@ -108,20 +97,12 @@ func GetStudentSettings(c echo.Context) error {
 	if err := db.First(&student, models.Student{UserID: user.ID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
-	studentSetting := studentSettings{
-		ID:        student.ID,
-		FullName:  student.FullName,
-		Gender:    student.Gender,
-		DNI:       student.DNI,
-		Phone:     student.Phone,
-		BirthDate: student.BirthDate,
-	}
 
 	// Set object response
 	return c.JSON(http.StatusOK, studentSettingsResponse{
 		User:    user,
 		Setting: setting,
-		Student: studentSetting,
+		Student: student,
 		Success: true,
 		Message: "OK",
 	})
