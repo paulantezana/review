@@ -202,12 +202,12 @@ func Migrate() {
 	// Validate
 	if usr.ID == 0 {
 		// hash password
-		cc := sha256.Sum256([]byte("sa"))
+		cc := sha256.Sum256([]byte("admin"))
 		pwd := fmt.Sprintf("%x", cc)
 
 		// create model
 		user := models.User{
-			UserName: "sa",
+			UserName: "admin",
 			Password: pwd,
 			Email:    "yoel.antezana@gmail.com",
 			RoleID:   1,

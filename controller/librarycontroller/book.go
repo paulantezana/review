@@ -296,7 +296,7 @@ func CreateBook(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    book.ID,
-		Message: fmt.Sprintf("El curso %s se registro correctamente", book.Name),
+		Message: fmt.Sprintf("El libro %s se registro correctamente", book.Name),
 	})
 }
 
@@ -323,7 +323,7 @@ func UpdateBook(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    book.ID,
-		Message: fmt.Sprintf("Los datos del curso %s se actualizaron correctamente", book.Name),
+		Message: fmt.Sprintf("Los datos del libro %s se actualizaron correctamente", book.Name),
 	})
 }
 
@@ -347,7 +347,7 @@ func DeleteBook(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    book.ID,
-		Message: fmt.Sprintf("El curso %s se elimino correctamente", book.Name),
+		Message: fmt.Sprintf("El libro %s se elimino correctamente", book.Name),
 	})
 }
 

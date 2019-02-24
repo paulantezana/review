@@ -108,7 +108,7 @@ func CreateCategory(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    category.ID,
-		Message: fmt.Sprintf("El curso %s se registro correctamente", category.Name),
+		Message: fmt.Sprintf("La categoria %s se registro correctamente", category.Name),
 	})
 }
 
@@ -135,7 +135,7 @@ func UpdateCategory(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    category.ID,
-		Message: fmt.Sprintf("Los datos del curso %s se actualizaron correctamente", category.Name),
+		Message: fmt.Sprintf("Los datos de la categoria %s se actualizaron correctamente", category.Name),
 	})
 }
 
@@ -159,6 +159,6 @@ func DeleteCategory(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    category.ID,
-		Message: fmt.Sprintf("El curso %s se elimino correctamente", category.Name),
+		Message: fmt.Sprintf("La categoria con el id %d se elimino correctamente", category.ID),
 	})
 }
