@@ -199,6 +199,11 @@ type updateStudentAdmissionRequest struct {
 }
 
 func UpdateStudentAdmission(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
 	// Get data request
 	request := updateStudentAdmissionRequest{}
 	if err := c.Bind(&request); err != nil {
@@ -230,11 +235,21 @@ func UpdateStudentAdmission(c echo.Context) error {
 
 		// Insert student in database
 		request.Student.UserID = request.User.ID
-		request.Student.StudentStatusID = 2
+		request.Student.StudentStatusID = 1
 		if err := TX.Create(&request.Student).Error; err != nil {
 			TX.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
+
+        // Insert student history
+        if err := createStudentHistory(
+            request.Student.ID,
+            currentUser.ID,
+            "Sus datos fueron creados desde el proceso de admisión",
+            1,
+        ); err != nil {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+        }
 	} else {
 		// Update data
 		rows := TX.Model(&request.Student).Update(request.Student).RowsAffected
@@ -248,6 +263,16 @@ func UpdateStudentAdmission(c echo.Context) error {
 
 		// Query data user
 		DB.First(&request.User, models.User{ID: request.User.ID})
+
+        // Insert student history
+        if err := createStudentHistory(
+            request.Student.ID,
+            currentUser.ID,
+            "Sus datos fueron modificados desde el proceso de admisión",
+            2,
+        ); err != nil {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+        }
 	}
 
 	// Commit transaction
@@ -319,17 +344,15 @@ func CreateAdmission(c echo.Context) error {
 	}
 
 	// Insert student history
-	studentHistory := models.StudentHistory{
-		StudentID:   admission.StudentID,
-		UserID:      currentUser.ID,
-		Description: fmt.Sprintf("Admision"),
-		Date:        time.Now(),
-		Type:        1,
-	}
-	if err := TX.Create(&studentHistory).Error; err != nil {
-		TX.Rollback()
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
+    // Insert new state student
+    if err := createStudentHistory(
+        admission.StudentID,
+        currentUser.ID,
+        fmt.Sprintf("Inicio un nuevo proceso de admisión al programa de estudios %d",admission.ProgramID),
+        1,
+    ); err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
 
 	// Commit transaction
 	TX.Commit()
@@ -401,17 +424,14 @@ func CancelAdmission(c echo.Context) error {
 	TX.First(&admission)
 
 	// Insert new state student
-	studentHistory := models.StudentHistory{
-		Description: "Admisión anulada",
-		StudentID:   admission.StudentID,
-		UserID:      currentUser.ID,
-		Date:        time.Now(),
-		Type:        2,
-	}
-	if err := TX.Create(&studentHistory).Error; err != nil {
-		TX.Rollback()
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
+    if err := createStudentHistory(
+        admission.StudentID,
+        currentUser.ID,
+        "El proceso se admisión fue anulada",
+        2,
+    ); err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
 
 	// Commit transaction
 	TX.Commit()
@@ -929,4 +949,23 @@ func exportExcel(admissions []models.Admission) string {
 
 	// Return string directory
 	return "temp/admission.xlsx"
+}
+
+func createStudentHistory(studentID uint, userID uint, message string, action uint)  error {
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Insert student history
+    studentHistory := models.StudentHistory{
+        StudentID:   studentID,
+        UserID:      userID,
+        Description: message,
+        Date:        time.Now(),
+        Type:        action,
+    }
+    if err := DB.Create(&studentHistory).Error; err != nil {
+        return  err
+    }
+    return  nil
 }

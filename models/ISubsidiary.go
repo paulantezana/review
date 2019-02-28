@@ -8,8 +8,6 @@ type Subsidiary struct {
 	Province            string `json:"province"`
 	District            string `json:"district"`
 	TownCenter          string `json:"town_center"`
-	AddressSubsidiary   string `json:"address_subsidiary"`
-	RegistrationAddress string `json:"registration_address"`
 	Address             string `json:"address"`
 	Main                bool   `json:"main"`
 	Phone               string `json:"phone"`
