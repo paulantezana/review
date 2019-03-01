@@ -1,16 +1,16 @@
 package controller
 
 import (
-    "fmt"
-    "github.com/dgrijalva/jwt-go"
-    "github.com/labstack/echo"
-    "github.com/paulantezana/review/config"
-    "github.com/paulantezana/review/models"
-    "github.com/paulantezana/review/utilities"
-    "io"
-    "net/http"
-    "os"
-    "path"
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/utilities"
+	"io"
+	"net/http"
+	"os"
+	"path"
 )
 
 // GlobalSettings struct
@@ -60,11 +60,11 @@ func GetGlobalSettings(c echo.Context) error {
 }
 
 type studentSettingsResponse struct {
-	Setting models.Setting  `json:"setting"`
-	User    models.User     `json:"user"`
+	Setting models.Setting `json:"setting"`
+	User    models.User    `json:"user"`
 	Student models.Student `json:"student"`
-	Message string          `json:"message"`
-	Success bool            `json:"success"`
+	Message string         `json:"message"`
+	Success bool           `json:"success"`
 }
 
 // GetGlobalSettings function

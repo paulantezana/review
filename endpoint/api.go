@@ -43,8 +43,13 @@ func ProtectedApi(e *echo.Echo) {
 	}
 	ar.Use(middleware.JWTWithConfig(con))
 
+	// System
+	ar.POST("/system/database/backup",controller.BackupDB)
+	ar.POST("/system/database/backup/list",controller.BackupDBList)
+
 	// Check Loginreport
-	ar.POST("/login/check", controller.LoginCheck)
+	ar.POST("/login/user/check", controller.LoginUserCheck)
+	ar.POST("/login/password/check", controller.LoginPasswordCheck)
 
 	// Global settings
 	ar.POST("/setting/global", controller.GetGlobalSettings)

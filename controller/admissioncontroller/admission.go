@@ -199,10 +199,10 @@ type updateStudentAdmissionRequest struct {
 }
 
 func UpdateStudentAdmission(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
 	// Get data request
 	request := updateStudentAdmissionRequest{}
@@ -241,15 +241,15 @@ func UpdateStudentAdmission(c echo.Context) error {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
-        // Insert student history
-        if err := createStudentHistory(
-            request.Student.ID,
-            currentUser.ID,
-            "Sus datos fueron creados desde el proceso de admisión",
-            1,
-        ); err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
+		// Insert student history
+		if err := createStudentHistory(
+			request.Student.ID,
+			currentUser.ID,
+			"Sus datos fueron creados desde el proceso de admisión",
+			1,
+		); err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
 	} else {
 		// Update data
 		rows := TX.Model(&request.Student).Update(request.Student).RowsAffected
@@ -264,15 +264,15 @@ func UpdateStudentAdmission(c echo.Context) error {
 		// Query data user
 		DB.First(&request.User, models.User{ID: request.User.ID})
 
-        // Insert student history
-        if err := createStudentHistory(
-            request.Student.ID,
-            currentUser.ID,
-            "Sus datos fueron modificados desde el proceso de admisión",
-            2,
-        ); err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
+		// Insert student history
+		if err := createStudentHistory(
+			request.Student.ID,
+			currentUser.ID,
+			"Sus datos fueron modificados desde el proceso de admisión",
+			2,
+		); err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
 	}
 
 	// Commit transaction
@@ -344,15 +344,15 @@ func CreateAdmission(c echo.Context) error {
 	}
 
 	// Insert student history
-    // Insert new state student
-    if err := createStudentHistory(
-        admission.StudentID,
-        currentUser.ID,
-        fmt.Sprintf("Inicio un nuevo proceso de admisión al programa de estudios %d",admission.ProgramID),
-        1,
-    ); err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Insert new state student
+	if err := createStudentHistory(
+		admission.StudentID,
+		currentUser.ID,
+		fmt.Sprintf("Inicio un nuevo proceso de admisión al programa de estudios %d", admission.ProgramID),
+		1,
+	); err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Commit transaction
 	TX.Commit()
@@ -424,14 +424,14 @@ func CancelAdmission(c echo.Context) error {
 	TX.First(&admission)
 
 	// Insert new state student
-    if err := createStudentHistory(
-        admission.StudentID,
-        currentUser.ID,
-        "El proceso se admisión fue anulada",
-        2,
-    ); err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	if err := createStudentHistory(
+		admission.StudentID,
+		currentUser.ID,
+		"El proceso se admisión fue anulada",
+		2,
+	); err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Commit transaction
 	TX.Commit()
@@ -951,21 +951,21 @@ func exportExcel(admissions []models.Admission) string {
 	return "temp/admission.xlsx"
 }
 
-func createStudentHistory(studentID uint, userID uint, message string, action uint)  error {
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+func createStudentHistory(studentID uint, userID uint, message string, action uint) error {
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Insert student history
-    studentHistory := models.StudentHistory{
-        StudentID:   studentID,
-        UserID:      userID,
-        Description: message,
-        Date:        time.Now(),
-        Type:        action,
-    }
-    if err := DB.Create(&studentHistory).Error; err != nil {
-        return  err
-    }
-    return  nil
+	// Insert student history
+	studentHistory := models.StudentHistory{
+		StudentID:   studentID,
+		UserID:      userID,
+		Description: message,
+		Date:        time.Now(),
+		Type:        action,
+	}
+	if err := DB.Create(&studentHistory).Error; err != nil {
+		return err
+	}
+	return nil
 }

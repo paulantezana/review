@@ -14,6 +14,5 @@ type Message struct {
 	NextReminderDate time.Time `json:"next_reminder_date"`
 
 	CreatorID           uint `json:"creator_id"`
-	ParentID            uint `json:"parent_id"`
 	ReminderFrequencyID uint `json:"reminder_frequency_id"`
 }

@@ -214,7 +214,7 @@ func LoginStudent(c echo.Context) error {
 }
 
 // Login login check
-func LoginCheck(c echo.Context) error {
+func LoginUserCheck(c echo.Context) error {
 	// Get data request
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
@@ -244,9 +244,49 @@ func LoginCheck(c echo.Context) error {
 	// Login success
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Message: fmt.Sprintf("Bienvenido al sistema %s", user.UserName),
+		Message: fmt.Sprintf("Verificación exitosa %s", user.UserName),
 		Data:    user,
 	})
+}
+
+// Login password login check
+func LoginPasswordCheck(c echo.Context) error {
+    // Get data request
+    user := models.User{}
+    if err := c.Bind(&user); err != nil {
+        return c.JSON(http.StatusBadRequest, utilities.Response{
+            Message: "La estructura no es válida",
+        })
+    }
+
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Hash password
+    cc := sha256.Sum256([]byte(user.Password))
+    pwd := fmt.Sprintf("%x", cc)
+
+    // Hash password
+    if DB.Where("id = ? and password = ?", user.ID, pwd).First(&user).RecordNotFound() {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Contraseña incorrecta")})
+    }
+
+    // Check state user
+    if !user.State {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("No tiene permisos para realizar ningún tipo de acción.")})
+    }
+
+    // Prepare response data
+    user.Password = ""
+    user.Key = ""
+
+    // Login success
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        Message: fmt.Sprintf("La verificación de su contraseña fue exitosamente. usuario: %s", user.UserName),
+        Data:    user.ID,
+    })
 }
 
 // ForgotSearch function forgot user search
