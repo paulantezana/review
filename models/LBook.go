@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type BStarts struct {
 	UserName string `json:"user_name"`
 	Stars    uint8  `json:"stars"`
@@ -16,6 +18,8 @@ type BookDetail struct {
 // Book struct
 type Book struct {
 	ID               uint       `json:"id" gorm:"primary_key"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
 	Name             string     `json:"name"`
 	ShortDescription string     `json:"short_description"`
 	LongDescription  string     `json:"long_description"`

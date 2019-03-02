@@ -1,9 +1,13 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Admission struct {
 	ID            uint      `json:"id" gorm:"primary_key"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 	Observation   string    `json:"observation"`
 	Exonerated    bool      `json:"exonerated"`
 	ExamNote      float32   `json:"exam_note"`

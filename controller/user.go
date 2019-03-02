@@ -251,42 +251,42 @@ func LoginUserCheck(c echo.Context) error {
 
 // Login password login check
 func LoginPasswordCheck(c echo.Context) error {
-    // Get data request
-    user := models.User{}
-    if err := c.Bind(&user); err != nil {
-        return c.JSON(http.StatusBadRequest, utilities.Response{
-            Message: "La estructura no es válida",
-        })
-    }
+	// Get data request
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return c.JSON(http.StatusBadRequest, utilities.Response{
+			Message: "La estructura no es válida",
+		})
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Hash password
-    cc := sha256.Sum256([]byte(user.Password))
-    pwd := fmt.Sprintf("%x", cc)
+	// Hash password
+	cc := sha256.Sum256([]byte(user.Password))
+	pwd := fmt.Sprintf("%x", cc)
 
-    // Hash password
-    if DB.Where("id = ? and password = ?", user.ID, pwd).First(&user).RecordNotFound() {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Contraseña incorrecta")})
-    }
+	// Hash password
+	if DB.Where("id = ? and password = ?", user.ID, pwd).First(&user).RecordNotFound() {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Contraseña incorrecta")})
+	}
 
-    // Check state user
-    if !user.State {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("No tiene permisos para realizar ningún tipo de acción.")})
-    }
+	// Check state user
+	if !user.State {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("No tiene permisos para realizar ningún tipo de acción.")})
+	}
 
-    // Prepare response data
-    user.Password = ""
-    user.Key = ""
+	// Prepare response data
+	user.Password = ""
+	user.Key = ""
 
-    // Login success
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Message: fmt.Sprintf("La verificación de su contraseña fue exitosamente. usuario: %s", user.UserName),
-        Data:    user.ID,
-    })
+	// Login success
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: fmt.Sprintf("La verificación de su contraseña fue exitosamente. usuario: %s", user.UserName),
+		Data:    user.ID,
+	})
 }
 
 // ForgotSearch function forgot user search
@@ -299,11 +299,11 @@ func ForgotSearch(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
-	defer db.Close()
+	DB := config.GetConnection()
+	defer DB.Close()
 
 	// Validations
-	if err := db.Where("email = ?", user.Email).First(&user).Error; err != nil {
+	if err := DB.Where("email = ?", user.Email).First(&user).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{
 			Message: fmt.Sprintf("Tu búsqueda no arrojó ningún resultado. Vuelve a intentarlo con otros datos."),
 		})
@@ -314,9 +314,13 @@ func ForgotSearch(c echo.Context) error {
 	user.Key = fmt.Sprint(key)
 
 	// Update database
-	if err := db.Model(&user).Update(user).Error; err != nil {
+	if err := DB.Model(&user).Update(user).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
+
+	// Query Database Get Settings
+	con := models.Setting{}
+	DB.First(&con)
 
 	// SEND EMAIL get html template
 	t, err := template.ParseFiles("templates/email.html")
@@ -332,7 +336,12 @@ func ForgotSearch(c echo.Context) error {
 	}
 
 	// SEND EMAIL
-	err = config.SendEmail(user.Email, fmt.Sprint(key)+" es el código de recuperación de tu cuenta", buf.String())
+	err = config.SendEmail(
+		con.PrefixShortName+" "+con.Institute,
+		user.Email,
+		fmt.Sprint(key)+" es el código de recuperación de tu cuenta",
+		buf.String(),
+	)
 	if err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}

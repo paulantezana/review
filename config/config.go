@@ -16,7 +16,6 @@ type Database struct {
 }
 
 type Email struct {
-	Name     string
 	From     string
 	Password string
 	Server   string

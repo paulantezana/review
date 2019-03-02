@@ -4,10 +4,12 @@ import "time"
 
 // Teacher struct
 type Teacher struct {
-	ID        uint   `json:"id" gorm:"primary_key"`
-	DNI       string `json:"dni" gorm:"type:varchar(15); not null; unique"`
-	LastName  string `json:"last_name"`
-	FirstName string `json:"first_name"`
+	ID        uint      `json:"id" gorm:"primary_key"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	DNI       string    `json:"dni" gorm:"type:varchar(15); not null; unique"`
+	LastName  string    `json:"last_name"`
+	FirstName string    `json:"first_name"`
 
 	BirthDate time.Time `json:"birth_date"`
 	Gender    string    `json:"gender"`

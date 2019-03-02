@@ -7,6 +7,8 @@ import (
 // Review struct
 type Review struct {
 	ID              uint      `json:"id" gorm:"primary_key"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 	ApprobationDate time.Time `json:"approbation_date"`
 
 	ModuleId         uint `json:"module_id"`

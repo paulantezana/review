@@ -7,10 +7,10 @@ import (
 	"net/smtp"
 )
 
-func SendEmail(to string, subject string, tem string) error {
+func SendEmail(headerTitle string, to string, subject string, tem string) error {
 	c := GetConfig()
 
-	from := mail.Address{c.Email.Name, c.Email.From}
+	from := mail.Address{headerTitle, c.Email.From}
 	toMail := mail.Address{"", to}
 
 	headers := make(map[string]string)

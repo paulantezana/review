@@ -242,12 +242,15 @@ func UpdateStudentAdmission(c echo.Context) error {
 		}
 
 		// Insert student history
-		if err := createStudentHistory(
-			request.Student.ID,
-			currentUser.ID,
-			"Sus datos fueron creados desde el proceso de admisión",
-			1,
-		); err != nil {
+		studentHistory := models.StudentHistory{
+			StudentID:   request.Student.ID,
+			UserID:      currentUser.ID,
+			Description: "Sus datos fueron creados desde el proceso de admisión",
+			Date:        time.Now(),
+			Type:        1,
+		}
+		if err := TX.Create(&studentHistory).Error; err != nil {
+			TX.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	} else {
@@ -265,12 +268,15 @@ func UpdateStudentAdmission(c echo.Context) error {
 		DB.First(&request.User, models.User{ID: request.User.ID})
 
 		// Insert student history
-		if err := createStudentHistory(
-			request.Student.ID,
-			currentUser.ID,
-			"Sus datos fueron modificados desde el proceso de admisión",
-			2,
-		); err != nil {
+		studentHistory := models.StudentHistory{
+			StudentID:   request.Student.ID,
+			UserID:      currentUser.ID,
+			Description: "Sus datos fueron modificados desde el proceso de admisión",
+			Date:        time.Now(),
+			Type:        1,
+		}
+		if err := TX.Create(&studentHistory).Error; err != nil {
+			TX.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	}

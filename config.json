@@ -16,7 +16,6 @@
         "paginate": 20
     },
     "Email": {
-        "name": "INSTITUTE",
         "from": "paul.antezana.2@gmail.com",
         "password": "Mc]-7EEP}vJ{q{P@",
         "server": "smtp.gmail.com:465",

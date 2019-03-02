@@ -7,6 +7,8 @@ import (
 // Student struct
 type Student struct {
 	ID          uint      `json:"id" gorm:"primary_key"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 	DNI         string    `json:"dni" gorm:" type:varchar(15); unique; not null"`
 	FullName    string    `json:"full_name" gorm:"type:varchar(250)"`
 	Phone       string    `json:"phone" gorm:"type:varchar(32)"`

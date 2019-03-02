@@ -4,6 +4,8 @@ import "time"
 
 type Message struct {
 	ID               uint      `json:"id" gorm:"primary_key"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 	Subject          string    `json:"subject"`
 	Body             string    `json:"body"`
 	BodyType         uint8     `json:"body_type"` // 0 = plain string || 1 == file
