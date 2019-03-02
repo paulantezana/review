@@ -104,7 +104,7 @@ func CreateSubsidiary(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    subsidiary.ID,
-		Message: fmt.Sprintf("the subsidiary %s successfully registered", subsidiary.Name),
+		Message: fmt.Sprintf("la filial %s se registró exitosamente", subsidiary.Name),
 	})
 }
 
@@ -123,7 +123,7 @@ func UpdateSubsidiary(c echo.Context) error {
 	rows := db.Model(&subsidiary).Update(subsidiary).RowsAffected
 	if rows == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("the subsidiary %s could not update", subsidiary.Name),
+			Message: fmt.Sprintf("La filial %s no pudo actualizar", subsidiary.Name),
 		})
 	}
 
@@ -131,7 +131,7 @@ func UpdateSubsidiary(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    subsidiary.ID,
-		Message: fmt.Sprintf("The data of the subsidiary %s was updated correctly", subsidiary.Name),
+		Message: fmt.Sprintf("Los datos de la filial %s se actualizaron correctamente.", subsidiary.Name),
 	})
 }
 
@@ -155,7 +155,7 @@ func DeleteSubsidiary(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    subsidiary.ID,
-		Message: fmt.Sprintf("The subsidiary %s was successfully deleted", subsidiary.Name),
+		Message: fmt.Sprintf("La filial %s fue eliminado exitosamente", subsidiary.Name),
 	})
 }
 
@@ -184,6 +184,6 @@ func UpdateMainSubsidiary(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    subsidiary.ID,
-		Message: fmt.Sprintf("The data of the subsidiary %s was updated correctly", subsidiary.Name),
+		Message: fmt.Sprintf("Los datos de la filial %s se actualizaron correctamente.", subsidiary.Name),
 	})
 }

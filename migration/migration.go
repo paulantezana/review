@@ -226,7 +226,7 @@ func Migrate() {
 		co := models.Setting{
 			Prefix:          "INSTITUTO DE EDUCACIÓN SUPERIOR TECNOLÓGICO PÚBLICO",
 			PrefixShortName: "I.E.S.T.P.",
-			Institute:       "SEDNA",
+			Institute:       "ABCD",
 			NationalEmblem:  "static/nationalEmblem.jpg",
 			Logo:            "static/logo.jpg",
 			Ministry:        "static/ministry.jpg",

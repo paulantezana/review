@@ -4,7 +4,7 @@
         "port"     : "5432",
         "user"     : "yoel",
         "pass"     : "cascadesheet",
-        "database" : "review"
+        "database" : "institute"
     },
     "Server" : {
         "port": "1323",
@@ -16,7 +16,7 @@
         "paginate": 20
     },
     "Email": {
-        "name": "REVIEW",
+        "name": "INSTITUTE",
         "from": "paul.antezana.2@gmail.com",
         "password": "Mc]-7EEP}vJ{q{P@",
         "server": "smtp.gmail.com:465",

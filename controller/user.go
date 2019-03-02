@@ -332,7 +332,7 @@ func ForgotSearch(c echo.Context) error {
 	}
 
 	// SEND EMAIL
-	err = config.SendEmail(user.Email, fmt.Sprint(key)+" es el código de recuperación de tu cuenta en REVIEW", buf.String())
+	err = config.SendEmail(user.Email, fmt.Sprint(key)+" es el código de recuperación de tu cuenta", buf.String())
 	if err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
