@@ -16,3 +16,4 @@
 .vscode
 !temp/*.md
 ./main
+*.pem

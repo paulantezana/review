@@ -2,8 +2,8 @@
     "Database" : {
         "server"   : "localhost",
         "port"     : "5432",
-        "user"     : "yoel",
-        "pass"     : "cascadesheet",
+        "user"     : "institute_user",
+        "pass"     : "newright789",
         "database" : "institute"
     },
     "Server" : {
