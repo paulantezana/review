@@ -1,8 +1,8 @@
 package controller
 
 import (
-    "crypto/sha256"
-    "fmt"
+	"crypto/sha256"
+	"fmt"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/utilities"
@@ -16,10 +16,10 @@ func BackupDB(c echo.Context) error {
 	con := config.GetConfig()
 
 	// Hash current time
-    cc := sha256.Sum256([]byte(time.Now().String()))
-    cd := fmt.Sprintf("%x", cc)
+	cc := sha256.Sum256([]byte(time.Now().String()))
+	cd := fmt.Sprintf("%x", cc)
 
-    // Execute command
+	// Execute command
 	out, err := exec.Command("pg_dump", "--host", con.Database.Server, "--port", con.Database.Port, "--username", con.Database.User, "--file", fmt.Sprintf("static/backup/database/%s.sql", cd), con.Database.Database).Output()
 	if err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -33,7 +33,7 @@ func BackupDB(c echo.Context) error {
 }
 
 func BackupDBList(c echo.Context) error {
-    // Query folder database
+	// Query folder database
 	fls, err := ioutil.ReadDir("static/backup/database/")
 	if err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -49,7 +49,7 @@ func BackupDBList(c echo.Context) error {
 		})
 	}
 
-    // Response json
+	// Response json
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    files,

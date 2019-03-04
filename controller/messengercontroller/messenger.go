@@ -21,29 +21,21 @@ import (
 	"time"
 )
 
-type chatMessageShort struct {
-	Body        string
-	IsRead      bool
-	CreatorID   uint
-	Date        time.Time
-	RecipientId uint
-	ReID        uint
-}
-
+// Use in user chat
 type userShort struct {
 	ID          uint   `json:"id"`
 	Name        string `json:"name"` //
 	Avatar      string `json:"avatar"`
-	UserGroupID uint   `json:"-"`
 }
 
+// Use in list chat messages scroll reverse
 type chatMessage struct {
 	ID          uint        `json:"id"`
 	Body        string      `json:"body"`
 	BodyType    uint8       `json:"body_type"` // 0 = plain string || 1 == file
 	FilePath    string      `json:"file_path"`
 	IsRead      bool        `json:"is_read"`
-	Date        time.Time   `json:"date"`
+	CreatedAt   time.Time   `json:"created_at"`
 	CreatorID   uint        `json:"-"`
 	RecipientID uint        `json:"-"`
 	Mode        string      `json:"mode"`
@@ -55,7 +47,7 @@ type chatMessage struct {
 
 type lastMessage struct {
 	Body      string    `json:"body"`
-	Date      time.Time `json:"date"`
+	CreatedAt time.Time `json:"created_at"`
 	Mode      string    `json:"mode"` // user || group
 	IsRead    bool      `json:"is_read"`
 	Contact   userShort `json:"contact"`
@@ -68,7 +60,7 @@ func (p timeSlice) Len() int {
 }
 
 func (p timeSlice) Less(i, j int) bool {
-	return p[i].Date.After(p[j].Date)
+	return p[i].CreatedAt.After(p[j].CreatedAt)
 }
 
 func (p timeSlice) Swap(i, j int) {
@@ -82,6 +74,7 @@ func init() {
 	Melody.Config.MaxMessageSize = 1024 * 1024 * 1024
 }
 
+// Get all users width messages
 func GetUsersMessageScroll(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
@@ -126,11 +119,11 @@ func GetUsersMessageScroll(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	// Users
+	// Query last messages
 	lastMessages := make([]lastMessage, 0)
 	for i := range users {
-		// Query semesters
-		chatMessageShort := make([]chatMessageShort, 0)
+		// Query messages
+		lastMessageByUser := make([]lastMessage, 0)
 		if err := DB.Table("messages").
 			Select("messages.body, message_recipients.is_read, messages.creator_id, messages.date").
 			Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
@@ -138,30 +131,30 @@ func GetUsersMessageScroll(c echo.Context) error {
 			Or("messages.creator_id = ? AND message_recipients.recipient_id = ?", currentUser.ID, users[i].ID).
 			Limit(1).
 			Order("messages.id desc").
-			Scan(&chatMessageShort).Error; err != nil {
+			Scan(&lastMessageByUser).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
-		// Query current student Name
+		// Query current Full Name
 		student := models.Student{}
-		DB.First(&student, models.Student{UserID: users[i].ID})
+		DB.First(&student, models.Student{UserID: users[i].ID}) // In student
 		if student.ID >= 1 {
 			users[i].UserName = student.FullName
 		} else {
 			teacher := models.Teacher{}
-			DB.First(&teacher, models.Teacher{UserID: users[i].ID})
+			DB.First(&teacher, models.Teacher{UserID: users[i].ID}) // In teacher
 			if teacher.ID >= 1 {
 				users[i].UserName = fmt.Sprintf("%s %s", teacher.FirstName, teacher.LastName)
 			}
 		}
 
-		// struct
+		// struct response message
 		lastMessage := lastMessage{
-			Body:      chatMessageShort[0].Body,
-			Date:      chatMessageShort[0].Date,
-			IsRead:    chatMessageShort[0].IsRead,
+			Body:      lastMessageByUser[0].Body,
+			CreatedAt: lastMessageByUser[0].CreatedAt,
+			IsRead:    lastMessageByUser[0].IsRead,
 			Mode:      "user",
-			CreatorID: chatMessageShort[0].CreatorID,
+			CreatorID: lastMessageByUser[0].CreatorID,
 			Contact: userShort{
 				ID:     users[i].ID,
 				Name:   users[i].UserName,
@@ -195,12 +188,8 @@ func GetUsersMessageScroll(c echo.Context) error {
 	})
 }
 
-func GetMessagesGroup(c echo.Context) error {
-	//// Get user token authenticate
-	//user := c.Get("user").(*jwt.Token)
-	//claims := user.Claims.(*utilities.Claim)
-	//currentUser := claims.User
-
+// Get messages by group
+func GetMessagesByGroup(c echo.Context) error {
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
@@ -219,19 +208,19 @@ func GetMessagesGroup(c echo.Context) error {
 
 	// Query chatMessage scroll
 	chatMessages := make([]chatMessage, 0)
-	if err := DB.Raw("SELECT id, body, body_type, file_path, creator_id, date FROM messages WHERE id "+
-		" IN ( "+
-		"   SELECT message_id FROM message_recipients WHERE recipient_group_id "+
-		" IN (SELECT id FROM user_groups WHERE group_id = ?) "+
-		" ) ORDER BY messages.id desc "+
+	if err := DB.Debug().Raw("SELECT group_messages.id, group_messages.body, group_messages.body_type, group_messages.file_path, group_messages.created_at, group_messages.creator_id  FROM group_messages " +
+        "INNER JOIN group_message_recipients ON group_messages.id = group_message_recipients.message_id " +
+        "WHERE group_message_recipients.recipient_group_id = ? " +
+        "GROUP BY group_messages.id, group_messages.body, group_messages.body_type, group_messages.created_at, group_messages.created_at " +
+        "ORDER BY group_messages.created_at DESC " +
 		" OFFSET ? LIMIT ?", request.GroupID, offset, request.Limit).Scan(&chatMessages).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
-	if err := DB.Raw("SELECT count(*) FROM messages WHERE id "+
-		" IN ( "+
-		"   SELECT message_id FROM message_recipients WHERE recipient_group_id "+
-		" IN (SELECT id FROM user_groups WHERE group_id = ?) "+
-		" ) ", request.GroupID).Scan(&counter).Error; err != nil {
+	if err := DB.Raw("SELECT count(*) FROM group_messages "+
+        "INNER JOIN group_message_recipients ON group_messages.id = group_message_recipients.message_id " +
+        "WHERE group_message_recipients.recipient_group_id = ? " +
+        "GROUP BY group_messages.id, group_messages.body, group_messages.body_type, group_messages.created_at, group_messages.created_at " +
+		" ", request.GroupID).Scan(&counter).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -243,18 +232,6 @@ func GetMessagesGroup(c echo.Context) error {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usuario no encontrado")})
 		}
 		chatMessages[i].Creator = userShots[0]
-
-		//// Find reads this message
-		//reads := make([]userShot, 0)
-		//DB.Raw("SELECT users.id, users.user_name, users.avatar, user_groups.id as user_group_id FROM message_recipients " +
-		//    "INNER JOIN user_groups ON user_groups.id = message_recipients.recipient_group_id " +
-		//    "INNER JOIN users on user_groups.user_id = users.id " +
-		//    "WHERE message_recipients.message_id = ?", chatMessages[i].ID).
-		//        Scan(&reads)
-		//if len(userShots) == 0 {
-		//    return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usuario no encontrado")})
-		//}
-		//chatMessages[i].Reads = reads
 	}
 
 	// Validate scroll
@@ -265,9 +242,6 @@ func GetMessagesGroup(c echo.Context) error {
 		}
 	}
 
-	// Read message
-	//DB.Model(models.MessageRecipient{}).Where("id in (?)", rIds).Update(models.MessageRecipient{IsRead: true})
-
 	// Return response data scroll reverse
 	return c.JSON(http.StatusOK, utilities.ResponseScroll{
 		Success:     true,
@@ -277,7 +251,7 @@ func GetMessagesGroup(c echo.Context) error {
 	})
 }
 
-// Get messages
+// Get messages by user
 func GetMessages(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
@@ -358,7 +332,6 @@ func CreateMessageFileUpload(c echo.Context) error {
 
 	// Read form fields
 	recipientID := c.FormValue("recipient_id")
-	mode := c.FormValue("mode")
 
 	// get connection
 	DB := config.GetConnection()
@@ -368,17 +341,6 @@ func CreateMessageFileUpload(c echo.Context) error {
 	rID, err := strconv.ParseUint(recipientID, 0, 32)
 	if err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
-
-	// Valida if user is active
-	if mode == "group" {
-		userGroup := models.UserGroup{}
-		if err := DB.First(&userGroup, models.UserGroup{UserID: currentUser.ID, GroupID: uint(rID)}).Error; err != nil {
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-		}
-		if !userGroup.IsActive {
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usted está bloqueado en este grupo")})
-		}
 	}
 
 	// Read file
@@ -415,7 +377,6 @@ func CreateMessageFileUpload(c echo.Context) error {
 		Body:      file.Filename,
 		BodyType:  1,
 		FilePath:  fileSRC,
-		Date:      time.Now(),
 		CreatorID: currentUser.ID,
 	}
 	if err := TX.Create(&message).Error; err != nil {
@@ -424,31 +385,13 @@ func CreateMessageFileUpload(c echo.Context) error {
 	}
 
 	// if is user
-	if mode == "user" {
-		recipient := models.MessageRecipient{
-			RecipientID: uint(rID),
-			MessageID:   message.ID,
-		}
-		if err := TX.Create(&recipient).Error; err != nil {
-			TX.Rollback()
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-		}
+	recipient := models.MessageRecipient{
+		RecipientID: uint(rID),
+		MessageID:   message.ID,
 	}
-
-	// if is group
-	if mode == "group" {
-		userGroup := make([]models.UserGroup, 0)
-		DB.Find(&userGroup, models.UserGroup{GroupID: uint(rID)})
-		for _, uGroup := range userGroup {
-			recipient := models.MessageRecipient{
-				RecipientGroupID: uGroup.ID,
-				MessageID:        message.ID,
-			}
-			if err := TX.Create(&recipient).Error; err != nil {
-				TX.Rollback()
-				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-			}
-		}
+	if err := TX.Create(&recipient).Error; err != nil {
+		TX.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Commit transaction
@@ -456,29 +399,26 @@ func CreateMessageFileUpload(c echo.Context) error {
 
 	// Find recipient user detail
 	userRecipient := userShort{}
-	if mode == "user" {
-		DB.Raw("SELECT id, user_name as name, avatar FROM users WHERE id = ? LIMIT 1", uint(rID)).Scan(&userRecipient)
-	}
+    DB.Raw("SELECT id, user_name as name, avatar FROM users WHERE id = ? LIMIT 1", uint(rID)).Scan(&userRecipient)
 
 	// Socket init send data
-	chatMessage := chatMessage{}
-	if mode == "user" {
-		chatMessage.ID = message.ID
-		chatMessage.Body = message.Body
-		chatMessage.BodyType = message.BodyType
-		chatMessage.FilePath = message.FilePath
-		chatMessage.Date = message.Date
-		chatMessage.Recipient = userShort{
+	chatMessage := chatMessage{
+		ID : message.ID,
+		Body : message.Body,
+		BodyType : message.BodyType,
+		FilePath : message.FilePath,
+		CreatedAt : message.CreatedAt,
+		Recipient : userShort{
 			ID:     userRecipient.ID,
 			Name:   userRecipient.Name,
 			Avatar: userRecipient.Avatar,
-		}
-		chatMessage.Creator = userShort{
+		},
+		Creator : userShort{
 			ID:     currentUser.ID,
 			Name:   currentUser.UserName,
 			Avatar: currentUser.Avatar,
-		}
-	}
+		},
+    }
 
 	json, err := json.Marshal(&utilities.SocketResponse{
 		Type:   "chat",
@@ -505,12 +445,149 @@ func CreateMessageFileUpload(c echo.Context) error {
 	})
 }
 
+func CreateMessageFileUploadByGroup(c echo.Context) error {
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
+
+	// Read form fields
+	recipientID := c.FormValue("recipient_id")
+
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
+
+	// Convert string to int
+	rID, err := strconv.ParseUint(recipientID, 0, 32)
+	if err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+	// Valida if user is active
+	userGroup := models.UserGroup{}
+	if err := DB.First(&userGroup, models.UserGroup{UserID: currentUser.ID, GroupID: uint(rID)}).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+	if !userGroup.IsActive {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usted está bloqueado en este grupo")})
+	}
+
+	// Read file
+	file, err := c.FormFile("file")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	// Destination
+	ccc := sha256.Sum256([]byte(time.Now().String() + string(currentUser.ID)))
+	name := fmt.Sprintf("%x%s", ccc, filepath.Ext(file.Filename))
+	fileSRC := "static/chat/" + name
+	dst, err := os.Create(fileSRC)
+	if err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+	defer dst.Close()
+
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
+
+	// Start transaction
+	TX := DB.Begin()
+
+	// create struct message
+	groupMessage := models.GroupMessage{
+		Body:      file.Filename,
+		BodyType:  1,
+		FilePath:  fileSRC,
+		CreatorID: currentUser.ID,
+	}
+	if err := TX.Create(&groupMessage).Error; err != nil {
+		TX.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+	// create recipient message
+	userGroups := make([]models.UserGroup, 0)
+	DB.Find(&userGroups, models.UserGroup{GroupID: uint(rID)})
+	for _, uGroup := range userGroups {
+		recipient := models.GroupMessageRecipient{
+			RecipientGroupID: uint(rID),
+			RecipientID:      uGroup.UserID,
+			MessageID:        groupMessage.ID,
+		}
+		if err := TX.Create(&recipient).Error; err != nil {
+			TX.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	}
+
+	// Commit transaction
+	TX.Commit()
+
+    // Find recipient group detail
+    groupRecipient := userShort{}
+    DB.Raw("SELECT * FROM groups WHERE id = ? LIMIT 1", uint(rID)).Scan(&groupRecipient)
+
+    //Socket init send data
+    chatMessage := chatMessage{
+        ID : groupMessage.ID,
+        Body : groupMessage.Body,
+        BodyType : groupMessage.BodyType,
+        FilePath : groupMessage.FilePath,
+        CreatedAt : groupMessage.CreatedAt,
+        Mode : "group",
+        Recipient : userShort{
+            ID:     groupRecipient.ID,
+            Name:   groupRecipient.Name,
+            Avatar: groupRecipient.Avatar,
+        },
+        Creator : userShort{
+            ID:     currentUser.ID,
+            Name:   currentUser.UserName,
+            Avatar: currentUser.Avatar,
+        },
+    }
+
+	json, err := json.Marshal(&utilities.SocketResponse{
+	   Type:   "chat",
+	   Action: "create",
+	   Data:   chatMessage,
+	})
+
+	// Socket
+	origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
+	url := fmt.Sprintf("ws://localhost:%s/ws/chat", config.GetConfig().Server.Port)
+
+	ws, err := websocket.Dial(url, "", origin)
+	if err != nil {
+	   log.Fatal(err)
+	}
+	if _, err := ws.Write(json); err != nil {
+	   log.Fatal(err)
+	}
+
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: "OK",
+	})
+}
+
 type createMessageRequest struct {
 	RecipientID uint   `json:"recipient_id"`
 	Body        string `json:"body"`
 	Mode        string `json:"mode"` // user || group
 }
 
+// Create message by user
 func CreateMessage(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
@@ -527,24 +604,12 @@ func CreateMessage(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
-	// Valida if user is active
-	if request.Mode == "group" {
-		userGroup := models.UserGroup{}
-		if err := DB.First(&userGroup, models.UserGroup{UserID: currentUser.ID, GroupID: request.RecipientID}).Error; err != nil {
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-		}
-		if !userGroup.IsActive {
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usted está bloqueado en este grupo")})
-		}
-	}
-
 	// Start transaction
 	TX := DB.Begin()
 
 	// create struct message
 	message := models.Message{
 		Body:      request.Body,
-		Date:      time.Now(),
 		CreatorID: currentUser.ID,
 	}
 	if err := TX.Create(&message).Error; err != nil {
@@ -553,32 +618,14 @@ func CreateMessage(c echo.Context) error {
 	}
 
 	// Create message recipient if USER
-	if request.Mode == "user" {
-		recipient := models.MessageRecipient{
-			RecipientID: request.RecipientID,
-			MessageID:   message.ID,
-		}
-
-		if err := TX.Create(&recipient).Error; err != nil {
-			TX.Rollback()
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-		}
+	recipient := models.MessageRecipient{
+		RecipientID: request.RecipientID,
+		MessageID:   message.ID,
 	}
 
-	// Create Recipient IF GROUP
-	if request.Mode == "group" {
-		userGroup := make([]models.UserGroup, 0)
-		DB.Find(&userGroup, models.UserGroup{GroupID: request.RecipientID})
-		for _, uGroup := range userGroup {
-			recipient := models.MessageRecipient{
-				RecipientGroupID: uGroup.ID,
-				MessageID:        message.ID,
-			}
-			if err := TX.Create(&recipient).Error; err != nil {
-				TX.Rollback()
-				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-			}
-		}
+	if err := TX.Create(&recipient).Error; err != nil {
+		TX.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Commit transaction
@@ -597,7 +644,7 @@ func CreateMessage(c echo.Context) error {
 		chatMessage.Body = message.Body
 		chatMessage.BodyType = message.BodyType
 		chatMessage.FilePath = message.FilePath
-		chatMessage.Date = message.Date
+		chatMessage.CreatedAt = message.CreatedAt
 		chatMessage.Mode = request.Mode
 		chatMessage.Recipient = userShort{
 			ID:     userRecipient.ID,
@@ -640,6 +687,116 @@ func CreateMessage(c echo.Context) error {
 	})
 }
 
+// Create message by group
+func CreateGroupMessage(c echo.Context) error {
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
+
+	// Get data request
+	request := createMessageRequest{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
+
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
+
+	// Valida if user is active
+	userGroup := models.UserGroup{}
+	if err := DB.First(&userGroup, models.UserGroup{UserID: currentUser.ID, GroupID: request.RecipientID}).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+	if !userGroup.IsActive {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usted está bloqueado en este grupo")})
+	}
+
+	// Start transaction
+	TX := DB.Begin()
+
+	// create struct groupMessage
+	groupMessage := models.GroupMessage{
+		Body:      request.Body,
+		CreatorID: currentUser.ID,
+	}
+	if err := TX.Create(&groupMessage).Error; err != nil {
+		TX.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+	// Create Recipient message by group
+	userGroups := make([]models.UserGroup, 0)
+	DB.Find(&userGroups, models.UserGroup{GroupID: request.RecipientID})
+	for _, uGroup := range userGroups {
+		recipient := models.GroupMessageRecipient{
+			RecipientGroupID: request.RecipientID,
+			RecipientID:      uGroup.UserID,
+			MessageID:        groupMessage.ID,
+		}
+		if err := TX.Create(&recipient).Error; err != nil {
+			TX.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	}
+
+	// Commit transaction
+	TX.Commit()
+
+	// Find recipient group detail
+	groupRecipient := userShort{}
+    DB.Raw("SELECT * FROM groups WHERE id = ? LIMIT 1", request.RecipientID).Scan(&groupRecipient)
+
+	//Socket init send data
+	chatMessage := chatMessage{
+        ID : groupMessage.ID,
+        Body : groupMessage.Body,
+        BodyType : groupMessage.BodyType,
+        FilePath : groupMessage.FilePath,
+        CreatedAt : groupMessage.CreatedAt,
+        Mode : request.Mode,
+        Recipient : userShort{
+            ID:     groupRecipient.ID,
+            Name:   groupRecipient.Name,
+            Avatar: groupRecipient.Avatar,
+        },
+        Creator : userShort{
+            ID:     currentUser.ID,
+            Name:   currentUser.UserName,
+            Avatar: currentUser.Avatar,
+        },
+    }
+
+	json, err := json.Marshal(&utilities.SocketResponse{
+	   Type:   "chat",
+	   Action: "create",
+	   Data:   chatMessage,
+	})
+
+	// Socket
+	origin := fmt.Sprintf("%s:%s/", config.GetConfig().Server.Host, config.GetConfig().Server.Port)
+	url := fmt.Sprintf("%s:%s/ws/chat", config.GetConfig().Server.Socket, config.GetConfig().Server.Port)
+
+	ws, err := websocket.Dial(url, "", origin)
+	if err != nil {
+	   return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("ERROR 1 == %s", err)})
+	}
+	if _, err := ws.Write(json); err != nil {
+	   return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("ERROR 2 == %s", err)})
+	}
+
+	// Send chat Notices
+	// Websocket las notices
+	getUnreadMessages(models.User{ID: request.RecipientID}, true)
+
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: "OK",
+	})
+}
+
 func UnreadMessages(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
@@ -662,30 +819,30 @@ func getUnreadMessages(u models.User, socket bool) []utilities.Notice {
 	defer DB.Close()
 
 	// query
-	chatMessageShort := make([]chatMessageShort, 0)
+    lastMessages := make([]lastMessage, 0)
 	if err := DB.Table("messages").
 		Select("messages.body, message_recipients.is_read, messages.creator_id, messages.date").
 		Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
 		Where("message_recipients.recipient_id = ? AND message_recipients.is_read = false", u.ID).
 		Limit(1).
 		Order("messages.id desc").
-		Scan(&chatMessageShort).Error; err != nil {
+		Scan(&lastMessages).Error; err != nil {
 		log.Fatal(err)
 	}
 
 	notices := make([]utilities.Notice, 0)
-	for i := range chatMessageShort {
+	for i := range lastMessages {
 		user := models.User{}
-		if err := DB.First(&user, models.User{ID: chatMessageShort[i].CreatorID}).Error; err != nil {
+		if err := DB.First(&user, models.User{ID: lastMessages[i].CreatorID}).Error; err != nil {
 			log.Fatal(err)
 		}
 
 		notice := utilities.Notice{
-			ID:          chatMessageShort[i].CreatorID,
+			ID:          lastMessages[i].CreatorID,
 			Title:       user.UserName,
 			Avatar:      user.Avatar,
-			Description: chatMessageShort[i].Body,
-			Date:        chatMessageShort[i].Date,
+			Description: lastMessages[i].Body,
+			Date:        lastMessages[i].CreatedAt,
 			RecipientID: u.ID,
 			Type:        "message",
 		}

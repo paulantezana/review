@@ -8,7 +8,8 @@ import (
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
-	"time"
+    "sort"
+    "time"
 )
 
 func GetGroupsScroll(c echo.Context) error {
@@ -48,6 +49,44 @@ func GetGroupsScroll(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
+    // query las messages
+    lastMessages := make([]lastMessage, 0)
+	for _, group := range groups {
+		// Find last message
+        lastMessageByGroup := make([]lastMessage, 0)
+		if err := DB.Table("group_messages").
+			Select("group_messages.id, group_messages.body, group_messages.created_at, group_messages.creator_id").
+			Joins("INNER JOIN group_message_recipients ON group_messages.id = group_message_recipients.message_id").
+			Where("group_message_recipients.recipient_group_id = ?", group.ID).
+			Limit(1).
+			Order("group_messages.id DESC").
+			Scan(&lastMessageByGroup).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+
+        // struct response message
+        lastMessage := lastMessage{
+            Body:      lastMessageByGroup[0].Body,
+            CreatedAt: lastMessageByGroup[0].CreatedAt,
+            IsRead:    lastMessageByGroup[0].IsRead,
+            Mode:      "user",
+            CreatorID: lastMessageByGroup[0].CreatorID,
+            Contact: userShort{
+                ID:     group.ID,
+                Name:   group.Name,
+                Avatar: group.Avatar,
+            },
+        }
+        lastMessages = append(lastMessages, lastMessage)
+	}
+
+    // Order By date
+    lastMessagesSorted := make(timeSlice, 0, len(lastMessages))
+    for _, lasM := range lastMessages {
+        lastMessagesSorted = append(lastMessagesSorted, lasM)
+    }
+    sort.Sort(lastMessagesSorted)
+
 	// Validate scroll
 	var hasMore = false
 	if request.CurrentPage < 10 {
@@ -59,7 +98,7 @@ func GetGroupsScroll(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusOK, utilities.ResponseScroll{
 		Success:     true,
-		Data:        groups,
+		Data:        lastMessagesSorted,
 		HasMore:     hasMore,
 		CurrentPage: request.CurrentPage,
 	})

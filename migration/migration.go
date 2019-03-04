@@ -76,6 +76,8 @@ func Migrate() {
 		&models.ReminderFrequency{},
 		&models.Session{},
 		&models.UserGroup{},
+		&models.GroupMessage{},
+		&models.GroupMessageRecipient{},
 	)
 	// General =================================================================
 	db.Model(&models.User{}).AddForeignKey("role_id", "roles(id)", "RESTRICT", "RESTRICT")
@@ -152,9 +154,11 @@ func Migrate() {
 	//db.Model(&models.MessageRecipient{}).AddForeignKey("recipient_id", "users(id)", "RESTRICT", "RESTRICT")
 	//db.Model(&models.MessageRecipient{}).AddForeignKey("recipient_group_id", "user_groups(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.MessageRecipient{}).AddForeignKey("message_id", "messages(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.GroupMessageRecipient{}).AddForeignKey("message_id", "group_messages(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.UserGroup{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.UserGroup{}).AddForeignKey("group_id", "groups(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.Message{}).AddForeignKey("creator_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.GroupMessage{}).AddForeignKey("creator_id", "users(id)", "RESTRICT", "RESTRICT")
 	//db.Model(&models.Message{}).AddForeignKey("reminder_frequency_id", "reminder_frequencies(id)", "RESTRICT", "RESTRICT")
 
 	// -------------------------------------------------------------
