@@ -125,7 +125,7 @@ func GetUsersMessageScroll(c echo.Context) error {
 		// Query messages
 		lastMessageByUser := make([]lastMessage, 0)
 		if err := DB.Table("messages").
-			Select("messages.body, message_recipients.is_read, messages.creator_id, messages.date").
+			Select("messages.body, message_recipients.is_read, messages.creator_id, messages.created_at").
 			Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
 			Where("messages.creator_id = ? AND message_recipients.recipient_id = ?", users[i].ID, currentUser.ID).
 			Or("messages.creator_id = ? AND message_recipients.recipient_id = ?", currentUser.ID, users[i].ID).
@@ -275,7 +275,7 @@ func GetMessages(c echo.Context) error {
 	var total uint
 	chatMessages := make([]chatMessage, 0)
 	if err := DB.Table("messages").
-		Select("messages.body, messages.body_type, messages.file_path, message_recipients.is_read, messages.creator_id, messages.date, "+
+		Select("messages.body, messages.body_type, messages.file_path, message_recipients.is_read, messages.creator_id, messages.created_at, "+
 			"message_recipients.id as re_id,  message_recipients.recipient_id  ").
 		Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
 		Where("messages.creator_id = ? AND message_recipients.recipient_id = ?", request.UserID, currentUser.ID).
@@ -821,7 +821,7 @@ func getUnreadMessages(u models.User, socket bool) []utilities.Notice {
 	// query
     lastMessages := make([]lastMessage, 0)
 	if err := DB.Table("messages").
-		Select("messages.body, message_recipients.is_read, messages.creator_id, messages.date").
+		Select("messages.body, message_recipients.is_read, messages.creator_id, messages.created_at").
 		Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
 		Where("message_recipients.recipient_id = ? AND message_recipients.is_read = false", u.ID).
 		Limit(1).

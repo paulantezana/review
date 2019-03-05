@@ -302,6 +302,8 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/messenger/group/scroll", messengercontroller.GetGroupsScroll)
 	ar.POST("/messenger/group/by/id", messengercontroller.GetGroupByID)
 	ar.POST("/messenger/group/create", messengercontroller.CreateGroup)
+	ar.POST("/messenger/group/upload/avatar", messengercontroller.UploadAvatarGroup)
+    ar.POST("/messenger/group/add/users", messengercontroller.AddUsers)
 	ar.PUT("/messenger/group/update", messengercontroller.UpdateGroup)
 	ar.POST("/messenger/group/is/active", messengercontroller.IsActiveGroup)
 	ar.POST("/messenger/group/user/is/active", messengercontroller.IsActiveUserGroup)
