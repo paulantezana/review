@@ -41,7 +41,7 @@ func GetGroupsScroll(c echo.Context) error {
 	// Query groups
 	groups := make([]models.Group, 0)
 	if err := DB.Raw("SELECT * FROM groups WHERE id IN "+
-		"( SELECT group_id FROM user_groups WHERE user_id = ? ) "+
+		"( SELECT group_id FROM user_groups WHERE user_id = ? AND is_active = true)   "+
 		"ORDER BY id asc LIMIT ? OFFSET ? ", currentUser.ID, request.Limit, offset).
 		Scan(&groups).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -218,7 +218,7 @@ func CreateGroup(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    group.ID,
-		Message: fmt.Sprintf("El curso %s se registro correctamente", group.Name),
+		Message: fmt.Sprintf("El grupo %s se registro correctamente", group.Name),
 	})
 }
 
@@ -282,10 +282,11 @@ func UpdateGroup(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    group.ID,
-		Message: fmt.Sprintf("El curso %s se registro correctamente", group.Name),
+		Message: fmt.Sprintf("Los datos del grupo %s se desactivo correctamente.", group.Name),
 	})
 }
 
+// Enable or disable group
 func IsActiveGroup(c echo.Context) error {
 	// Get data request
 	group := models.Group{}
@@ -306,10 +307,11 @@ func IsActiveGroup(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    group.ID,
-		Message: fmt.Sprintf("El curso %s se registro correctamente", group.Name),
+		Message: fmt.Sprintf("Los datos del grupo se modificaron correctamente."),
 	})
 }
 
+// Enable or disable user in group
 func IsActiveUserGroup(c echo.Context) error {
 	// Get data request
 	userGroup := models.UserGroup{}
@@ -331,7 +333,7 @@ func IsActiveUserGroup(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    userGroup.ID,
-		Message: fmt.Sprintf("El cursos se registro correctamente"),
+		Message: fmt.Sprintf("Los datos del grupo se modificaron correctamente."),
 	})
 }
 

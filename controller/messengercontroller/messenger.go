@@ -190,7 +190,12 @@ func GetUsersMessageScroll(c echo.Context) error {
 
 // Get messages by group
 func GetMessagesByGroup(c echo.Context) error {
-	// Get data request
+    // Get user token authenticate
+    //user := c.Get("user").(*jwt.Token)
+    //claims := user.Claims.(*utilities.Claim)
+    //currentUser := claims.User
+
+    // Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
 		return err
