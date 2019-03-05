@@ -490,6 +490,11 @@ type searchUsersResponse struct {
 }
 
 func SearchUsers(c echo.Context) error {
+    // Get user token authenticate
+    user := c.Get("user").(*jwt.Token)
+    claims := user.Claims.(*utilities.Claim)
+    currentUser := claims.User
+
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
@@ -513,25 +518,41 @@ func SearchUsers(c echo.Context) error {
 	}
 
 	// Queries
+    newUsers := make([]searchUsersResponse, 0)
 	for i := range users {
+        // ignore current user
+        if users[i].ID == currentUser.ID {
+            break
+        }
+
+	    // search user
+	    nUser := searchUsersResponse{
+	        ID: users[i].ID,
+	        UserName: users[i].UserName,
+	        Avatar: users[i].Avatar,
+        }
+
 		// Query current student Name
 		student := models.Student{}
-		DB.First(&student, models.Student{UserID: users[i].ID})
+		DB.First(&student, models.Student{UserID: nUser.ID})
 		if student.ID >= 1 {
-			users[i].UserName = student.FullName
+            nUser.UserName = student.FullName
 		} else {
 			teacher := models.Teacher{}
-			DB.First(&teacher, models.Teacher{UserID: users[i].ID})
+			DB.First(&teacher, models.Teacher{UserID: nUser.ID})
 			if teacher.ID >= 1 {
-				users[i].UserName = fmt.Sprintf("%s %s", teacher.FirstName, teacher.LastName)
+                nUser.UserName = fmt.Sprintf("%s %s", teacher.FirstName, teacher.LastName)
 			}
 		}
+
+		// append child
+        newUsers = append(newUsers, nUser)
 	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    users,
+		Data:    newUsers,
 	})
 }
 

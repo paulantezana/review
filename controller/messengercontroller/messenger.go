@@ -208,7 +208,7 @@ func GetMessagesByGroup(c echo.Context) error {
 
 	// Query chatMessage scroll
 	chatMessages := make([]chatMessage, 0)
-	if err := DB.Debug().Raw("SELECT group_messages.id, group_messages.body, group_messages.body_type, group_messages.file_path, group_messages.created_at, group_messages.creator_id  FROM group_messages " +
+	if err := DB.Raw("SELECT group_messages.id, group_messages.body, group_messages.body_type, group_messages.file_path, group_messages.created_at, group_messages.creator_id  FROM group_messages " +
         "INNER JOIN group_message_recipients ON group_messages.id = group_message_recipients.message_id " +
         "WHERE group_message_recipients.recipient_group_id = ? " +
         "GROUP BY group_messages.id, group_messages.body, group_messages.body_type, group_messages.created_at, group_messages.created_at " +
@@ -216,13 +216,10 @@ func GetMessagesByGroup(c echo.Context) error {
 		" OFFSET ? LIMIT ?", request.GroupID, offset, request.Limit).Scan(&chatMessages).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
-	if err := DB.Raw("SELECT count(*) FROM group_messages "+
+	DB.Raw("SELECT count(*) FROM group_messages "+
         "INNER JOIN group_message_recipients ON group_messages.id = group_message_recipients.message_id " +
         "WHERE group_message_recipients.recipient_group_id = ? " +
-        "GROUP BY group_messages.id, group_messages.body, group_messages.body_type, group_messages.created_at, group_messages.created_at " +
-		" ", request.GroupID).Scan(&counter).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
+        "GROUP BY group_messages.id", request.GroupID).Scan(&counter)
 
 	// find user creator info
 	for i := range chatMessages {

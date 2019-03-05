@@ -180,7 +180,7 @@ func GetGroupByID(c echo.Context) error {
 	}
 
 	// Return response
-	return c.JSON(http.StatusCreated, utilities.Response{
+	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    groupResponse,
 	})
