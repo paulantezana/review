@@ -1,19 +1,19 @@
 package messengercontroller
 
 import (
-    "crypto/sha256"
-    "fmt"
+	"crypto/sha256"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
-    "io"
-    "net/http"
-    "os"
-    "path/filepath"
-    "sort"
-    "time"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"sort"
+	"time"
 )
 
 func GetGroupsScroll(c echo.Context) error {
@@ -53,11 +53,11 @@ func GetGroupsScroll(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-    // query las messages
-    lastMessages := make([]lastMessage, 0)
+	// query las messages
+	lastMessages := make([]lastMessage, 0)
 	for _, group := range groups {
 		// Find last message
-        lastMessageByGroup := make([]lastMessage, 0)
+		lastMessageByGroup := make([]lastMessage, 0)
 		if err := DB.Debug().Table("group_messages").
 			Select("group_messages.id, group_messages.body, group_messages.created_at, group_messages.creator_id").
 			Joins("INNER JOIN group_message_recipients ON group_messages.id = group_message_recipients.message_id").
@@ -68,39 +68,39 @@ func GetGroupsScroll(c echo.Context) error {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
-        // struct response message
-        lastMessage := lastMessage{
-            Mode:      "user",
-            Contact: userShort{
-                ID:     group.ID,
-                Name:   group.Name,
-                Avatar: group.Avatar,
-            },
-        }
+		// struct response message
+		lastMessage := lastMessage{
+			Mode: "user",
+			Contact: userShort{
+				ID:     group.ID,
+				Name:   group.Name,
+				Avatar: group.Avatar,
+			},
+		}
 
-        // Set messages
-        if len(lastMessageByGroup) >= 1 {
-            lastMessage.Body = lastMessageByGroup[0].Body
-            lastMessage.CreatedAt = lastMessageByGroup[0].CreatedAt
-            lastMessage.IsRead = lastMessageByGroup[0].IsRead
-            lastMessage.CreatorID = lastMessageByGroup[0].CreatorID
-        }
+		// Set messages
+		if len(lastMessageByGroup) >= 1 {
+			lastMessage.Body = lastMessageByGroup[0].Body
+			lastMessage.CreatedAt = lastMessageByGroup[0].CreatedAt
+			lastMessage.IsRead = lastMessageByGroup[0].IsRead
+			lastMessage.CreatorID = lastMessageByGroup[0].CreatorID
+		}
 
-        // Add last message
-        lastMessages = append(lastMessages, lastMessage)
+		// Add last message
+		lastMessages = append(lastMessages, lastMessage)
 	}
 
-    // Order By date
-    lastMessagesSorted := make(timeSlice, 0, len(lastMessages))
-    for _, lasM := range lastMessages {
-        lastMessagesSorted = append(lastMessagesSorted, lasM)
-    }
-    sort.Sort(lastMessagesSorted)
+	// Order By date
+	lastMessagesSorted := make(timeSlice, 0, len(lastMessages))
+	for _, lasM := range lastMessages {
+		lastMessagesSorted = append(lastMessagesSorted, lasM)
+	}
+	sort.Sort(lastMessagesSorted)
 
 	// Validate scroll
 	var hasMore = false
 	if request.CurrentPage < 10 {
-		if request.Limit * request.CurrentPage < counter.Count {
+		if request.Limit*request.CurrentPage < counter.Count {
 			hasMore = true
 		}
 	}
@@ -115,10 +115,10 @@ func GetGroupsScroll(c echo.Context) error {
 }
 
 type userGroupResponse struct {
-	ID       uint      `json:"id" gorm:"primary_key"`
-    CreatedAt time.Time `json:"created_at"`
-	IsActive bool      `json:"is_active" gorm:"default:'true'"`
-	IsAdmin  bool      `json:"is_admin"`
+	ID        uint      `json:"id" gorm:"primary_key"`
+	CreatedAt time.Time `json:"created_at"`
+	IsActive  bool      `json:"is_active" gorm:"default:'true'"`
+	IsAdmin   bool      `json:"is_admin"`
 
 	UserID uint   `json:"user_id"`
 	Name   string `json:"name"`
@@ -126,11 +126,11 @@ type userGroupResponse struct {
 }
 
 type groupResponse struct {
-	ID       uint      `json:"id"`
-	Name     string    `json:"name"`
-	Avatar   string    `json:"avatar"`
-    CreatedAt time.Time `json:"created_at"`
-	IsActive bool      `json:"is_active"`
+	ID        uint      `json:"id"`
+	Name      string    `json:"name"`
+	Avatar    string    `json:"avatar"`
+	CreatedAt time.Time `json:"created_at"`
+	IsActive  bool      `json:"is_active"`
 
 	Users []userGroupResponse `json:"users"`
 }
@@ -223,37 +223,37 @@ func CreateGroup(c echo.Context) error {
 }
 
 func AddUsers(c echo.Context) error {
-    // Get data request
-    userGroups := make([]models.UserGroup,0)
-    if err := c.Bind(&userGroups); err != nil {
-        return err
-    }
+	// Get data request
+	userGroups := make([]models.UserGroup, 0)
+	if err := c.Bind(&userGroups); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Start transaction
-    TX := DB.Begin()
+	// Start transaction
+	TX := DB.Begin()
 
-    // Add new users
-    count := 0
-    for _, uGroup := range userGroups {
-        if err := TX.Create(&uGroup).Error; err != nil {
-            TX.Rollback()
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
-        count++
-    }
+	// Add new users
+	count := 0
+	for _, uGroup := range userGroups {
+		if err := TX.Create(&uGroup).Error; err != nil {
+			TX.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+		count++
+	}
 
-    // Commit transaction
-    TX.Commit()
+	// Commit transaction
+	TX.Commit()
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Message: fmt.Sprintf("Se añadieron %d usuarios.",count),
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Message: fmt.Sprintf("Se añadieron %d usuarios.", count),
+	})
 }
 
 func UpdateGroup(c echo.Context) error {
@@ -339,57 +339,57 @@ func IsActiveUserGroup(c echo.Context) error {
 
 // UploadAvatarUser function upload avatar user
 func UploadAvatarGroup(c echo.Context) error {
-    // Read form fields
-    idGroup := c.FormValue("id")
+	// Read form fields
+	idGroup := c.FormValue("id")
 
-    // get connection
-    db := config.GetConnection()
-    defer db.Close()
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
 
-    // Validation user exist
-    group := models.Group{}
-    if db.First(&group, "id = ?", idGroup).RecordNotFound() {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("No se encontró el registro con id %d", group.ID),
-        })
-    }
+	// Validation user exist
+	group := models.Group{}
+	if db.First(&group, "id = ?", idGroup).RecordNotFound() {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("No se encontró el registro con id %d", group.ID),
+		})
+	}
 
-    // Source
-    file, err := c.FormFile("avatar")
-    if err != nil {
-        return err
-    }
-    src, err := file.Open()
-    if err != nil {
-        return err
-    }
-    defer src.Close()
+	// Source
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
 
-    // Destination
-    ccc := sha256.Sum256([]byte(string(group.ID)))
-    name := fmt.Sprintf("%x%s", ccc, filepath.Ext(file.Filename))
-    avatarSRC := "static/profiles/" + name
-    dst, err := os.Create(avatarSRC)
-    if err != nil {
-        return err
-    }
-    defer dst.Close()
-    group.Avatar = avatarSRC
+	// Destination
+	ccc := sha256.Sum256([]byte(string(group.ID)))
+	name := fmt.Sprintf("%x%s", ccc, filepath.Ext(file.Filename))
+	avatarSRC := "static/profiles/" + name
+	dst, err := os.Create(avatarSRC)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+	group.Avatar = avatarSRC
 
-    // Copy
-    if _, err = io.Copy(dst, src); err != nil {
-        return err
-    }
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
 
-    // Update database user
-    if err := db.Model(&group).Update(group).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Update database user
+	if err := db.Model(&group).Update(group).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    group,
-        Message: fmt.Sprintf("El avatar del grupo %s, se subió correctamente", group.Name),
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    group,
+		Message: fmt.Sprintf("El avatar del grupo %s, se subió correctamente", group.Name),
+	})
 }

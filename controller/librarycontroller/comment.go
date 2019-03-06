@@ -110,7 +110,7 @@ func CreateComment(c echo.Context) error {
 
 	// websocket
 	origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
-	url := fmt.Sprintf("ws://localhost:%s/api/v1/ws/comment", config.GetConfig().Server.Port)
+	url := fmt.Sprintf("ws://localhost:%s/ws/comment", config.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -160,7 +160,7 @@ func UpdateComment(c echo.Context) error {
 
 	// websocket
 	origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
-	url := fmt.Sprintf("ws://localhost:%s/api/v1/ws/comment", config.GetConfig().Server.Port)
+	url := fmt.Sprintf("ws://localhost:%s/ws/comment", config.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -217,7 +217,7 @@ func DeleteComment(c echo.Context) error {
 
 	// websocket
 	origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
-	url := fmt.Sprintf("ws://localhost:%s/api/v1/ws/comment", config.GetConfig().Server.Port)
+	url := fmt.Sprintf("ws://localhost:%s/ws/comment", config.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -286,7 +286,7 @@ func CreateVote(c echo.Context) error {
 
 		// websocket
 		origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
-		url := fmt.Sprintf("ws://localhost:%s/api/v1/ws/comment", config.GetConfig().Server.Port)
+		url := fmt.Sprintf("ws://localhost:%s/ws/comment", config.GetConfig().Server.Port)
 
 		ws, err := websocket.Dial(url, "", origin)
 		if err != nil {
@@ -334,7 +334,7 @@ func CreateVote(c echo.Context) error {
 
 		// websocket
 		origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
-		url := fmt.Sprintf("ws://localhost:%s/api/v1/ws/comment", config.GetConfig().Server.Port)
+		url := fmt.Sprintf("ws://localhost:%s/ws/comment", config.GetConfig().Server.Port)
 
 		ws, err := websocket.Dial(url, "", origin)
 		if err != nil {

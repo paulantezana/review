@@ -23,9 +23,9 @@ import (
 
 // Use in user chat
 type userShort struct {
-	ID          uint   `json:"id"`
-	Name        string `json:"name"` //
-	Avatar      string `json:"avatar"`
+	ID     uint   `json:"id"`
+	Name   string `json:"name"` //
+	Avatar string `json:"avatar"`
 }
 
 // Use in list chat messages scroll reverse
@@ -190,12 +190,12 @@ func GetUsersMessageScroll(c echo.Context) error {
 
 // Get messages by group
 func GetMessagesByGroup(c echo.Context) error {
-    // Get user token authenticate
-    //user := c.Get("user").(*jwt.Token)
-    //claims := user.Claims.(*utilities.Claim)
-    //currentUser := claims.User
+	// Get user token authenticate
+	//user := c.Get("user").(*jwt.Token)
+	//claims := user.Claims.(*utilities.Claim)
+	//currentUser := claims.User
 
-    // Get data request
+	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
 		return err
@@ -213,18 +213,18 @@ func GetMessagesByGroup(c echo.Context) error {
 
 	// Query chatMessage scroll
 	chatMessages := make([]chatMessage, 0)
-	if err := DB.Raw("SELECT group_messages.id, group_messages.body, group_messages.body_type, group_messages.file_path, group_messages.created_at, group_messages.creator_id  FROM group_messages " +
-        "INNER JOIN group_message_recipients ON group_messages.id = group_message_recipients.message_id " +
-        "WHERE group_message_recipients.recipient_group_id = ? " +
-        "GROUP BY group_messages.id, group_messages.body, group_messages.body_type, group_messages.created_at, group_messages.created_at " +
-        "ORDER BY group_messages.created_at DESC " +
+	if err := DB.Raw("SELECT group_messages.id, group_messages.body, group_messages.body_type, group_messages.file_path, group_messages.created_at, group_messages.creator_id  FROM group_messages "+
+		"INNER JOIN group_message_recipients ON group_messages.id = group_message_recipients.message_id "+
+		"WHERE group_message_recipients.recipient_group_id = ? "+
+		"GROUP BY group_messages.id, group_messages.body, group_messages.body_type, group_messages.created_at, group_messages.created_at "+
+		"ORDER BY group_messages.created_at DESC "+
 		" OFFSET ? LIMIT ?", request.GroupID, offset, request.Limit).Scan(&chatMessages).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 	DB.Raw("SELECT count(*) FROM group_messages "+
-        "INNER JOIN group_message_recipients ON group_messages.id = group_message_recipients.message_id " +
-        "WHERE group_message_recipients.recipient_group_id = ? " +
-        "GROUP BY group_messages.id", request.GroupID).Scan(&counter)
+		"INNER JOIN group_message_recipients ON group_messages.id = group_message_recipients.message_id "+
+		"WHERE group_message_recipients.recipient_group_id = ? "+
+		"GROUP BY group_messages.id", request.GroupID).Scan(&counter)
 
 	// find user creator info
 	for i := range chatMessages {
@@ -401,26 +401,26 @@ func CreateMessageFileUpload(c echo.Context) error {
 
 	// Find recipient user detail
 	userRecipient := userShort{}
-    DB.Raw("SELECT id, user_name as name, avatar FROM users WHERE id = ? LIMIT 1", uint(rID)).Scan(&userRecipient)
+	DB.Raw("SELECT id, user_name as name, avatar FROM users WHERE id = ? LIMIT 1", uint(rID)).Scan(&userRecipient)
 
 	// Socket init send data
 	chatMessage := chatMessage{
-		ID : message.ID,
-		Body : message.Body,
-		BodyType : message.BodyType,
-		FilePath : message.FilePath,
-		CreatedAt : message.CreatedAt,
-		Recipient : userShort{
+		ID:        message.ID,
+		Body:      message.Body,
+		BodyType:  message.BodyType,
+		FilePath:  message.FilePath,
+		CreatedAt: message.CreatedAt,
+		Recipient: userShort{
 			ID:     userRecipient.ID,
 			Name:   userRecipient.Name,
 			Avatar: userRecipient.Avatar,
 		},
-		Creator : userShort{
+		Creator: userShort{
 			ID:     currentUser.ID,
 			Name:   currentUser.UserName,
 			Avatar: currentUser.Avatar,
 		},
-    }
+	}
 
 	json, err := json.Marshal(&utilities.SocketResponse{
 		Type:   "chat",
@@ -534,34 +534,34 @@ func CreateMessageFileUploadByGroup(c echo.Context) error {
 	// Commit transaction
 	TX.Commit()
 
-    // Find recipient group detail
-    groupRecipient := userShort{}
-    DB.Raw("SELECT * FROM groups WHERE id = ? LIMIT 1", uint(rID)).Scan(&groupRecipient)
+	// Find recipient group detail
+	groupRecipient := userShort{}
+	DB.Raw("SELECT * FROM groups WHERE id = ? LIMIT 1", uint(rID)).Scan(&groupRecipient)
 
-    //Socket init send data
-    chatMessage := chatMessage{
-        ID : groupMessage.ID,
-        Body : groupMessage.Body,
-        BodyType : groupMessage.BodyType,
-        FilePath : groupMessage.FilePath,
-        CreatedAt : groupMessage.CreatedAt,
-        Mode : "group",
-        Recipient : userShort{
-            ID:     groupRecipient.ID,
-            Name:   groupRecipient.Name,
-            Avatar: groupRecipient.Avatar,
-        },
-        Creator : userShort{
-            ID:     currentUser.ID,
-            Name:   currentUser.UserName,
-            Avatar: currentUser.Avatar,
-        },
-    }
+	//Socket init send data
+	chatMessage := chatMessage{
+		ID:        groupMessage.ID,
+		Body:      groupMessage.Body,
+		BodyType:  groupMessage.BodyType,
+		FilePath:  groupMessage.FilePath,
+		CreatedAt: groupMessage.CreatedAt,
+		Mode:      "group",
+		Recipient: userShort{
+			ID:     groupRecipient.ID,
+			Name:   groupRecipient.Name,
+			Avatar: groupRecipient.Avatar,
+		},
+		Creator: userShort{
+			ID:     currentUser.ID,
+			Name:   currentUser.UserName,
+			Avatar: currentUser.Avatar,
+		},
+	}
 
 	json, err := json.Marshal(&utilities.SocketResponse{
-	   Type:   "chat",
-	   Action: "create",
-	   Data:   chatMessage,
+		Type:   "chat",
+		Action: "create",
+		Data:   chatMessage,
 	})
 
 	// Socket
@@ -570,10 +570,10 @@ func CreateMessageFileUploadByGroup(c echo.Context) error {
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
-	   log.Fatal(err)
+		log.Fatal(err)
 	}
 	if _, err := ws.Write(json); err != nil {
-	   log.Fatal(err)
+		log.Fatal(err)
 	}
 
 	// Return response
@@ -748,32 +748,32 @@ func CreateGroupMessage(c echo.Context) error {
 
 	// Find recipient group detail
 	groupRecipient := userShort{}
-    DB.Raw("SELECT * FROM groups WHERE id = ? LIMIT 1", request.RecipientID).Scan(&groupRecipient)
+	DB.Raw("SELECT * FROM groups WHERE id = ? LIMIT 1", request.RecipientID).Scan(&groupRecipient)
 
 	//Socket init send data
 	chatMessage := chatMessage{
-        ID : groupMessage.ID,
-        Body : groupMessage.Body,
-        BodyType : groupMessage.BodyType,
-        FilePath : groupMessage.FilePath,
-        CreatedAt : groupMessage.CreatedAt,
-        Mode : request.Mode,
-        Recipient : userShort{
-            ID:     groupRecipient.ID,
-            Name:   groupRecipient.Name,
-            Avatar: groupRecipient.Avatar,
-        },
-        Creator : userShort{
-            ID:     currentUser.ID,
-            Name:   currentUser.UserName,
-            Avatar: currentUser.Avatar,
-        },
-    }
+		ID:        groupMessage.ID,
+		Body:      groupMessage.Body,
+		BodyType:  groupMessage.BodyType,
+		FilePath:  groupMessage.FilePath,
+		CreatedAt: groupMessage.CreatedAt,
+		Mode:      request.Mode,
+		Recipient: userShort{
+			ID:     groupRecipient.ID,
+			Name:   groupRecipient.Name,
+			Avatar: groupRecipient.Avatar,
+		},
+		Creator: userShort{
+			ID:     currentUser.ID,
+			Name:   currentUser.UserName,
+			Avatar: currentUser.Avatar,
+		},
+	}
 
 	json, err := json.Marshal(&utilities.SocketResponse{
-	   Type:   "chat",
-	   Action: "create",
-	   Data:   chatMessage,
+		Type:   "chat",
+		Action: "create",
+		Data:   chatMessage,
 	})
 
 	// Socket
@@ -782,10 +782,10 @@ func CreateGroupMessage(c echo.Context) error {
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
-	   return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("ERROR 1 == %s", err)})
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("ERROR 1 == %s", err)})
 	}
 	if _, err := ws.Write(json); err != nil {
-	   return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("ERROR 2 == %s", err)})
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("ERROR 2 == %s", err)})
 	}
 
 	// Send chat Notices
@@ -821,7 +821,7 @@ func getUnreadMessages(u models.User, socket bool) []utilities.Notice {
 	defer DB.Close()
 
 	// query
-    lastMessages := make([]lastMessage, 0)
+	lastMessages := make([]lastMessage, 0)
 	if err := DB.Table("messages").
 		Select("messages.body, message_recipients.is_read, messages.creator_id, messages.created_at").
 		Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
