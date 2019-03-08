@@ -218,7 +218,7 @@ func CreateGroup(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    group.ID,
-		Message: fmt.Sprintf("El grupo %s se registro correctamente", group.Name),
+		Message: fmt.Sprintf("El canal %s se registro correctamente", group.Name),
 	})
 }
 
@@ -282,7 +282,7 @@ func UpdateGroup(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    group.ID,
-		Message: fmt.Sprintf("Los datos del grupo %s se desactivo correctamente.", group.Name),
+		Message: fmt.Sprintf("Los datos del canal %s se modificarón correctamente.", group.Name),
 	})
 }
 
@@ -307,7 +307,7 @@ func IsActiveGroup(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    group.ID,
-		Message: fmt.Sprintf("Los datos del grupo se modificaron correctamente."),
+		Message: fmt.Sprintf("Los datos del canal se modificaron correctamente."),
 	})
 }
 
@@ -333,7 +333,7 @@ func IsActiveUserGroup(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    userGroup.ID,
-		Message: fmt.Sprintf("Los datos del grupo se modificaron correctamente."),
+		Message: fmt.Sprintf("Los datos del canal se modificaron correctamente."),
 	})
 }
 
@@ -390,6 +390,6 @@ func UploadAvatarGroup(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    group,
-		Message: fmt.Sprintf("El avatar del grupo %s, se subió correctamente", group.Name),
+		Message: fmt.Sprintf("El avatar del canal %s, se subió correctamente", group.Name),
 	})
 }

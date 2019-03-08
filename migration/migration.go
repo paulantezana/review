@@ -13,16 +13,21 @@ func Migrate() {
 	defer db.Close()
 
 	db.Debug().AutoMigrate(
+	    // Global setting institute
+        &models.Setting{},
+
+	    // Authorization
 		&models.Role{},
 		&models.User{},
-
-		&models.Setting{},
+		&models.SubsidiaryUser{},
+		&models.ProgramUser{},
+		&models.AppModules{},
+		&models.UserScopeProgram{},
+		&models.UserScopeSubsidiary{},
 
 		// Institute
 		&models.Subsidiary{},
-		&models.SubsidiaryUser{},
 		&models.Program{},
-		&models.ProgramUser{},
 		&models.Semester{},
 		&models.Module{},
 		&models.ModuleSemester{},
@@ -82,12 +87,18 @@ func Migrate() {
 	// General =================================================================
 	db.Model(&models.User{}).AddForeignKey("role_id", "roles(id)", "RESTRICT", "RESTRICT")
 
-	// Institutional ===========================================================
+	// Authorization ===========================================================
 	db.Model(&models.SubsidiaryUser{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
 	db.Model(&models.SubsidiaryUser{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "CASCADE", "CASCADE")
-	db.Model(&models.Program{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.ProgramUser{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
 	db.Model(&models.ProgramUser{}).AddForeignKey("program_id", "programs(id)", "CASCADE", "CASCADE")
+	db.Model(&models.UserScopeSubsidiary{}).AddForeignKey("app_module_id", "app_modules(id)", "CASCADE", "CASCADE")
+	db.Model(&models.UserScopeSubsidiary{}).AddForeignKey("subsidiary_user_id", "subsidiary_users(id)", "CASCADE", "CASCADE")
+	db.Model(&models.UserScopeProgram{}).AddForeignKey("app_module_id", "app_modules(id)", "CASCADE", "CASCADE")
+	db.Model(&models.UserScopeProgram{}).AddForeignKey("program_user_id", "program_users(id)", "CASCADE", "CASCADE")
+
+	// Institutional ===========================================================
+	db.Model(&models.Program{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.Semester{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.ModuleSemester{}).AddForeignKey("semester_id", "semesters(id)", "CASCADE", "CASCADE")
 	db.Model(&models.ModuleSemester{}).AddForeignKey("module_id", "modules(id)", "CASCADE", "CASCADE")
@@ -151,8 +162,7 @@ func Migrate() {
 	db.Model(&models.Like{}).AddForeignKey("book_id", "books(id)", "CASCADE", "CASCADE")
 
 	// Messenger =================================s==========================
-	//db.Model(&models.MessageRecipient{}).AddForeignKey("recipient_id", "users(id)", "RESTRICT", "RESTRICT")
-	//db.Model(&models.MessageRecipient{}).AddForeignKey("recipient_group_id", "user_groups(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.MessageRecipient{}).AddForeignKey("recipient_id", "users(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.MessageRecipient{}).AddForeignKey("message_id", "messages(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.GroupMessageRecipient{}).AddForeignKey("message_id", "group_messages(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.UserGroup{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
