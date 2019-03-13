@@ -59,12 +59,15 @@ func Migrate() {
 		&models.CourseExam{},
 
 		// Migration monitoring
-		&models.Answer{},
-		&models.AnswerDetail{},
-		&models.MultipleQuestion{},
+		&models.TypeQuestion{},
 		&models.Poll{},
 		&models.Question{},
-		&models.TypeQuestion{},
+		&models.MultipleQuestion{},
+        &models.Quiz{},
+        &models.QuizQuestion{},
+        &models.MultipleQuizQuestion{},
+		&models.Answer{},
+		&models.AnswerDetail{},
 
 		// Libraries
 		&models.Category{},
@@ -142,15 +145,18 @@ func Migrate() {
 
 	// Monitoring ==============================================================
 	db.Model(&models.Poll{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Question{}).AddForeignKey("poll_id", "polls(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Question{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.MultipleQuestion{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
 	db.Model(&models.Answer{}).AddForeignKey("poll_id", "polls(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.Answer{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.AnswerDetail{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
 	db.Model(&models.AnswerDetail{}).AddForeignKey("answer_id", "answers(id)", "RESTRICT", "RESTRICT")
 
-	db.Model(&models.Question{}).AddForeignKey("poll_id", "polls(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.Question{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
-
-	db.Model(&models.MultipleQuestion{}).AddForeignKey("question_id", "questions(id)", "CASCADE", "RESTRICT")
+	db.Model(&models.Quiz{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.QuizQuestion{}).AddForeignKey("quiz_id", "quizzes(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.QuizQuestion{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.MultipleQuizQuestion{}).AddForeignKey("quiz_question_id", "multiple_quiz_questions(id)", "RESTRICT", "RESTRICT")
 
 	// Libraries ===========================================================
 	db.Model(&models.Book{}).AddForeignKey("category_id", "categories(id)", "RESTRICT", "RESTRICT")
@@ -256,10 +262,10 @@ func Migrate() {
 
 	if tpq.ID == 0 {
 		// Create Models
-		tq1 := models.TypeQuestion{Name: "Respuesta breve"}          // 1 = Simple input
-		tq2 := models.TypeQuestion{Name: "Párrafo"}                  // 2 = TextArea input
-		tq3 := models.TypeQuestion{Name: "Opción múltiple"}          // 3 = Radio input
-		tq4 := models.TypeQuestion{Name: "Casillas de verificación"} // 4 = Checkbox input
+		tq1 := models.TypeQuestion{Name: "Respuesta breve"}             // 1 = Simple input
+		tq2 := models.TypeQuestion{Name: "Párrafo"}                     // 2 = TextArea input
+		tq3 := models.TypeQuestion{Name: "Una respuesta"}               // 3 = Radio input
+		tq4 := models.TypeQuestion{Name: "Varias respuestas"}           // 4 = Checkbox input
 
 		// Insert in Database
 		db.Create(&tq1)

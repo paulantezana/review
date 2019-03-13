@@ -209,6 +209,13 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/monitoring/poll/update", monitoringcontroller.UpdatePoll)
 	ar.DELETE("/monitoring/poll/delete", monitoringcontroller.DeletePoll)
 
+	// quiz
+	ar.POST("/monitoring/quiz/paginate", monitoringcontroller.GetQuizzesPaginate)
+	ar.POST("/monitoring/quiz/by/id", monitoringcontroller.GetQuizByID)
+	ar.POST("/monitoring/quiz/create", monitoringcontroller.CreateQuiz)
+	ar.PUT("/monitoring/quiz/update", monitoringcontroller.UpdateQuiz)
+	ar.DELETE("/monitoring/quiz/delete", monitoringcontroller.DeleteQuiz)
+
 	// Question
 	ar.POST("/monitoring/question/all", monitoringcontroller.GetQuestions)
 	ar.POST("/monitoring/question/create", monitoringcontroller.CreateQuestions)

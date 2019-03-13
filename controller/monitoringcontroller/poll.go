@@ -31,12 +31,12 @@ func GetPollsPaginate(c echo.Context) error {
 
 	// Execute instructions
 	var total uint
-	companies := make([]models.Poll, 0)
+	polls := make([]models.Poll, 0)
 
 	// Query in database
 	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ProgramID).
 		Order("id desc").
-		Offset(offset).Limit(request.Limit).Find(&companies).
+		Offset(offset).Limit(request.Limit).Find(&polls).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
@@ -44,7 +44,7 @@ func GetPollsPaginate(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
 		Success:     true,
-		Data:        companies,
+		Data:        polls,
 		Total:       total,
 		CurrentPage: request.CurrentPage,
 		Limit:       request.Limit,
@@ -102,7 +102,7 @@ func CreatePoll(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    poll.ID,
-		Message: fmt.Sprintf("La empresa %s se registro correctamente", poll.Name),
+		Message: fmt.Sprintf("La encuesta %s se registro correctamente", poll.Name),
 	})
 }
 
@@ -118,18 +118,20 @@ func UpdatePoll(c echo.Context) error {
 	defer db.Close()
 
 	// Update poll in database
-	rows := db.Model(&poll).Update(poll).RowsAffected
-	if rows == 0 {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", poll.ID),
-		})
-	}
+	db.Model(&poll).Update(poll)
 
-	// Return response
+	// Update columns
+    db.Model(&poll).UpdateColumns(map[string]interface{}{
+        "start_date_enable": poll.StartDateEnable,
+        "end_date_enable": poll.EndDateEnable,
+        "show_analyze": poll.ShowAnalyze,
+    })
+
+    // Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    poll.ID,
-		Message: fmt.Sprintf("Los datos del la empresa %s se actualizaron correctamente", poll.Name),
+		Message: fmt.Sprintf("Los datos del la encuesta %s se actualizaron correctamente", poll.Name),
 	})
 }
 
@@ -154,6 +156,6 @@ func DeletePoll(c echo.Context) error {
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    poll.ID,
-		Message: fmt.Sprintf("La empresa %s se elimino correctamente", poll.Name),
+		Message: fmt.Sprintf("La encuesta %s se elimino correctamente", poll.Name),
 	})
 }
