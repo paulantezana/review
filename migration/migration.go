@@ -13,10 +13,10 @@ func Migrate() {
 	defer db.Close()
 
 	db.Debug().AutoMigrate(
-	    // Global setting institute
-        &models.Setting{},
+		// Global setting institute
+		&models.Setting{},
 
-	    // Authorization
+		// Authorization
 		&models.Role{},
 		&models.User{},
 		&models.SubsidiaryUser{},
@@ -63,9 +63,9 @@ func Migrate() {
 		&models.Poll{},
 		&models.Question{},
 		&models.MultipleQuestion{},
-        &models.Quiz{},
-        &models.QuizQuestion{},
-        &models.MultipleQuizQuestion{},
+		&models.Quiz{},
+		&models.QuizQuestion{},
+		&models.MultipleQuizQuestion{},
 		&models.Answer{},
 		&models.AnswerDetail{},
 
@@ -262,10 +262,10 @@ func Migrate() {
 
 	if tpq.ID == 0 {
 		// Create Models
-		tq1 := models.TypeQuestion{Name: "Respuesta breve"}             // 1 = Simple input
-		tq2 := models.TypeQuestion{Name: "Párrafo"}                     // 2 = TextArea input
-		tq3 := models.TypeQuestion{Name: "Una respuesta"}               // 3 = Radio input
-		tq4 := models.TypeQuestion{Name: "Varias respuestas"}           // 4 = Checkbox input
+		tq1 := models.TypeQuestion{Name: "Respuesta breve"}   // 1 = Simple input
+		tq2 := models.TypeQuestion{Name: "Párrafo"}           // 2 = TextArea input
+		tq3 := models.TypeQuestion{Name: "Una respuesta"}     // 3 = Radio input
+		tq4 := models.TypeQuestion{Name: "Varias respuestas"} // 4 = Checkbox input
 
 		// Insert in Database
 		db.Create(&tq1)

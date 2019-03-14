@@ -10,5 +10,5 @@ type MultipleQuizQuestion struct {
 	Label     string    `json:"label"`
 	State     bool      `json:"state" gorm:"default:'true'"`
 
-    QuizQuestionID uint `json:"quiz_question_id"`
+	QuizQuestionID uint `json:"quiz_question_id"`
 }

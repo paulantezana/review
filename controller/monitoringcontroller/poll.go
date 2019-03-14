@@ -121,13 +121,13 @@ func UpdatePoll(c echo.Context) error {
 	db.Model(&poll).Update(poll)
 
 	// Update columns
-    db.Model(&poll).UpdateColumns(map[string]interface{}{
-        "start_date_enable": poll.StartDateEnable,
-        "end_date_enable": poll.EndDateEnable,
-        "show_analyze": poll.ShowAnalyze,
-    })
+	db.Model(&poll).UpdateColumns(map[string]interface{}{
+		"start_date_enable": poll.StartDateEnable,
+		"end_date_enable":   poll.EndDateEnable,
+		"show_analyze":      poll.ShowAnalyze,
+	})
 
-    // Return response
+	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    poll.ID,
@@ -135,7 +135,29 @@ func UpdatePoll(c echo.Context) error {
 	})
 }
 
-// DeletePoll delete pooll by id
+func UpdateStatePoll(c echo.Context) error {
+    // Get data request
+    poll := models.Poll{}
+    if err := c.Bind(&poll); err != nil {
+        return err
+    }
+
+    // get connection
+    db := config.GetConnection()
+    defer db.Close()
+
+    // Update columns
+    db.Model(&poll).UpdateColumn("state", poll.State)
+
+    // Return response
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        Data:    poll.ID,
+        Message: fmt.Sprintf("Los datos del la encuesta %s se actualizaron correctamente", poll.Name),
+    })
+}
+
+// DeletePoll delete poll by id
 func DeletePoll(c echo.Context) error {
 	// Get data request
 	poll := models.Poll{}

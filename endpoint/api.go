@@ -207,6 +207,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/monitoring/poll/by/id", monitoringcontroller.GetPollByID)
 	ar.POST("/monitoring/poll/create", monitoringcontroller.CreatePoll)
 	ar.PUT("/monitoring/poll/update", monitoringcontroller.UpdatePoll)
+	ar.PUT("/monitoring/poll/update/state", monitoringcontroller.UpdateStatePoll)
 	ar.DELETE("/monitoring/poll/delete", monitoringcontroller.DeletePoll)
 
 	// quiz
