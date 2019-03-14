@@ -11,10 +11,10 @@ import (
 )
 
 // GetQuestions get all questions by poll
-func GetQuestions(c echo.Context) error {
+func GetQuizQuestions(c echo.Context) error {
 	// Get data request
-	poll := models.Poll{}
-	if err := c.Bind(&poll); err != nil {
+    quiz := models.Quiz{}
+	if err := c.Bind(&quiz); err != nil {
 		return err
 	}
 
@@ -23,38 +23,39 @@ func GetQuestions(c echo.Context) error {
 	defer db.Close()
 
 	// Execute instructions
-	questions := make([]models.Question, 0)
+    quizQuestions := make([]models.QuizQuestion, 0)
 
 	// Query in database
-	if err := db.Where("poll_id = ?", poll.ID).
-		Order("position asc").Find(&questions).Error; err != nil {
+	if err := db.Where("poll_id = ?", quiz.ID).
+		Order("position asc").Find(&quizQuestions).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	for k, question := range questions {
-		multipleQuestions := make([]models.MultipleQuestion, 0)
+    // Quiz Questions
+	for k, question := range quizQuestions {
+        multipleQuizQuestion := make([]models.MultipleQuizQuestion, 0)
 		if err := db.Where("question_id = ?", question.ID).
-			Order("id asc").Find(&multipleQuestions).Error; err != nil {
+			Order("id asc").Find(&multipleQuizQuestion).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
-		questions[k].MultipleQuestions = multipleQuestions
+        quizQuestions[k].MultipleQuizQuestions = multipleQuizQuestion
 	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    questions,
+		Data:    quizQuestions,
 	})
 }
 
-type createQuestionsRequest struct {
+type createQuizQuestionsRequest struct {
 	Questions []models.Question `json:"questions"`
 }
 
 // CreateQuestions create multiple questions
-func SaveQuestions(c echo.Context) error {
+func CreateQuizQuestions(c echo.Context) error {
 	// Get data request
-	request := createQuestionsRequest{}
+	request := createQuizQuestionsRequest{}
 	if err := c.Bind(&request); err != nil {
 		return err
 	}
@@ -69,7 +70,6 @@ func SaveQuestions(c echo.Context) error {
 	insetCount := 0
 	updateCount := 0
 	for _, question := range request.Questions {
-		fmt.Println("---------------------------------------------------------")
 		if question.ID == 0 {
 			if err := tr.Create(&question).Error; err != nil {
 				tr.Rollback()
@@ -83,7 +83,6 @@ func SaveQuestions(c echo.Context) error {
 			}
 			updateCount++
 		}
-		fmt.Println("---------------------------------------------------------")
 	}
 
 	// Commit transaction
@@ -97,10 +96,10 @@ func SaveQuestions(c echo.Context) error {
 }
 
 // UpdateQuestion update one question
-func UpdateQuestion(c echo.Context) error {
+func UpdateQuizQuestion(c echo.Context) error {
 	// Get data request
-	question := models.Question{}
-	if err := c.Bind(&question); err != nil {
+    quizQuestion := models.QuizQuestion{}
+	if err := c.Bind(&quizQuestion); err != nil {
 		return err
 	}
 
@@ -109,26 +108,26 @@ func UpdateQuestion(c echo.Context) error {
 	defer db.Close()
 
 	// Update question in database
-	rows := db.Model(&question).Update(question).RowsAffected
+	rows := db.Model(&quizQuestion).Update(quizQuestion).RowsAffected
 	if rows == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", question.ID),
+			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", quizQuestion.ID),
 		})
 	}
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    question.ID,
-		Message: fmt.Sprintf("Los datos del la pregunta %s se actualizaron correctamente", question.Name),
+		Data:    quizQuestion.ID,
+		Message: fmt.Sprintf("Los datos del la pregunta %s se actualizaron correctamente", quizQuestion.Name),
 	})
 }
 
 // DeleteQuestion Delete one question
-func DeleteQuestion(c echo.Context) error {
+func DeleteQuizQuestion(c echo.Context) error {
 	// Get data request
-	question := models.Question{}
-	if err := c.Bind(&question); err != nil {
+    quizQuestion := models.QuizQuestion{}
+	if err := c.Bind(&quizQuestion); err != nil {
 		return err
 	}
 
@@ -137,39 +136,14 @@ func DeleteQuestion(c echo.Context) error {
 	defer db.Close()
 
 	// Delete question in database
-	if err := db.Delete(&question).Error; err != nil {
+	if err := db.Delete(&quizQuestion).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    question.ID,
-		Message: fmt.Sprintf("La pregunta %s se elimino correctamente", question.Name),
+		Data:    quizQuestion.ID,
+		Message: fmt.Sprintf("La pregunta %s se elimino correctamente", quizQuestion.Name),
 	})
-}
-
-// DeleteQuestion Delete one question
-func DeleteMultipleQuestion(c echo.Context) error {
-    // Get data request
-    multipleQuestion := models.MultipleQuestion{}
-    if err := c.Bind(&multipleQuestion); err != nil {
-        return err
-    }
-
-    // get connection
-    db := config.GetConnection()
-    defer db.Close()
-
-    // Delete question in database
-    if err := db.Delete(&multipleQuestion).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
-
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    multipleQuestion.ID,
-        Message: fmt.Sprintf("La opcion %s se elimino correctamente", multipleQuestion.Label),
-    })
 }
