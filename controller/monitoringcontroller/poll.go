@@ -136,25 +136,25 @@ func UpdatePoll(c echo.Context) error {
 }
 
 func UpdateStatePoll(c echo.Context) error {
-    // Get data request
-    poll := models.Poll{}
-    if err := c.Bind(&poll); err != nil {
-        return err
-    }
+	// Get data request
+	poll := models.Poll{}
+	if err := c.Bind(&poll); err != nil {
+		return err
+	}
 
-    // get connection
-    db := config.GetConnection()
-    defer db.Close()
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
 
-    // Update columns
-    db.Model(&poll).UpdateColumn("state", poll.State)
+	// Update columns
+	db.Model(&poll).UpdateColumn("state", poll.State)
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    poll.ID,
-        Message: fmt.Sprintf("Los datos del la encuesta %s se actualizaron correctamente", poll.Name),
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    poll.ID,
+		Message: fmt.Sprintf("Los datos del la encuesta %s se actualizaron correctamente", poll.Name),
+	})
 }
 
 // DeletePoll delete poll by id

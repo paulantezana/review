@@ -132,6 +132,28 @@ func UpdateQuiz(c echo.Context) error {
 	})
 }
 
+func UpdateStateQuiz(c echo.Context) error {
+	// Get data request
+	quiz := models.Quiz{}
+	if err := c.Bind(&quiz); err != nil {
+		return err
+	}
+
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Update columns
+	db.Model(&quiz).UpdateColumn("state", quiz.State)
+
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    quiz.ID,
+		Message: fmt.Sprintf("Los datos dell cuestionario %s se actualizaron correctamente", quiz.Name),
+	})
+}
+
 // DeletePoll delete quiz by id
 func DeleteQuiz(c echo.Context) error {
 	// Get data request

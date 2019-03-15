@@ -151,25 +151,25 @@ func DeleteQuestion(c echo.Context) error {
 
 // DeleteQuestion Delete one question
 func DeleteMultipleQuestion(c echo.Context) error {
-    // Get data request
-    multipleQuestion := models.MultipleQuestion{}
-    if err := c.Bind(&multipleQuestion); err != nil {
-        return err
-    }
+	// Get data request
+	multipleQuestion := models.MultipleQuestion{}
+	if err := c.Bind(&multipleQuestion); err != nil {
+		return err
+	}
 
-    // get connection
-    db := config.GetConnection()
-    defer db.Close()
+	// get connection
+	db := config.GetConnection()
+	defer db.Close()
 
-    // Delete question in database
-    if err := db.Delete(&multipleQuestion).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Delete question in database
+	if err := db.Delete(&multipleQuestion).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    multipleQuestion.ID,
-        Message: fmt.Sprintf("La opcion %s se elimino correctamente", multipleQuestion.Label),
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    multipleQuestion.ID,
+		Message: fmt.Sprintf("La opcion %s se elimino correctamente", multipleQuestion.Label),
+	})
 }

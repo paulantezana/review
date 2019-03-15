@@ -13,7 +13,7 @@ import (
 // GetQuestions get all questions by poll
 func GetQuizQuestions(c echo.Context) error {
 	// Get data request
-    quiz := models.Quiz{}
+	quiz := models.Quiz{}
 	if err := c.Bind(&quiz); err != nil {
 		return err
 	}
@@ -23,22 +23,22 @@ func GetQuizQuestions(c echo.Context) error {
 	defer db.Close()
 
 	// Execute instructions
-    quizQuestions := make([]models.QuizQuestion, 0)
+	quizQuestions := make([]models.QuizQuestion, 0)
 
 	// Query in database
-	if err := db.Where("poll_id = ?", quiz.ID).
+	if err := db.Where("quiz_id = ?", quiz.ID).
 		Order("position asc").Find(&quizQuestions).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-    // Quiz Questions
+	// Quiz Questions
 	for k, question := range quizQuestions {
-        multipleQuizQuestion := make([]models.MultipleQuizQuestion, 0)
-		if err := db.Where("question_id = ?", question.ID).
+		multipleQuizQuestion := make([]models.MultipleQuizQuestion, 0)
+		if err := db.Where("quiz_question_id = ?", question.ID).
 			Order("id asc").Find(&multipleQuizQuestion).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
-        quizQuestions[k].MultipleQuizQuestions = multipleQuizQuestion
+		quizQuestions[k].MultipleQuizQuestions = multipleQuizQuestion
 	}
 
 	// Return response
@@ -49,11 +49,11 @@ func GetQuizQuestions(c echo.Context) error {
 }
 
 type createQuizQuestionsRequest struct {
-	Questions []models.Question `json:"questions"`
+	Questions []models.QuizQuestion `json:"questions"`
 }
 
 // CreateQuestions create multiple questions
-func CreateQuizQuestions(c echo.Context) error {
+func SaveQuizQuestions(c echo.Context) error {
 	// Get data request
 	request := createQuizQuestionsRequest{}
 	if err := c.Bind(&request); err != nil {
@@ -65,20 +65,20 @@ func CreateQuizQuestions(c echo.Context) error {
 	defer db.Close()
 
 	// Insert companies in database
-	tr := db.Begin()
+	TX := db.Begin()
 
 	insetCount := 0
 	updateCount := 0
 	for _, question := range request.Questions {
 		if question.ID == 0 {
-			if err := tr.Create(&question).Error; err != nil {
-				tr.Rollback()
+			if err := TX.Save(&question).Error; err != nil {
+                TX.Rollback()
 				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 			}
 			insetCount++
 		} else {
-			if err := tr.Model(&question).Update(question).Error; err != nil {
-				tr.Rollback()
+			if err := TX.Model(&question).Update(question).Error; err != nil {
+                TX.Rollback()
 				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 			}
 			updateCount++
@@ -86,7 +86,7 @@ func CreateQuizQuestions(c echo.Context) error {
 	}
 
 	// Commit transaction
-	tr.Commit()
+    TX.Commit()
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -98,7 +98,7 @@ func CreateQuizQuestions(c echo.Context) error {
 // UpdateQuestion update one question
 func UpdateQuizQuestion(c echo.Context) error {
 	// Get data request
-    quizQuestion := models.QuizQuestion{}
+	quizQuestion := models.QuizQuestion{}
 	if err := c.Bind(&quizQuestion); err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func UpdateQuizQuestion(c echo.Context) error {
 // DeleteQuestion Delete one question
 func DeleteQuizQuestion(c echo.Context) error {
 	// Get data request
-    quizQuestion := models.QuizQuestion{}
+	quizQuestion := models.QuizQuestion{}
 	if err := c.Bind(&quizQuestion); err != nil {
 		return err
 	}

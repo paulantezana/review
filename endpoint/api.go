@@ -215,6 +215,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/monitoring/quiz/by/id", monitoringcontroller.GetQuizByID)
 	ar.POST("/monitoring/quiz/create", monitoringcontroller.CreateQuiz)
 	ar.PUT("/monitoring/quiz/update", monitoringcontroller.UpdateQuiz)
+	ar.PUT("/monitoring/quiz/update/state", monitoringcontroller.UpdateStateQuiz)
 	ar.DELETE("/monitoring/quiz/delete", monitoringcontroller.DeleteQuiz)
 
 	// Question
@@ -223,11 +224,11 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/monitoring/question/update", monitoringcontroller.UpdateQuestion)
 	ar.DELETE("/monitoring/question/delete", monitoringcontroller.DeleteQuestion)
 
-    // Quiz Question
-    ar.POST("/monitoring/quiz/question/all", monitoringcontroller.GetQuizQuestions)
-    ar.POST("/monitoring/quiz/question/create", monitoringcontroller.CreateQuizQuestions)
-    ar.PUT("/monitoring/quiz/question/update", monitoringcontroller.UpdateQuizQuestion)
-    ar.DELETE("/monitoring/quiz/question/delete", monitoringcontroller.DeleteQuizQuestion)
+	// Quiz Question
+	ar.POST("/monitoring/quiz/question/all", monitoringcontroller.GetQuizQuestions)
+	ar.POST("/monitoring/quiz/question/save", monitoringcontroller.SaveQuizQuestions)
+	ar.PUT("/monitoring/quiz/question/update", monitoringcontroller.UpdateQuizQuestion)
+	ar.DELETE("/monitoring/quiz/question/delete", monitoringcontroller.DeleteQuizQuestion)
 
 	// Type questions
 	ar.POST("/monitoring/type/question/all", monitoringcontroller.GetTypeQuestions)
