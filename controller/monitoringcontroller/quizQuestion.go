@@ -48,6 +48,53 @@ func GetQuizQuestions(c echo.Context) error {
 	})
 }
 
+type getQuizQuestionsNavigateRequest struct {
+    ID       uint `json:"id"`
+    Current uint `json:"current"`
+}
+
+func GetQuizQuestionsNavigate(c echo.Context) error {
+	// Get data request
+	request := getQuizQuestionsNavigateRequest{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
+
+	// Get connection
+	DB := config.GetConnection()
+	defer DB.Close()
+
+	// Execute instructions
+	var total uint
+	quizQuestions := make([]models.QuizQuestion, 0)
+
+	// Query in database
+	if err := DB.Debug().Where("quiz_id = ?", request.ID).
+		Order("position asc").
+		Offset(request.Current).Limit(1).Find(&quizQuestions).
+		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+	// Quiz Questions
+	for k, question := range quizQuestions {
+		multipleQuizQuestion := make([]models.MultipleQuizQuestion, 0)
+		if err := DB.Where("quiz_question_id = ?", question.ID).
+			Order("id asc").Find(&multipleQuizQuestion).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+		quizQuestions[k].MultipleQuizQuestions = multipleQuizQuestion
+	}
+
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
+		Success:     true,
+		Data:        quizQuestions,
+		Total:       total,
+		CurrentPage: request.Current,
+	})
+}
+
 type createQuizQuestionsRequest struct {
 	Questions []models.QuizQuestion `json:"questions"`
 }
