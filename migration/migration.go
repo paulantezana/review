@@ -63,11 +63,13 @@ func Migrate() {
 		&models.Poll{},
 		&models.Question{},
 		&models.MultipleQuestion{},
+		&models.Answer{},
+		&models.AnswerDetail{},
 		&models.Quiz{},
 		&models.QuizQuestion{},
 		&models.MultipleQuizQuestion{},
-		&models.Answer{},
-		&models.AnswerDetail{},
+		&models.QuizAnswer{},
+		&models.QuizAnswerDetail{},
 
 		// Libraries
 		&models.Category{},
@@ -157,6 +159,10 @@ func Migrate() {
 	db.Model(&models.QuizQuestion{}).AddForeignKey("quiz_id", "quizzes(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.QuizQuestion{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.MultipleQuizQuestion{}).AddForeignKey("quiz_question_id", "multiple_quiz_questions(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.QuizAnswer{}).AddForeignKey("quiz_id", "quizzes(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.QuizAnswer{}).AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.QuizAnswerDetail{}).AddForeignKey("quiz_question_id", "quiz_questions(id)", "CASCADE", "RESTRICT")
+	db.Model(&models.QuizAnswerDetail{}).AddForeignKey("quiz_answer_id", "quiz_answers(id)", "RESTRICT", "RESTRICT")
 
 	// Libraries ===========================================================
 	db.Model(&models.Book{}).AddForeignKey("category_id", "categories(id)", "RESTRICT", "RESTRICT")

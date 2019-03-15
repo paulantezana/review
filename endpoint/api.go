@@ -203,7 +203,8 @@ func ProtectedApi(e *echo.Echo) {
 	//      Monitoring routes ----------------------------------------------------
 
 	// poll
-	ar.POST("/monitoring/poll/all", monitoringcontroller.GetPollsPaginate)
+	ar.POST("/monitoring/poll/paginate", monitoringcontroller.GetPollsPaginate)
+	ar.POST("/monitoring/poll/paginate/student", monitoringcontroller.GetPollsPaginateStudent)
 	ar.POST("/monitoring/poll/by/id", monitoringcontroller.GetPollByID)
 	ar.POST("/monitoring/poll/create", monitoringcontroller.CreatePoll)
 	ar.PUT("/monitoring/poll/update", monitoringcontroller.UpdatePoll)
@@ -212,6 +213,7 @@ func ProtectedApi(e *echo.Echo) {
 
 	// quiz
 	ar.POST("/monitoring/quiz/paginate", monitoringcontroller.GetQuizzesPaginate)
+	ar.POST("/monitoring/quiz/paginate/student", monitoringcontroller.GetQuizzesPaginateStudent)
 	ar.POST("/monitoring/quiz/by/id", monitoringcontroller.GetQuizByID)
 	ar.POST("/monitoring/quiz/create", monitoringcontroller.CreateQuiz)
 	ar.PUT("/monitoring/quiz/update", monitoringcontroller.UpdateQuiz)

@@ -10,11 +10,6 @@ import (
 )
 
 func GetQuizzesPaginate(c echo.Context) error {
-	// Get user token authenticate
-	//user := c.Get("user").(*jwt.Token)
-	//claims := user.Claims.(*utilities.Claim)
-	//currentUser := claims.User
-
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
@@ -34,6 +29,43 @@ func GetQuizzesPaginate(c echo.Context) error {
 
 	// Query in database
 	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ProgramID).
+		Order("id desc").
+		Offset(offset).Limit(request.Limit).Find(&quizzes).
+		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
+		Success:     true,
+		Data:        quizzes,
+		Total:       total,
+		CurrentPage: request.CurrentPage,
+		Limit:       request.Limit,
+	})
+}
+
+// From student
+func GetQuizzesPaginateStudent(c echo.Context) error {
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
+
+	// Get connection
+	db := config.GetConnection()
+	defer db.Close()
+
+	// Pagination calculate
+	offset := request.Validate()
+
+	// Execute instructions
+	var total uint
+	quizzes := make([]models.Quiz, 0)
+
+	// Query in database
+	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ? AND state = true", "%"+request.Search+"%", request.ProgramID).
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&quizzes).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
@@ -117,12 +149,15 @@ func UpdateQuiz(c echo.Context) error {
 	defer db.Close()
 
 	// Update poll in database
-	rows := db.Model(&quiz).Update(quiz).RowsAffected
-	if rows == 0 {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", quiz.ID),
-		})
-	}
+	db.Model(&quiz).Update(quiz)
+
+	// Update columns
+	db.Model(&quiz).UpdateColumns(map[string]interface{}{
+		"start_date_enable": quiz.StartDateEnable,
+		"end_date_enable":   quiz.EndDateEnable,
+		"limit_time_enable": quiz.LimitTimeEnable,
+		"show_analyze":      quiz.ShowAnalyze,
+	})
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{

@@ -72,13 +72,13 @@ func SaveQuizQuestions(c echo.Context) error {
 	for _, question := range request.Questions {
 		if question.ID == 0 {
 			if err := TX.Save(&question).Error; err != nil {
-                TX.Rollback()
+				TX.Rollback()
 				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 			}
 			insetCount++
 		} else {
 			if err := TX.Model(&question).Update(question).Error; err != nil {
-                TX.Rollback()
+				TX.Rollback()
 				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 			}
 			updateCount++
@@ -86,7 +86,7 @@ func SaveQuizQuestions(c echo.Context) error {
 	}
 
 	// Commit transaction
-    TX.Commit()
+	TX.Commit()
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
