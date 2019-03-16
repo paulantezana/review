@@ -63,33 +63,51 @@ func GetQuizQuestionsNavigate(c echo.Context) error {
 	// Get connection
 	DB := config.GetConnection()
 	defer DB.Close()
+	
+	// Validate
+    if request.Current == 0 {
+        request.Current = 1
+    }
 
 	// Execute instructions
 	var total uint
-	quizQuestions := make([]models.QuizQuestion, 0)
+    quizQuestions := make([]models.QuizQuestion,0)
+
+
 
 	// Query in database
-	if err := DB.Debug().Where("quiz_id = ?", request.ID).
+	if err := DB.Where("quiz_id = ?", request.ID).
 		Order("position asc").
-		Offset(request.Current).Limit(1).Find(&quizQuestions).
+		Offset(request.Current - 1).Limit(1).Find(&quizQuestions).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
+    // Validate finish
+    if request.Current == total {
+        return c.JSON(http.StatusOK, utilities.Response{
+            Success: true,
+        })
+    }
+
+    // Validate Not Found record
+    if len(quizQuestions) == 0 {
+        return c.JSON(http.StatusOK,utilities.Response{
+            Message: fmt.Sprintf("No se encontro ninguna pregunta"),
+        })
+    }
 
 	// Quiz Questions
-	for k, question := range quizQuestions {
-		multipleQuizQuestion := make([]models.MultipleQuizQuestion, 0)
-		if err := DB.Where("quiz_question_id = ?", question.ID).
-			Order("id asc").Find(&multipleQuizQuestion).Error; err != nil {
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-		}
-		quizQuestions[k].MultipleQuizQuestions = multipleQuizQuestion
-	}
+    multipleQuizQuestion := make([]models.MultipleQuizQuestion, 0)
+    if err := DB.Where("quiz_question_id = ?", quizQuestions[0].ID).
+        Order("id asc").Find(&multipleQuizQuestion).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+    quizQuestions[0].MultipleQuizQuestions = multipleQuizQuestion
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
 		Success:     true,
-		Data:        quizQuestions,
+		Data:        quizQuestions[0],
 		Total:       total,
 		CurrentPage: request.Current,
 	})
