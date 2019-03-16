@@ -49,8 +49,8 @@ func GetQuizQuestions(c echo.Context) error {
 }
 
 type getQuizQuestionsNavigateRequest struct {
-    ID       uint `json:"id"`
-    Current uint `json:"current"`
+	ID      uint `json:"id"`
+	Current uint `json:"current"`
 }
 
 func GetQuizQuestionsNavigate(c echo.Context) error {
@@ -63,17 +63,15 @@ func GetQuizQuestionsNavigate(c echo.Context) error {
 	// Get connection
 	DB := config.GetConnection()
 	defer DB.Close()
-	
+
 	// Validate
-    if request.Current == 0 {
-        request.Current = 1
-    }
+	if request.Current == 0 {
+		request.Current = 1
+	}
 
 	// Execute instructions
 	var total uint
-    quizQuestions := make([]models.QuizQuestion,0)
-
-
+	quizQuestions := make([]models.QuizQuestion, 0)
 
 	// Query in database
 	if err := DB.Where("quiz_id = ?", request.ID).
@@ -82,27 +80,27 @@ func GetQuizQuestionsNavigate(c echo.Context) error {
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
-    // Validate finish
-    if request.Current == total {
-        return c.JSON(http.StatusOK, utilities.Response{
-            Success: true,
-        })
-    }
+	// Validate finish
+	if request.Current == total {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: true,
+		})
+	}
 
-    // Validate Not Found record
-    if len(quizQuestions) == 0 {
-        return c.JSON(http.StatusOK,utilities.Response{
-            Message: fmt.Sprintf("No se encontro ninguna pregunta"),
-        })
-    }
+	// Validate Not Found record
+	if len(quizQuestions) == 0 {
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("No se encontro ninguna pregunta"),
+		})
+	}
 
 	// Quiz Questions
-    multipleQuizQuestion := make([]models.MultipleQuizQuestion, 0)
-    if err := DB.Where("quiz_question_id = ?", quizQuestions[0].ID).
-        Order("id asc").Find(&multipleQuizQuestion).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
-    quizQuestions[0].MultipleQuizQuestions = multipleQuizQuestion
+	multipleQuizQuestion := make([]models.MultipleQuizQuestion, 0)
+	if err := DB.Where("quiz_question_id = ?", quizQuestions[0].ID).
+		Order("id asc").Find(&multipleQuizQuestion).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+	quizQuestions[0].MultipleQuizQuestions = multipleQuizQuestion
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{

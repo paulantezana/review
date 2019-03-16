@@ -245,7 +245,9 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/monitoring/answer/navigate", monitoringcontroller.GetAnswerNavigate)
 	ar.POST("/monitoring/answer/export/excel", monitoringcontroller.ExportExcelAnswers)
 
+	ar.POST("/monitoring/quiz/answer/last", monitoringcontroller.GetLastQuizAnswer)
 	ar.POST("/monitoring/quiz/answer/create", monitoringcontroller.CreateQuizAnswer)
+	ar.POST("/monitoring/quiz/answer/create/detail", monitoringcontroller.CreateQuizAnswerDetail)
 
 	// ---------------------------------------------------------------------------
 	//      Book routes ----------------------------------------------------
