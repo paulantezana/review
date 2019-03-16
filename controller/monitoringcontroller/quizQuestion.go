@@ -74,17 +74,11 @@ func GetQuizQuestionsNavigate(c echo.Context) error {
 	quizQuestions := make([]models.QuizQuestion, 0)
 
 	// Query in database
-	if err := DB.Where("quiz_id = ?", request.ID).
+	if err := DB.Debug().Where("quiz_id = ?", request.ID).
 		Order("position asc").
 		Offset(request.Current - 1).Limit(1).Find(&quizQuestions).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
-	// Validate finish
-	if request.Current == total {
-		return c.JSON(http.StatusOK, utilities.Response{
-			Success: true,
-		})
 	}
 
 	// Validate Not Found record

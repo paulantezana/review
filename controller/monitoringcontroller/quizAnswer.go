@@ -9,7 +9,6 @@ import (
 	"net/http"
 )
 
-
 func GetLastQuizAnswer(c echo.Context) error {
     // Get data request
     answer := models.QuizAnswer{}
@@ -68,10 +67,16 @@ func CreateQuizAnswer(c echo.Context) error {
 	})
 }
 
+type answerDetailRequest struct {
+    QuizQuestionID uint `json:"quiz_question_id"`
+    QuizAnswerID   uint `json:"quiz_answer_id"`
+    Current uint `json:"current"`
+    Total uint `json:"total"`
+}
 func CreateQuizAnswerDetail(c echo.Context) error {
     // Get data request
-    answerDetail := models.QuizAnswerDetail{}
-    if err := c.Bind(&answerDetail); err != nil {
+    request := answerDetailRequest{}
+    if err := c.Bind(&request); err != nil {
         return err
     }
 
@@ -80,14 +85,31 @@ func CreateQuizAnswerDetail(c echo.Context) error {
     defer DB.Close()
 
     // Insert answers in database
+    answerDetail := models.QuizAnswerDetail{
+        QuizQuestionID: request.QuizQuestionID,
+        QuizAnswerID: request.QuizAnswerID,
+    }
     if err := DB.Create(&answerDetail).Error; err != nil {
         return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
     }
 
+    // Query
+    quizAnswer := models.QuizAnswer{}
+    if err := DB.First(&quizAnswer,models.QuizAnswer{ID: answerDetail.QuizAnswerID}).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Update quiz in database
+    if request.Current == request.Total {
+        quizAnswer.Step = quizAnswer.Step + 1
+    }
+    quizAnswer.CurrentQuestion = request.Current + 1
+    DB.Model(&quizAnswer).Update(quizAnswer)
+
     // Return response
     return c.JSON(http.StatusCreated, utilities.Response{
         Success: true,
-        Data:    answerDetail.ID,
-        Message: fmt.Sprintf("La empresa %d se registro correctamente", answerDetail.ID),
+        Data:    quizAnswer,
+        Message: fmt.Sprintf("La empresa se registro correctamente"),
     })
 }
