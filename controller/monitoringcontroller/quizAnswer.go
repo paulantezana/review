@@ -31,6 +31,23 @@ func GetLastQuizAnswer(c echo.Context) error {
     })
 }
 
+// GetAnalyzeQuizAnswer
+//func GetAnalyzeQuizAnswer(c echo.Context) error {
+//   // Get data request
+//   quiz := models.Quiz{}
+//   if err := c.Bind(&quiz); err != nil {
+//       return err
+//   }
+//
+//   // get connection
+//   DB := config.GetConnection()
+//   defer DB.Close()
+//
+//   //
+//   ansa := models.QuizAnswer{}
+//}
+
+// CreateQuizAnswer
 func CreateQuizAnswer(c echo.Context) error {
 	// Get data request
 	answer := models.QuizAnswer{}
@@ -111,5 +128,28 @@ func CreateQuizAnswerDetail(c echo.Context) error {
         Success: true,
         Data:    quizAnswer,
         Message: fmt.Sprintf("La empresa se registro correctamente"),
+    })
+}
+
+func TimeFinihsQuizAnswer(c echo.Context) error {
+    // Get data request
+    quizAnswer := models.QuizAnswer{}
+    if err := c.Bind(&quizAnswer); err != nil {
+        return err
+    }
+
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // update quiz
+    quizAnswer.Step = 2
+    DB.Model(&quizAnswer).Update(quizAnswer)
+
+    // Return response
+    return c.JSON(http.StatusCreated, utilities.Response{
+        Success: true,
+        Data:    quizAnswer,
+        Message: fmt.Sprintf("El tiempo ha finalizado."),
     })
 }
