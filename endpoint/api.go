@@ -226,6 +226,15 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/monitoring/question/update", monitoringcontroller.UpdateQuestion)
 	ar.DELETE("/monitoring/question/delete", monitoringcontroller.DeleteQuestion)
 
+    // Quiz Diplomat
+    ar.POST("/monitoring/quiz/diplomat/paginate", monitoringcontroller.GetQuizDiplomatPaginate)
+    ar.POST("/monitoring/quiz/diplomat/paginate/student", monitoringcontroller.GetQuizDiplomatPaginateStudent)
+    ar.POST("/monitoring/quiz/diplomat/by/id", monitoringcontroller.GetQuizDiplomatByID)
+    ar.POST("/monitoring/quiz/diplomat/create", monitoringcontroller.CreateQuizDiplomat)
+    ar.PUT("/monitoring/quiz/diplomat/update", monitoringcontroller.UpdateQuizDiplomat)
+    //ar.PUT("/monitoring/quiz/diplomat/update/state", monitoringcontroller.UpdateQuizDiplomat)
+    ar.DELETE("/monitoring/quiz/diplomat/delete", monitoringcontroller.DeleteQuizDiplomat)
+
 	// Quiz Question
 	ar.POST("/monitoring/quiz/question/all", monitoringcontroller.GetQuizQuestions)
 	ar.POST("/monitoring/quiz/question/navigate", monitoringcontroller.GetQuizQuestionsNavigate)
@@ -245,11 +254,13 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/monitoring/answer/navigate", monitoringcontroller.GetAnswerNavigate)
 	ar.POST("/monitoring/answer/export/excel", monitoringcontroller.ExportExcelAnswers)
 
+	// Quiz Answer
 	ar.POST("/monitoring/quiz/answer/last", monitoringcontroller.GetLastQuizAnswer)
 	ar.POST("/monitoring/quiz/answer/create", monitoringcontroller.CreateQuizAnswer)
 	ar.POST("/monitoring/quiz/answer/time/finish", monitoringcontroller.TimeFinishQuizAnswer)
 	ar.POST("/monitoring/quiz/answer/create/detail", monitoringcontroller.CreateQuizAnswerDetail)
 	ar.POST("/monitoring/quiz/answer/analyze/by/student", monitoringcontroller.GetAnalyzeQuizAnswerByStudent)
+
 
 	// ---------------------------------------------------------------------------
 	//      Book routes ----------------------------------------------------
