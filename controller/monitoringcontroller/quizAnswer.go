@@ -31,12 +31,34 @@ func GetLastQuizAnswer(c echo.Context) error {
 	})
 }
 
-type answerDetails struct {
-    Answer    string    `json:"answer"`
-    QuizQuestionID uint `json:"quiz_question_id"`
+// Multiple question
+type multipleQuestionR struct {
+	ID      uint   `json:"id"`
+	Label   string `json:"label"`
+	Correct bool   `json:"correct"`
 }
+
+// Question response
+type questionR struct {
+	ID                uint                `json:"id"`
+	Name              string              `json:"name"`
+	Answer            string              `json:"answer"`
+	MultipleQuestions []multipleQuestionR `json:"multiple_questions"`
+}
+
+// Analyze Attempts
+type attemptR struct {
+	Note      uint        `json:"note"`
+	Questions []questionR `json:"questions"`
+}
+
+// response struct
+type analyzeQuizAnswerResponse struct {
+	Attempts []attemptR `json:"attempts"`
+}
+
 //GetAnalyzeQuizAnswer
-func GetAnalyzeQuizAnswer(c echo.Context) error {
+func GetAnalyzeQuizAnswerByStudent(c echo.Context) error {
 	// Get data request
 	answer := models.QuizAnswer{}
 	if err := c.Bind(&answer); err != nil {
@@ -47,31 +69,60 @@ func GetAnalyzeQuizAnswer(c echo.Context) error {
 	DB := config.GetConnection()
 	defer DB.Close()
 
-    // Get questions
-    questions := make([]answerSummary, 0)
-    if err := DB.Table("questions").Select("id, name, type_question_id").
-        Where("quiz_id = ?", answer.QuizID).Scan(&questions).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// analyzeQuizAnswerResponse
+	analyze := analyzeQuizAnswerResponse{}
+
+	// Get questions
+	questions := make([]answerSummary, 0)
+	if err := DB.Table("quiz_questions").Select("id, name, type_question_id").
+		Where("quiz_id = ?", answer.QuizID).Scan(&questions).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Query answer
 	quizAnswers := make([]models.QuizAnswer, 0)
 	DB.Find(&quizAnswers, models.QuizAnswer{QuizID: answer.QuizID, StudentID: answer.StudentID})
 
-	// quizAnswers
 	for _, quizAnswer := range quizAnswers {
-        answerDetails := make([]answerDetails,0)
-		if err := DB.Raw("SELECT quiz_answer_details.quiz_question_id, quiz_answer_details.answer FROM quiz_answers "+
-			"INNER JOIN quiz_answer_details ON quiz_answers.id = quiz_answer_details.quiz_answer_id "+
-			"WHERE quiz_answers.id = ?", quizAnswer.ID).Scan(&answerDetails).Error; err != nil {
+		attemptR := attemptR{}
+		for _, question := range questions {
+			// Prepare struct question
+			questionR := questionR{
+				ID:   question.ID,
+				Name: question.Name,
+			}
+
+			// Query answers
+			answerDetail := answerDetailSummary{}
+			if err := DB.Table("quiz_answer_details").Select("id, answer").
+				Where("quiz_question_id = ? AND quiz_answer_id = ?", question.ID, quizAnswer.ID).
+				Limit(1).
+				Scan(&answerDetail).Error; err != nil {
+				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+			}
+            questionR.Answer = answerDetail.Answer
+
+			// Query multiple questions
+			multipleQuestionRs := make([]multipleQuestionR, 0)
+			if err := DB.Table("multiple_quiz_questions").Select("id, label, correct").
+				Where("quiz_question_id = ?", question.ID).
+				Scan(&multipleQuestionRs).Error; err != nil {
+				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+			}
+			questionR.MultipleQuestions = multipleQuestionRs
+
+			// Set Questions
+			attemptR.Questions = append(attemptR.Questions, questionR)
 		}
+		// Set Attempts
+		analyze.Attempts = append(analyze.Attempts, attemptR)
 	}
 
-    // Return response
-    return c.JSON(http.StatusCreated, utilities.Response{
-        Success: true,
-        Data:    20,
-    })
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    analyze,
+	})
 }
 
 // CreateQuizAnswer

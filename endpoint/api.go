@@ -249,6 +249,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/monitoring/quiz/answer/create", monitoringcontroller.CreateQuizAnswer)
 	ar.POST("/monitoring/quiz/answer/time/finish", monitoringcontroller.TimeFinishQuizAnswer)
 	ar.POST("/monitoring/quiz/answer/create/detail", monitoringcontroller.CreateQuizAnswerDetail)
+	ar.POST("/monitoring/quiz/answer/analyze/by/student", monitoringcontroller.GetAnalyzeQuizAnswerByStudent)
 
 	// ---------------------------------------------------------------------------
 	//      Book routes ----------------------------------------------------
