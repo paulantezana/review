@@ -17,6 +17,7 @@ type Quiz struct {
 	LimitTimeFormat uint      `json:"limit_time_format"`
 	LimitTimeEnable bool      `json:"limit_time_enable"`
 	ShowAnalyze     bool      `json:"show_analyze"`
+	BaseNote        uint      `json:"base_note"`
 	State           bool      `json:"state"`
 
 	ProgramID uint `json:"program_id"`

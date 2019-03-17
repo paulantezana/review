@@ -7,6 +7,8 @@ import (
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 func GetLastQuizAnswer(c echo.Context) error {
@@ -40,10 +42,11 @@ type multipleQuestionR struct {
 
 // Question response
 type questionR struct {
-	ID                uint                `json:"id"`
-	Name              string              `json:"name"`
-	Answer            string              `json:"answer"`
-	MultipleQuestions []multipleQuestionR `json:"multiple_questions"`
+	ID                    uint                `json:"id"`
+	Name                  string              `json:"name"`
+	Answer                string              `json:"answer"`
+	TypeQuestionID        uint                `json:"type_question_id"`
+	MultipleQuizQuestions []multipleQuestionR `json:"multiple_quiz_questions"`
 }
 
 // Analyze Attempts
@@ -79,17 +82,23 @@ func GetAnalyzeQuizAnswerByStudent(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
+	// Query quiz
+	quizzes := models.Quiz{}
+	DB.Find(&quizzes, models.Quiz{ID: answer.QuizID})
+
 	// Query answer
 	quizAnswers := make([]models.QuizAnswer, 0)
 	DB.Find(&quizAnswers, models.QuizAnswer{QuizID: answer.QuizID, StudentID: answer.StudentID})
 
 	for _, quizAnswer := range quizAnswers {
 		attemptR := attemptR{}
+		points := 0
 		for _, question := range questions {
 			// Prepare struct question
 			questionR := questionR{
-				ID:   question.ID,
-				Name: question.Name,
+				ID:             question.ID,
+				Name:           question.Name,
+				TypeQuestionID: question.TypeQuestionID,
 			}
 
 			// Query answers
@@ -100,7 +109,7 @@ func GetAnalyzeQuizAnswerByStudent(c echo.Context) error {
 				Scan(&answerDetail).Error; err != nil {
 				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 			}
-            questionR.Answer = answerDetail.Answer
+			questionR.Answer = answerDetail.Answer
 
 			// Query multiple questions
 			multipleQuestionRs := make([]multipleQuestionR, 0)
@@ -109,11 +118,27 @@ func GetAnalyzeQuizAnswerByStudent(c echo.Context) error {
 				Scan(&multipleQuestionRs).Error; err != nil {
 				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 			}
-			questionR.MultipleQuestions = multipleQuestionRs
+			questionR.MultipleQuizQuestions = multipleQuestionRs
+
+			// IS CORRECT
+			// convert string to UINT == Convert answer to to id multiple question
+			u, _ := strconv.ParseUint(strings.TrimSpace(answerDetail.Answer), 0, 32)
+
+			for _, mq := range multipleQuestionRs {
+				if mq.ID == uint(u) && mq.Correct {
+					points++
+				}
+			}
 
 			// Set Questions
 			attemptR.Questions = append(attemptR.Questions, questionR)
 		}
+
+		// Calculate average
+		if len(questions) >= 1 {
+			attemptR.Note = uint((uint(points) * quizzes.BaseNote) / uint(len(questions)))
+		}
+
 		// Set Attempts
 		analyze.Attempts = append(analyze.Attempts, attemptR)
 	}
