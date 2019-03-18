@@ -65,7 +65,7 @@ func GetQuizDiplomatPaginateStudent(c echo.Context) error {
 	quizDiplomats := make([]models.QuizDiplomat, 0)
 
 	// Query in database
-	if err := DB.Where("lower(name) LIKE lower(?) AND program_id = ? AND state = true", "%"+request.Search+"%", request.ProgramID).
+	if err := DB.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ProgramID).
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&quizDiplomats).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {

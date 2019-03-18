@@ -214,6 +214,7 @@ func ProtectedApi(e *echo.Echo) {
 	// quiz
 	ar.POST("/monitoring/quiz/paginate", monitoringcontroller.GetQuizzesPaginate)
 	ar.POST("/monitoring/quiz/paginate/by/diplomat", monitoringcontroller.GetQuizzesPaginateByDiplomat)
+	ar.POST("/monitoring/quiz/paginate/by/diplomat/student", monitoringcontroller.GetQuizzesPaginateByDiplomatStudent)
 	ar.POST("/monitoring/quiz/paginate/student", monitoringcontroller.GetQuizzesPaginateStudent)
 	ar.POST("/monitoring/quiz/by/id", monitoringcontroller.GetQuizByID)
 	ar.POST("/monitoring/quiz/create", monitoringcontroller.CreateQuiz)
