@@ -160,7 +160,6 @@ func Migrate() {
 	db.Model(&models.QuizDiplomat{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 
 	// Quiz
-	db.Model(&models.Quiz{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.QuizQuestion{}).AddForeignKey("quiz_id", "quizzes(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.QuizQuestion{}).AddForeignKey("type_question_id", "type_questions(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.MultipleQuizQuestion{}).AddForeignKey("quiz_question_id", "multiple_quiz_questions(id)", "RESTRICT", "RESTRICT")

@@ -213,6 +213,7 @@ func ProtectedApi(e *echo.Echo) {
 
 	// quiz
 	ar.POST("/monitoring/quiz/paginate", monitoringcontroller.GetQuizzesPaginate)
+	ar.POST("/monitoring/quiz/paginate/by/diplomat", monitoringcontroller.GetQuizzesPaginateByDiplomat)
 	ar.POST("/monitoring/quiz/paginate/student", monitoringcontroller.GetQuizzesPaginateStudent)
 	ar.POST("/monitoring/quiz/by/id", monitoringcontroller.GetQuizByID)
 	ar.POST("/monitoring/quiz/create", monitoringcontroller.CreateQuiz)
@@ -226,14 +227,14 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/monitoring/question/update", monitoringcontroller.UpdateQuestion)
 	ar.DELETE("/monitoring/question/delete", monitoringcontroller.DeleteQuestion)
 
-    // Quiz Diplomat
-    ar.POST("/monitoring/quiz/diplomat/paginate", monitoringcontroller.GetQuizDiplomatPaginate)
-    ar.POST("/monitoring/quiz/diplomat/paginate/student", monitoringcontroller.GetQuizDiplomatPaginateStudent)
-    ar.POST("/monitoring/quiz/diplomat/by/id", monitoringcontroller.GetQuizDiplomatByID)
-    ar.POST("/monitoring/quiz/diplomat/create", monitoringcontroller.CreateQuizDiplomat)
-    ar.PUT("/monitoring/quiz/diplomat/update", monitoringcontroller.UpdateQuizDiplomat)
-    //ar.PUT("/monitoring/quiz/diplomat/update/state", monitoringcontroller.UpdateQuizDiplomat)
-    ar.DELETE("/monitoring/quiz/diplomat/delete", monitoringcontroller.DeleteQuizDiplomat)
+	// Quiz Diplomat
+	ar.POST("/monitoring/quiz/diplomat/paginate", monitoringcontroller.GetQuizDiplomatPaginate)
+	ar.POST("/monitoring/quiz/diplomat/paginate/student", monitoringcontroller.GetQuizDiplomatPaginateStudent)
+	ar.POST("/monitoring/quiz/diplomat/by/id", monitoringcontroller.GetQuizDiplomatByID)
+	ar.POST("/monitoring/quiz/diplomat/create", monitoringcontroller.CreateQuizDiplomat)
+	ar.PUT("/monitoring/quiz/diplomat/update", monitoringcontroller.UpdateQuizDiplomat)
+	//ar.PUT("/monitoring/quiz/diplomat/update/state", monitoringcontroller.UpdateQuizDiplomat)
+	ar.DELETE("/monitoring/quiz/diplomat/delete", monitoringcontroller.DeleteQuizDiplomat)
 
 	// Quiz Question
 	ar.POST("/monitoring/quiz/question/all", monitoringcontroller.GetQuizQuestions)
@@ -260,7 +261,6 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/monitoring/quiz/answer/time/finish", monitoringcontroller.TimeFinishQuizAnswer)
 	ar.POST("/monitoring/quiz/answer/create/detail", monitoringcontroller.CreateQuizAnswerDetail)
 	ar.POST("/monitoring/quiz/answer/analyze/by/student", monitoringcontroller.GetAnalyzeQuizAnswerByStudent)
-
 
 	// ---------------------------------------------------------------------------
 	//      Book routes ----------------------------------------------------

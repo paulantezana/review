@@ -13,6 +13,7 @@ type Request struct {
 	StudentID    uint   `json:"student_id"`
 	UserID       uint   `json:"user_id"`
 	GroupID      uint   `json:"group_id"`
+	QuizDiplomatID uint `json:"quiz_diplomat_id"`
 	IDs          []uint `json:"i_ds"`
 }
 

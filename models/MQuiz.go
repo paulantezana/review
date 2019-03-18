@@ -20,7 +20,8 @@ type Quiz struct {
 	BaseNote        uint      `json:"base_note"`
 	State           bool      `json:"state"`
 
-	ProgramID uint `json:"program_id"`
+	ProgramID       uint      `json:"program_id"`
+	QuizDiplomatID    uint `json:"quiz_diplomat_id"` // No foreign key
 
-	QuizQuestions []QuizQuestion `json:"quiz_questions"`
+	QuizQuestions   []QuizQuestion `json:"quiz_questions"`
 }
