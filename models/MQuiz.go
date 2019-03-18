@@ -19,7 +19,7 @@ type Quiz struct {
 	ShowAnalyze     bool      `json:"show_analyze"`
 	BaseNote        uint      `json:"base_note"`
 	State           bool      `json:"state"`
-
+    Advance uint `json:"advance"`
 	ProgramID       uint      `json:"program_id"`
 	QuizDiplomatID    uint `json:"quiz_diplomat_id"` // No foreign key
 

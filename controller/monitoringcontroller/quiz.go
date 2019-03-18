@@ -81,6 +81,7 @@ func GetQuizzesPaginateByDiplomat(c echo.Context) error {
     })
 }
 
+// Query By Diplomat student
 func GetQuizzesPaginateByDiplomatStudent(c echo.Context) error {
     // Get data request
     request := utilities.Request{}

@@ -229,6 +229,21 @@ func CreateQuizAnswerDetail(c echo.Context) error {
 	quizAnswer.CurrentQuestion = request.Current + 1
 	DB.Model(&quizAnswer).Update(quizAnswer)
 
+    // Calculate advance
+    quiz := models.Quiz{}
+    DB.First(&quiz, models.Quiz{ID: quizAnswer.QuizID})
+
+    questionCount := 0
+    DB.Model(&models.QuizQuestion{}).Where("quiz_id = ?", quizAnswer.QuizID).Count(&questionCount)
+
+    answerCount := 0
+    DB.Model(&models.QuizAnswerDetail{}).Where("quiz_answer_id = ?", quizAnswer.ID).Count(&answerCount)
+
+    if questionCount >= 1 {
+        quiz.Advance = uint((answerCount * 100) / questionCount)
+        DB.Model(&quiz).Update(quiz)
+    }
+
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
