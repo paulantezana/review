@@ -213,8 +213,8 @@ func ProtectedApi(e *echo.Echo) {
 
 	// quiz
 	ar.POST("/monitoring/quiz/paginate", monitoringcontroller.GetQuizzesPaginate)
-	ar.POST("/monitoring/quiz/paginate/by/diplomat", monitoringcontroller.GetQuizzesPaginateByDiplomat)
-	ar.POST("/monitoring/quiz/paginate/by/diplomat/student", monitoringcontroller.GetQuizzesPaginateByDiplomatStudent)
+	ar.POST("/monitoring/quiz/all/by/diplomat", monitoringcontroller.GetQuizzesAllByDiplomat)
+	ar.POST("/monitoring/quiz/all/by/diplomat/student", monitoringcontroller.GetQuizzesAllByDiplomatStudent)
 	ar.POST("/monitoring/quiz/paginate/student", monitoringcontroller.GetQuizzesPaginateStudent)
 	ar.POST("/monitoring/quiz/by/id", monitoringcontroller.GetQuizByID)
 	ar.POST("/monitoring/quiz/create", monitoringcontroller.CreateQuiz)
@@ -262,6 +262,10 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/monitoring/quiz/answer/time/finish", monitoringcontroller.TimeFinishQuizAnswer)
 	ar.POST("/monitoring/quiz/answer/create/detail", monitoringcontroller.CreateQuizAnswerDetail)
 	ar.POST("/monitoring/quiz/answer/analyze/by/student", monitoringcontroller.GetAnalyzeQuizAnswerByStudent)
+
+	// Filters restrictions
+	ar.POST("/monitoring/filter/query", monitoringcontroller.GetMonitoringFilterQuery)
+	ar.POST("/monitoring/filter/search", monitoringcontroller.GetMonitoringFilterSearch)
 
 	// ---------------------------------------------------------------------------
 	//      Book routes ----------------------------------------------------

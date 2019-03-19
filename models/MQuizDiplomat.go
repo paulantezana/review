@@ -8,6 +8,7 @@ type QuizDiplomat struct {
 	UpdatedAt       time.Time `json:"updated_at"`
 	Name            string    `json:"name"`
 	Description     string    `json:"description"`
+	Message         string    `json:"message"`
 	StartDate       time.Time `json:"start_date"`
 	StartDateEnable bool      `json:"start_date_enable"`
 	EndDate         time.Time `json:"end_date"`

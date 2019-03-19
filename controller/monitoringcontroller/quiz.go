@@ -45,77 +45,60 @@ func GetQuizzesPaginate(c echo.Context) error {
 	})
 }
 
-func GetQuizzesPaginateByDiplomat(c echo.Context) error {
-    // Get data request
-    request := utilities.Request{}
-    if err := c.Bind(&request); err != nil {
-        return err
-    }
+// Get all quizzes
+func GetQuizzesAllByDiplomat(c echo.Context) error {
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
 
-    // Get connection
-    db := config.GetConnection()
-    defer db.Close()
+	// Get connection
+	db := config.GetConnection()
+	defer db.Close()
 
-    // Pagination calculate
-    offset := request.Validate()
+	// Execute instructions
+	quizzes := make([]models.Quiz, 0)
 
-    // Execute instructions
-    var total uint
-    quizzes := make([]models.Quiz, 0)
+	// Query in database
+	if err := db.Where("lower(name) LIKE lower(?) AND quiz_diplomat_id = ?", "%"+request.Search+"%", request.QuizDiplomatID).
+		Order("id asc").Find(&quizzes).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Query in database
-    if err := db.Where("lower(name) LIKE lower(?) AND quiz_diplomat_id = ?", "%"+request.Search+"%", request.QuizDiplomatID).
-        Order("id desc").
-        Offset(offset).Limit(request.Limit).Find(&quizzes).
-        Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
-
-    // Return response
-    return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
-        Success:     true,
-        Data:        quizzes,
-        Total:       total,
-        CurrentPage: request.CurrentPage,
-        Limit:       request.Limit,
-    })
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    quizzes,
+	})
 }
 
 // Query By Diplomat student
-func GetQuizzesPaginateByDiplomatStudent(c echo.Context) error {
-    // Get data request
-    request := utilities.Request{}
-    if err := c.Bind(&request); err != nil {
-        return err
-    }
+func GetQuizzesAllByDiplomatStudent(c echo.Context) error {
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
 
-    // Get connection
-    db := config.GetConnection()
-    defer db.Close()
+	// Get connection
+	db := config.GetConnection()
+	defer db.Close()
 
-    // Pagination calculate
-    offset := request.Validate()
+	// Execute instructions
+	quizzes := make([]models.Quiz, 0)
 
-    // Execute instructions
-    var total uint
-    quizzes := make([]models.Quiz, 0)
+	// Query in database
+	if err := db.Where("lower(name) LIKE lower(?) AND quiz_diplomat_id = ? AND state = true", "%"+request.Search+"%", request.QuizDiplomatID).
+		Order("id asc").Find(&quizzes).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Query in database
-    if err := db.Where("lower(name) LIKE lower(?) AND quiz_diplomat_id = ?", "%"+request.Search+"%", request.QuizDiplomatID).
-        Order("id desc").
-        Offset(offset).Limit(request.Limit).Find(&quizzes).
-        Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
-
-    // Return response
-    return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
-        Success:     true,
-        Data:        quizzes,
-        Total:       total,
-        CurrentPage: request.CurrentPage,
-        Limit:       request.Limit,
-    })
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    quizzes,
+	})
 }
 
 // From student

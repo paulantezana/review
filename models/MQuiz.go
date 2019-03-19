@@ -18,10 +18,10 @@ type Quiz struct {
 	LimitTimeEnable bool      `json:"limit_time_enable"`
 	ShowAnalyze     bool      `json:"show_analyze"`
 	BaseNote        uint      `json:"base_note"`
-	State           bool      `json:"state"`
-    Advance uint `json:"advance"`
+	State           bool      `json:"state" gorm:"default:'true'"`
+	Advance         uint      `json:"advance"`
 	ProgramID       uint      `json:"program_id"`
-	QuizDiplomatID    uint `json:"quiz_diplomat_id"` // No foreign key
+	QuizDiplomatID  uint      `json:"quiz_diplomat_id"` // No foreign key
 
-	QuizQuestions   []QuizQuestion `json:"quiz_questions"`
+	QuizQuestions []QuizQuestion `json:"quiz_questions"`
 }

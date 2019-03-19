@@ -10,6 +10,7 @@ import (
 	"github.com/paulantezana/review/utilities"
 )
 
+// GetPollsPaginate
 func GetPollsPaginate(c echo.Context) error {
 	// Get data request
 	request := utilities.Request{}
