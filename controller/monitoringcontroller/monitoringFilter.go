@@ -1,7 +1,8 @@
 package monitoringcontroller
 
 import (
-	"github.com/labstack/echo"
+    "fmt"
+    "github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
@@ -24,6 +25,11 @@ func GetMonitoringFilterQuery(c echo.Context) error {
 		Table:   monitoringFilter.Table,
 		TableID: monitoringFilter.TableID,
 	})
+
+	// Query details
+    if err := DB.Model(&monitoringFilter).Related(&monitoringFilter.Details).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -70,4 +76,34 @@ func GetMonitoringFilterSearch(c echo.Context) error {
 		Success: true,
 		Data:    searchResponse,
 	})
+}
+
+// SaveMonitoringFilter -
+func SaveMonitoringFilter(c echo.Context) error {
+    // Get data request
+    monitoringFilter := models.MonitoringFilter{}
+    if err := c.Bind(&monitoringFilter); err != nil {
+        return err
+    }
+
+    // Get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Reset all
+    if err := DB.Where("monitoring_filter_id = ?", monitoringFilter.ID).Delete(&models.MonitoringFilterDetail{}).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Save
+    if err := DB.Save(&monitoringFilter).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Return response
+    return c.JSON(http.StatusCreated, utilities.Response{
+        Success: true,
+        Data:    monitoringFilter.ID,
+        Message: fmt.Sprintf("El filtro %d se registro correctamente", monitoringFilter.ID),
+    })
 }

@@ -9,4 +9,5 @@ type MonitoringFilter struct {
 	Table     string    `json:"table"`
 	TableID   uint      `json:"table_id"`
 	Type      string    `json:"type"` // subsidiary || program || student || teacher || user || all
+	Details []MonitoringFilterDetail `json:"details"`
 }

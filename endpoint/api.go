@@ -266,6 +266,7 @@ func ProtectedApi(e *echo.Echo) {
 	// Filters restrictions
 	ar.POST("/monitoring/filter/query", monitoringcontroller.GetMonitoringFilterQuery)
 	ar.POST("/monitoring/filter/search", monitoringcontroller.GetMonitoringFilterSearch)
+	ar.POST("/monitoring/filter/save", monitoringcontroller.SaveMonitoringFilter)
 
 	// ---------------------------------------------------------------------------
 	//      Book routes ----------------------------------------------------
