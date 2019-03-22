@@ -2,6 +2,7 @@ package monitoringcontroller
 
 import (
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/paulantezana/review/models"
 	"net/http"
 
@@ -49,6 +50,11 @@ func GetPollsPaginate(c echo.Context) error {
 
 // From student
 func GetPollsPaginateStudent(c echo.Context) error {
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
+
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
@@ -66,8 +72,14 @@ func GetPollsPaginateStudent(c echo.Context) error {
 	var total uint
 	polls := make([]models.Poll, 0)
 
+	// Validations
+	filterIDS, err := validateRestrictions("polls", currentUser)
+	if err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
 	// Query in database
-	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ? AND state = true", "%"+request.Search+"%", request.ProgramID).
+	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ? AND state = true AND id IN (?)", "%"+request.Search+"%", request.ProgramID, filterIDS).
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&polls).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {

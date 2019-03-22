@@ -2,6 +2,7 @@ package monitoringcontroller
 
 import (
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
@@ -47,6 +48,11 @@ func GetQuizDiplomatPaginate(c echo.Context) error {
 
 // From student
 func GetQuizDiplomatPaginateStudent(c echo.Context) error {
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
+
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
@@ -64,8 +70,14 @@ func GetQuizDiplomatPaginateStudent(c echo.Context) error {
 	var total uint
 	quizDiplomats := make([]models.QuizDiplomat, 0)
 
+	// Validations
+	filterIDS, err := validateRestrictions("quiz_diplomats", currentUser)
+	if err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
 	// Query in database
-	if err := DB.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ProgramID).
+	if err := DB.Where("lower(name) LIKE lower(?) AND id IN (?)", "%"+request.Search+"%", filterIDS).
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&quizDiplomats).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
