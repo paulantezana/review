@@ -76,11 +76,6 @@ func GetQuizzesAllByDiplomat(c echo.Context) error {
 
 // Query By Diplomat student
 func GetQuizzesAllByDiplomatStudent(c echo.Context) error {
-	// Get user token authenticate
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
-
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
@@ -94,14 +89,8 @@ func GetQuizzesAllByDiplomatStudent(c echo.Context) error {
 	// Execute instructions
 	quizzes := make([]models.Quiz, 0)
 
-	// Validations
-	filterIDS, err := validateRestrictions("quizzes", currentUser)
-	if err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
-
 	// Query in database
-	if err := db.Where("lower(name) LIKE lower(?) AND quiz_diplomat_id = ? AND state = true AND id IN (?)", "%"+request.Search+"%", request.QuizDiplomatID, filterIDS).
+	if err := db.Where("lower(name) LIKE lower(?) AND quiz_diplomat_id = ? AND state = true", "%"+request.Search+"%", request.QuizDiplomatID).
 		Order("id asc").Find(&quizzes).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
@@ -115,6 +104,11 @@ func GetQuizzesAllByDiplomatStudent(c echo.Context) error {
 
 // From student
 func GetQuizzesPaginateStudent(c echo.Context) error {
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
+
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
@@ -132,8 +126,14 @@ func GetQuizzesPaginateStudent(c echo.Context) error {
 	var total uint
 	quizzes := make([]models.Quiz, 0)
 
+	// Validations
+	filterIDS, err := validateRestrictions("quizzes", currentUser)
+	if err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
 	// Query in database
-	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ? AND state = true", "%"+request.Search+"%", request.ProgramID).
+	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ? AND state = true AND id IN (?)", "%"+request.Search+"%", request.ProgramID, filterIDS).
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&quizzes).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {

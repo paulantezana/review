@@ -6,6 +6,7 @@ import (
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -92,7 +93,7 @@ func GetAnalyzeQuizAnswerByStudent(c echo.Context) error {
 
 	for _, quizAnswer := range quizAnswers {
 		attemptR := attemptR{}
-		points := 0
+		var points uint
 		for _, question := range questions {
 			// Prepare struct question
 			questionR := questionR{
@@ -103,12 +104,10 @@ func GetAnalyzeQuizAnswerByStudent(c echo.Context) error {
 
 			// Query answers
 			answerDetail := answerDetailSummary{}
-			if err := DB.Table("quiz_answer_details").Select("id, answer").
+			DB.Table("quiz_answer_details").Select("id, answer").
 				Where("quiz_question_id = ? AND quiz_answer_id = ?", question.ID, quizAnswer.ID).
 				Limit(1).
-				Scan(&answerDetail).Error; err != nil {
-				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-			}
+				Scan(&answerDetail)
 			questionR.Answer = answerDetail.Answer
 
 			// Query multiple questions
@@ -136,7 +135,7 @@ func GetAnalyzeQuizAnswerByStudent(c echo.Context) error {
 
 		// Calculate average
 		if len(questions) >= 1 {
-			attemptR.Note = uint((uint(points) * quizzes.BaseNote) / uint(len(questions)))
+			attemptR.Note = uint(math.Round(float64(points*quizzes.BaseNote) / float64(len(questions))))
 		}
 
 		// Set Attempts

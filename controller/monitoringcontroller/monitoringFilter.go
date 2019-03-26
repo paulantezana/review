@@ -70,9 +70,9 @@ func GetMonitoringFilterSearch(c echo.Context) error {
 			"WHERE lower(full_name) LIKE lower(?) OR dni LIKE ? LIMIT 5", "%"+searchRequest.Search+"%", "%"+searchRequest.Search+"%").
 			Scan(&searchResponse)
 	case "subsidiary":
-        DB.Raw("SELECT id, name FROM subsidiaries "+
-            "WHERE lower(name) LIKE lower(?) LIMIT 5", "%"+searchRequest.Search+"%").
-            Scan(&searchResponse)
+		DB.Raw("SELECT id, name FROM subsidiaries "+
+			"WHERE lower(name) LIKE lower(?) LIMIT 5", "%"+searchRequest.Search+"%").
+			Scan(&searchResponse)
 	}
 
 	// Return response

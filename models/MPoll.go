@@ -16,7 +16,7 @@ type Poll struct {
 	StartDateEnable bool       `json:"start_date_enable"`
 	EndDate         time.Time  `json:"end_date"`
 	EndDateEnable   bool       `json:"end_date_enable"`
-	State           bool       `json:"state"`
+	State           bool       `json:"state" gorm:"default:'true'"`
 	ShowAnalyze     bool       `json:"show_analyze"`
 	ProgramID       uint       `json:"program_id"`
 	Questions       []Question `json:"questions, omitempty"`

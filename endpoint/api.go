@@ -297,6 +297,13 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/library/comment/update", librarycontroller.UpdateComment)
 	ar.DELETE("/library/comment/delete", librarycontroller.DeleteComment)
 
+	// Statics
+	ar.POST("/library/statics/counts", librarycontroller.LibraryCounts)
+	ar.POST("/library/statics/top/reading/by/student", librarycontroller.Top10ReadingByStudent)
+	ar.POST("/library/statics/top/reading/by/program", librarycontroller.Top10ReadingByProgram)
+	ar.POST("/library/statics/top/reading/by/book", librarycontroller.TopReadingByBook)
+	ar.POST("/library/statics/last/comments", librarycontroller.LastComments)
+
 	// ---------------------------------------------------------------------------
 	//      Admission routes -----------------------------------------------------
 	// Admission setting
