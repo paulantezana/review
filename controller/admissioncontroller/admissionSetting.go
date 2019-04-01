@@ -129,32 +129,3 @@ func DeleteAdmissionSetting(c echo.Context) error {
 		Message: fmt.Sprintf("La admisión con el id %d se elimino correctamente", admSetting.ID),
 	})
 }
-
-func ShowInWebAdmissionSetting(c echo.Context) error {
-	// Get data request
-	admissionSetting := models.AdmissionSetting{}
-	if err := c.Bind(&admissionSetting); err != nil {
-		return err
-	}
-
-	// get connection
-	DB := config.GetConnection()
-	defer DB.Close()
-
-	//  all subsidiaries main = false
-	if err := DB.Exec("UPDATE admission_settings SET show_in_web = false").Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
-
-	//  current subsidiary main = true
-	if err := DB.Model(admissionSetting).UpdateColumn("show_in_web", admissionSetting.ShowInWeb).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
-
-	// Return response
-	return c.JSON(http.StatusCreated, utilities.Response{
-		Success: true,
-		Data:    admissionSetting.ID,
-		Message: fmt.Sprintf("La admisión del año %d se mostraran de forma predeterminada en la web", admissionSetting.Year),
-	})
-}

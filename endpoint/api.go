@@ -11,7 +11,6 @@ import (
 	"github.com/paulantezana/review/controller/librarycontroller"
 	"github.com/paulantezana/review/controller/messengercontroller"
 	"github.com/paulantezana/review/controller/monitoringcontroller"
-	"github.com/paulantezana/review/controller/publiccontroller"
 	"github.com/paulantezana/review/controller/reviewcontroller"
 	"github.com/paulantezana/review/utilities"
 )
@@ -29,7 +28,14 @@ func PublicApi(e *echo.Echo) {
 
 	pb.GET("/subsidiaries", institutecontroller.GetSubsidiaries)
 	pb.POST("/programs", institutecontroller.GetPrograms)
-	pb.POST("/admission/exam/results", publiccontroller.GetAdmissionExamResults)
+
+	pb.POST("/admission/results", admissioncontroller.GetAdmissionExamResults)
+	pb.POST("/admission/results/by/id", admissioncontroller.GetAdmissionExamResultsById)
+	pb.POST("/admission/results/by/program/id", admissioncontroller.GetAdmissionExamResultsByProgramId)
+	pb.POST("/admission/brochure", admissioncontroller.GetAdmissionExamResults)         // Prospecto
+	pb.POST("/admission/modalities", admissioncontroller.GetAdmissionExamResults)       // Modalidades
+	pb.POST("/admission/modalities/by/id", admissioncontroller.GetAdmissionExamResults) // Modalidades
+	pb.POST("/admission/pre/admission", admissioncontroller.SavePreAdmission)
 }
 
 // ProtectedApi function protected urls
@@ -309,10 +315,16 @@ func ProtectedApi(e *echo.Echo) {
 	// Admission setting
 	ar.POST("/admission/setting/all", admissioncontroller.GetAdmissionSettings)
 	ar.POST("/admission/setting/by/id", admissioncontroller.GetAdmissionSettingByID)
-	ar.PUT("/admission/setting/default/in/web", admissioncontroller.ShowInWebAdmissionSetting)
 	ar.POST("/admission/setting/create", admissioncontroller.CreateAdmissionSetting)
 	ar.PUT("/admission/setting/update", admissioncontroller.UpdateAdmissionSetting)
 	ar.DELETE("/admission/setting/delete", admissioncontroller.DeleteAdmissionSetting)
+
+    // Admission setting
+    ar.POST("/admission/modality/all", admissioncontroller.GetModalities)
+    //ar.POST("/admission/modality/by/id", admissioncontroller.GetAdmissionSettingByID)
+    ar.POST("/admission/modality/create", admissioncontroller.CreateModality)
+    ar.PUT("/admission/modality/update", admissioncontroller.UpdateModality)
+    ar.DELETE("/admission/modality/delete", admissioncontroller.DeleteModality)
 
 	// Admission
 	ar.POST("/admission/admission/paginate", admissioncontroller.GetAdmissionsPaginate)

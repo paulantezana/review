@@ -1,0 +1,100 @@
+package admissioncontroller
+
+import (
+	"crypto/sha256"
+	"fmt"
+	"github.com/labstack/echo"
+	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/utilities"
+	"net/http"
+	"time"
+)
+
+type savePreAdmissionRequest struct {
+	Student models.Student `json:"student"`
+	User    models.User    `json:"user"`
+}
+
+func SavePreAdmission(c echo.Context) error {
+	// Get data request
+	request := savePreAdmissionRequest{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
+
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
+
+	// start transaction
+	TX := DB.Begin()
+
+	// Validate if exist student
+	if request.Student.ID == 0 {
+		// has password new user account
+		cc := sha256.Sum256([]byte(request.Student.DNI + "ST"))
+		pwd := fmt.Sprintf("%x", cc)
+
+		// Insert user in database
+		request.User.UserName = request.Student.DNI + "ST"
+		request.User.Password = pwd
+		request.User.RoleID = 5
+
+		if err := TX.Create(&request.User).Error; err != nil {
+			TX.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+
+		// Insert student in database
+		request.Student.UserID = request.User.ID
+		request.Student.StudentStatusID = 1
+		if err := TX.Create(&request.Student).Error; err != nil {
+			TX.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+
+		// Insert student history
+		studentHistory := models.StudentHistory{
+			StudentID:   request.Student.ID,
+			UserID:      request.User.ID,
+			Description: "Sus datos fueron creados desde el proceso de pre inscripcion de admision",
+			Date:        time.Now(),
+			Type:        1,
+		}
+		if err := TX.Create(&studentHistory).Error; err != nil {
+			TX.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	} else {
+		// Update data
+		TX.Model(&request.Student).Update(request.Student)
+		TX.Model(&request.User).Update(request.User)
+
+		// Query data user
+		DB.First(&request.User, models.User{ID: request.User.ID})
+
+		// Insert student history
+		studentHistory := models.StudentHistory{
+			StudentID:   request.Student.ID,
+			UserID:      request.User.ID,
+			Description: "Sus datos fueron modificados desde el proceso de pre inscripcion de admision",
+			Date:        time.Now(),
+			Type:        1,
+		}
+		if err := TX.Create(&studentHistory).Error; err != nil {
+			TX.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	}
+
+	// Commit transaction
+	TX.Commit()
+
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    request,
+		Message: fmt.Sprintf("El estudiante %s se registro correctamente", request.Student.FullName),
+	})
+}
