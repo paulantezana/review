@@ -81,20 +81,20 @@ func ProtectedApi(e *echo.Echo) {
 
 	// subsidiary - user
 	ar.POST("/subsidiary/user/all/by/user", institutecontroller.GetSubsidiariesUserByUserID)
+	ar.PUT("/subsidiary/user/update", institutecontroller.SubsidiariesUserUpdate)
 	ar.POST("/subsidiary/user/all/by/user/license", institutecontroller.GetSubsidiariesUserByUserIDLicense)
-	ar.PUT("/subsidiary/user/update", institutecontroller.UpdateSubsidiariesUserByUserID)
 
 	// Program
 	ar.POST("/program/all", institutecontroller.GetPrograms)
+	ar.POST("/program/all/by/license", institutecontroller.GetProgramsByLicense)
 	ar.POST("/program/by/id", institutecontroller.GetProgramByID)
 	ar.POST("/program/create", institutecontroller.CreateProgram)
 	ar.PUT("/program/update", institutecontroller.UpdateProgram)
 
 	// Program - user
 	ar.POST("/program/user/all/by/user", institutecontroller.GetProgramsUserByUserID)
-	ar.POST("/program/user/all/by/user/license", institutecontroller.GetProgramsUserByUserIDLicense)
+	ar.PUT("/program/user/update", institutecontroller.ProgramsUserUpdate)
 	ar.POST("/program/user/all/by/student/license", institutecontroller.GetProgramsUserByStudentIDLicense)
-	ar.PUT("/program/user/update", institutecontroller.UpdateProgramsUserByUserID)
 
 	// Program
 	ar.POST("/semester/all", institutecontroller.GetSemesters)
@@ -176,6 +176,8 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/user/upload/avatar", controller.UploadAvatarUser)
 	ar.POST("/user/reset/password", controller.ResetPasswordUser)
 	ar.POST("/user/change/password", controller.ChangePasswordUser)
+	ar.POST("/user/licenses", controller.GetLicenseUser)
+	ar.POST("/user/login/licenses", controller.GetLicensePostLogin)
 
 	// Statistic
 	ar.POST("/statistic/top/users", controller.TopUsers)
@@ -319,12 +321,12 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/admission/setting/update", admissioncontroller.UpdateAdmissionSetting)
 	ar.DELETE("/admission/setting/delete", admissioncontroller.DeleteAdmissionSetting)
 
-    // Admission setting
-    ar.POST("/admission/modality/all", admissioncontroller.GetModalities)
-    //ar.POST("/admission/modality/by/id", admissioncontroller.GetAdmissionSettingByID)
-    ar.POST("/admission/modality/create", admissioncontroller.CreateModality)
-    ar.PUT("/admission/modality/update", admissioncontroller.UpdateModality)
-    ar.DELETE("/admission/modality/delete", admissioncontroller.DeleteModality)
+	// Admission setting
+	ar.POST("/admission/modality/all", admissioncontroller.GetModalities)
+	//ar.POST("/admission/modality/by/id", admissioncontroller.GetAdmissionSettingByID)
+	ar.POST("/admission/modality/create", admissioncontroller.CreateModality)
+	ar.PUT("/admission/modality/update", admissioncontroller.UpdateModality)
+	ar.DELETE("/admission/modality/delete", admissioncontroller.DeleteModality)
 
 	// Admission
 	ar.POST("/admission/admission/paginate", admissioncontroller.GetAdmissionsPaginate)

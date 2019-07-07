@@ -7,7 +7,7 @@ type AdmissionSetting struct {
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 	VacantByProgram uint      `json:"vacant_by_program"`
-	Name string `json:"name"`
+	Name            string    `json:"name"`
 	Year            uint      `json:"year"`
 	Seats           uint      `json:"seats"`
 	Description     string    `json:"description"`

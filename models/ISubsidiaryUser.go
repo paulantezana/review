@@ -9,4 +9,6 @@ type SubsidiaryUser struct {
 	UserID       uint      `json:"user_id"`
 	SubsidiaryID uint      `json:"subsidiary_id"`
 	License      bool      `json:"license"`
+
+    ProgramUsers []ProgramUser `json:"program_users, omitempty"`
 }

@@ -9,4 +9,6 @@ type ProgramUser struct {
 	UserID    uint      `json:"user_id"`
 	ProgramID uint      `json:"program_id"`
 	License   bool      `json:"license"`
+	
+	SubsidiaryUserID uint `json:"subsidiary_user_id"`
 }

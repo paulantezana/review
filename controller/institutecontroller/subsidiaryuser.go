@@ -18,6 +18,28 @@ type subsidiaryUserResponse struct {
 	License      bool   `json:"license"`
 }
 
+func SubsidiariesUserUpdate(c echo.Context) error {
+    // Get data request
+    subsidiaryUser := models.SubsidiaryUser{}
+    if err := c.Bind(&subsidiaryUser); err != nil {
+        return err
+    }
+
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Update module in database
+    DB.Model(&subsidiaryUser).Where("id = ?", subsidiaryUser.ID).UpdateColumn("license", subsidiaryUser.License)
+
+    // Return response
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        Data:    subsidiaryUser.ID,
+        Message: fmt.Sprintf("Los datos del se actualizaron correctamente"),
+    })
+}
+
 // get all subsidiaries by user id
 func GetSubsidiariesUserByUserID(c echo.Context) error {
 	// Get data request
@@ -96,31 +118,5 @@ func GetSubsidiariesUserByUserIDLicense(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    subsidiaryUsers,
-	})
-}
-
-// Update license By subsidiary users
-func UpdateSubsidiariesUserByUserID(c echo.Context) error {
-	// Get data request
-	subsidiaryUsers := make([]models.SubsidiaryUser, 0)
-	if err := c.Bind(&subsidiaryUsers); err != nil {
-		return err
-	}
-
-	// get connection
-	DB := config.GetConnection()
-	defer DB.Close()
-
-	// Update in Database
-	for _, subsidiaryUser := range subsidiaryUsers {
-		if err := DB.Model(subsidiaryUser).UpdateColumn("license", subsidiaryUser.License).Error; err != nil {
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-		}
-	}
-
-	// Return response
-	return c.JSON(http.StatusOK, utilities.Response{
-		Success: true,
-		Message: "OK",
 	})
 }

@@ -102,6 +102,7 @@ func Migrate() {
 	db.Model(&models.SubsidiaryUser{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "CASCADE", "CASCADE")
 	db.Model(&models.ProgramUser{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
 	db.Model(&models.ProgramUser{}).AddForeignKey("program_id", "programs(id)", "CASCADE", "CASCADE")
+	db.Model(&models.ProgramUser{}).AddForeignKey("subsidiary_user_id", "subsidiary_users(id)", "CASCADE", "CASCADE")
 	db.Model(&models.UserScopeSubsidiary{}).AddForeignKey("app_module_id", "app_modules(id)", "CASCADE", "CASCADE")
 	db.Model(&models.UserScopeSubsidiary{}).AddForeignKey("subsidiary_user_id", "subsidiary_users(id)", "CASCADE", "CASCADE")
 	db.Model(&models.UserScopeProgram{}).AddForeignKey("app_module_id", "app_modules(id)", "CASCADE", "CASCADE")

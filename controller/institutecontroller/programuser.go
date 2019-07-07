@@ -23,6 +23,29 @@ type programUserRequest struct {
 	SubsidiaryID uint `json:"subsidiary_id"`
 }
 
+// Update
+func ProgramsUserUpdate(c echo.Context) error {
+    // Get data request
+    programUser := models.ProgramUser{}
+    if err := c.Bind(&programUser); err != nil {
+        return err
+    }
+
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Update module in database
+    DB.Model(&programUser).Where("id = ?", programUser.ID).UpdateColumn("license", programUser.License)
+
+    // Return response
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        Data:    programUser.ID,
+        Message: fmt.Sprintf("Los datos del se actualizaron correctamente"),
+    })
+}
+
 // Get all programs licenses by user
 func GetProgramsUserByUserID(c echo.Context) error {
 	// Get data request
@@ -77,32 +100,6 @@ func GetProgramsUserByUserID(c echo.Context) error {
 	})
 }
 
-func GetProgramsUserByUserIDLicense(c echo.Context) error {
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*utilities.Claim)
-	currentUser := claims.User
-
-	// get connection
-	DB := config.GetConnection()
-	defer DB.Close()
-
-	// Query
-	programUsers := make([]programUserResponse, 0)
-	if err := DB.Table("program_users").
-		Select("program_users.id, program_users.user_id, program_users.program_id, program_users.license, programs.name").
-		Joins("INNER JOIN programs ON programs.id = program_users.program_id").
-		Where("program_users.user_id = ? AND license = TRUE", currentUser.ID).
-		Scan(&programUsers).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-	}
-
-	// Response data
-	return c.JSON(http.StatusCreated, utilities.Response{
-		Success: true,
-		Data:    programUsers,
-	})
-}
-
 func GetProgramsUserByStudentIDLicense(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*utilities.Claim)
@@ -130,30 +127,5 @@ func GetProgramsUserByStudentIDLicense(c echo.Context) error {
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
 		Data:    programs,
-	})
-}
-
-func UpdateProgramsUserByUserID(c echo.Context) error {
-	// Get data request
-	programUsers := make([]models.ProgramUser, 0)
-	if err := c.Bind(&programUsers); err != nil {
-		return err
-	}
-
-	// get connection
-	DB := config.GetConnection()
-	defer DB.Close()
-
-	// Update in Database
-	for _, programUser := range programUsers {
-		if err := DB.Model(programUser).UpdateColumn("license", programUser.License).Error; err != nil {
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-		}
-	}
-
-	// Return response
-	return c.JSON(http.StatusOK, utilities.Response{
-		Success: true,
-		Message: "OK",
 	})
 }
