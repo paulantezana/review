@@ -15,6 +15,7 @@ type AdmissionSetting struct {
 	EndDate         time.Time `json:"end_date"`
 	PreStartDate    time.Time `json:"pre_start_date"`
 	PreEndDate      time.Time `json:"pre_end_date"`
+	PreEnabled      bool      `json:"pre_enabled"`
 	PreDescription  string    `json:"pre_description"`
 
 	SubsidiaryID uint        `json:"subsidiary_id"`

@@ -28,7 +28,7 @@ func GetCategoriesPaginate(c echo.Context) error {
 	categories := make([]models.Category, 0)
 
 	// Query in database
-	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%",request.ProgramID).
+	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ProgramID).
 		Order("id desc").
 		Offset(offset).Limit(request.Limit).Find(&categories).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
@@ -46,11 +46,11 @@ func GetCategoriesPaginate(c echo.Context) error {
 }
 
 func GetCategoriesAll(c echo.Context) error {
-    // Get data request
-    request := models.Category{}
-    if err := c.Bind(&request); err != nil {
-        return err
-    }
+	// Get data request
+	request := models.Category{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
 
 	// Get connection
 	db := config.GetConnection()
@@ -60,7 +60,7 @@ func GetCategoriesAll(c echo.Context) error {
 	categories := make([]models.Category, 0)
 
 	// Query in database
-	if err := db.Where("program_id = ?",request.ProgramId).Order("id desc").Find(&categories).Error; err != nil {
+	if err := db.Where("program_id = ?", request.ProgramId).Order("id desc").Find(&categories).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 

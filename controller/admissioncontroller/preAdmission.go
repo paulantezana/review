@@ -11,6 +11,21 @@ import (
 	"time"
 )
 
+func GetPreAdmission(c echo.Context) error {
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
+
+	admissionSettings := make([]models.AdmissionSetting, 0)
+	DB.Where("pre_end_date >= ? AND pre_enabled = true", time.Now()).Find(&admissionSettings)
+
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    admissionSettings,
+	})
+}
+
 type savePreAdmissionRequest struct {
 	Student models.Student `json:"student"`
 	User    models.User    `json:"user"`

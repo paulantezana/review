@@ -74,10 +74,10 @@ func Login(c echo.Context) error {
 		return c.NoContent(http.StatusForbidden)
 	}
 
-    // Exception users student and invited
-    if  !(user.RoleID >= 1 && user.RoleID <= 4)  {
-        return c.NoContent(http.StatusForbidden)
-    }
+	// Exception users student and invited
+	if !(user.RoleID >= 1 && user.RoleID <= 4) {
+		return c.NoContent(http.StatusForbidden)
+	}
 
 	// Prepare response data
 	user.Password = ""
@@ -495,7 +495,7 @@ func SearchUsers(c echo.Context) error {
 	for i := range users {
 		// ignore current user
 		if users[i].ID == currentUser.ID {
-			break
+			continue
 		}
 
 		// search user
@@ -820,154 +820,154 @@ func ChangePasswordUser(c echo.Context) error {
 }
 
 type licenseUser struct {
-    ID           uint   `json:"id" gorm:"primary_key"`
-    UserID       uint   `json:"user_id"`
-    SubsidiaryID uint   `json:"subsidiary_id"`
-    Name         string `json:"name"`
-    License      bool   `json:"license"`
-    Programs []struct{
-        ID        uint   `json:"id"`
-        UserID    uint   `json:"user_id"`
-        ProgramID uint   `json:"program_id"`
-        License   bool   `json:"license"`
-        Name      string `json:"name"`
-    } `json:"programs"`
+	ID           uint   `json:"id" gorm:"primary_key"`
+	UserID       uint   `json:"user_id"`
+	SubsidiaryID uint   `json:"subsidiary_id"`
+	Name         string `json:"name"`
+	License      bool   `json:"license"`
+	Programs     []struct {
+		ID        uint   `json:"id"`
+		UserID    uint   `json:"user_id"`
+		ProgramID uint   `json:"program_id"`
+		License   bool   `json:"license"`
+		Name      string `json:"name"`
+	} `json:"programs"`
 }
 
 type licenseUserResponse struct {
-    Licenses []licenseUser `json:"licenses"`
-    User models.User `json:"user"`
-} 
+	Licenses []licenseUser `json:"licenses"`
+	User     models.User   `json:"user"`
+}
 
 func GetLicensePostLogin(c echo.Context) error {
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Query licenses
-    licenseUsers := make([]licenseUser, 0)
-    licenseUsersFilter := make([]licenseUser, 0)
-    if err := DB.Table("subsidiary_users").
-        Select("subsidiary_users.id, subsidiary_users.user_id, subsidiary_users.subsidiary_id, subsidiary_users.license, subsidiaries.name").
-        Joins("INNER JOIN subsidiaries ON subsidiaries.id = subsidiary_users.subsidiary_id").
-        Where("subsidiary_users.user_id = ?", currentUser.ID).
-        Scan(&licenseUsers).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query licenses
+	licenseUsers := make([]licenseUser, 0)
+	licenseUsersFilter := make([]licenseUser, 0)
+	if err := DB.Table("subsidiary_users").
+		Select("subsidiary_users.id, subsidiary_users.user_id, subsidiary_users.subsidiary_id, subsidiary_users.license, subsidiaries.name").
+		Joins("INNER JOIN subsidiaries ON subsidiaries.id = subsidiary_users.subsidiary_id").
+		Where("subsidiary_users.user_id = ?", currentUser.ID).
+		Scan(&licenseUsers).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    for i, subsidiaryR := range licenseUsers {
-        DB.Table("program_users").
-            Select("program_users.id, program_users.user_id, program_users.program_id, program_users.license, programs.name").
-            Joins("INNER JOIN programs ON programs.id = program_users.program_id").
-            Where("program_users.user_id = ? AND programs.subsidiary_id = ? AND license = true", currentUser.ID, subsidiaryR.SubsidiaryID).
-            Scan(&licenseUsers[i].Programs)
+	for i, subsidiaryR := range licenseUsers {
+		DB.Table("program_users").
+			Select("program_users.id, program_users.user_id, program_users.program_id, program_users.license, programs.name").
+			Joins("INNER JOIN programs ON programs.id = program_users.program_id").
+			Where("program_users.user_id = ? AND programs.subsidiary_id = ? AND license = true", currentUser.ID, subsidiaryR.SubsidiaryID).
+			Scan(&licenseUsers[i].Programs)
 
-        if licenseUsers[i].License ==  true || len(licenseUsers[i].Programs) >= 1 {
-            licenseUsersFilter = append(licenseUsersFilter, licenseUsers[i])
-        }
-    }
+		if licenseUsers[i].License == true || len(licenseUsers[i].Programs) >= 1 {
+			licenseUsersFilter = append(licenseUsersFilter, licenseUsers[i])
+		}
+	}
 
-    // Response data
-    return c.JSON(http.StatusCreated, utilities.Response{
-        Success: true,
-        Data: licenseUserResponse{
-            Licenses: licenseUsersFilter,
-            User: currentUser,
-        },
-    })
+	// Response data
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data: licenseUserResponse{
+			Licenses: licenseUsersFilter,
+			User:     currentUser,
+		},
+	})
 }
 
 func GetLicenseUser(c echo.Context) error {
-    // Get data request
-    user := models.User{}
-    if err := c.Bind(&user); err != nil {
-        return err
-    }
+	// Get data request
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Query Subsidiaries
-    subsidiaries := make([]models.Subsidiary, 0)
-    if err := DB.Raw("SELECT * FROM subsidiaries WHERE id NOT IN (SELECT subsidiary_id FROM subsidiary_users WHERE user_id = ?)", user.ID).
-        Scan(&subsidiaries).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query Subsidiaries
+	subsidiaries := make([]models.Subsidiary, 0)
+	if err := DB.Raw("SELECT * FROM subsidiaries WHERE id NOT IN (SELECT subsidiary_id FROM subsidiary_users WHERE user_id = ?)", user.ID).
+		Scan(&subsidiaries).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Start Transaction
-    TR := DB.Begin()
+	// Start Transaction
+	TR := DB.Begin()
 
-    // Insert SubsidiaryUsers
-    for _, subsidiary := range subsidiaries {
-        subsidiaryUser := models.SubsidiaryUser{
-            UserID:       user.ID,
-            SubsidiaryID: subsidiary.ID,
-        }
-        if err := TR.Create(&subsidiaryUser).Error; err != nil {
-            TR.Rollback()
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
-    }
+	// Insert SubsidiaryUsers
+	for _, subsidiary := range subsidiaries {
+		subsidiaryUser := models.SubsidiaryUser{
+			UserID:       user.ID,
+			SubsidiaryID: subsidiary.ID,
+		}
+		if err := TR.Create(&subsidiaryUser).Error; err != nil {
+			TR.Rollback()
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	}
 
-    // Get all subsidiary users
-    subsidiaryUsers := make([]models.SubsidiaryUser,0)
-    if err := DB.Where("user_id = ?", user.ID).
-        Find(&subsidiaryUsers).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Get all subsidiary users
+	subsidiaryUsers := make([]models.SubsidiaryUser, 0)
+	if err := DB.Where("user_id = ?", user.ID).
+		Find(&subsidiaryUsers).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // loop subsidiaryUsers
-    for _, subsidiaryUser := range subsidiaryUsers {
-        // Query Programs
-        programs := make([]models.Program, 0)
-        if err := DB.Raw("SELECT * FROM programs WHERE id NOT IN (SELECT program_id  FROM program_users WHERE user_id = ? AND subsidiary_user_id = ?) AND subsidiary_id = ?", user.ID, subsidiaryUser.ID, subsidiaryUser.SubsidiaryID).
-            Scan(&programs).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
+	// loop subsidiaryUsers
+	for _, subsidiaryUser := range subsidiaryUsers {
+		// Query Programs
+		programs := make([]models.Program, 0)
+		if err := DB.Raw("SELECT * FROM programs WHERE id NOT IN (SELECT program_id  FROM program_users WHERE user_id = ? AND subsidiary_user_id = ?) AND subsidiary_id = ?", user.ID, subsidiaryUser.ID, subsidiaryUser.SubsidiaryID).
+			Scan(&programs).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
 
-        // Insert SubsidiaryUsers
-        for _, program := range programs {
-            programUser := models.ProgramUser{
-                UserID:    user.ID,
-                ProgramID: program.ID,
-                SubsidiaryUserID: subsidiaryUser.ID,
-            }
-            if err := TR.Create(&programUser).Error; err != nil {
-                TR.Rollback()
-                return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-            }
-        }
-    }
+		// Insert SubsidiaryUsers
+		for _, program := range programs {
+			programUser := models.ProgramUser{
+				UserID:           user.ID,
+				ProgramID:        program.ID,
+				SubsidiaryUserID: subsidiaryUser.ID,
+			}
+			if err := TR.Create(&programUser).Error; err != nil {
+				TR.Rollback()
+				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+			}
+		}
+	}
 
-    // End Transaction
-    TR.Commit()
+	// End Transaction
+	TR.Commit()
 
-    // Query SubsidiaryUsers
-    licenseUsers := make([]licenseUser, 0)
-    if err := DB.Table("subsidiary_users").
-        Select("subsidiary_users.id, subsidiary_users.user_id, subsidiary_users.subsidiary_id, subsidiary_users.license, subsidiaries.name").
-        Joins("INNER JOIN subsidiaries ON subsidiaries.id = subsidiary_users.subsidiary_id").
-        Where("subsidiary_users.user_id = ?", user.ID).
-        Scan(&licenseUsers).Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query SubsidiaryUsers
+	licenseUsers := make([]licenseUser, 0)
+	if err := DB.Table("subsidiary_users").
+		Select("subsidiary_users.id, subsidiary_users.user_id, subsidiary_users.subsidiary_id, subsidiary_users.license, subsidiaries.name").
+		Joins("INNER JOIN subsidiaries ON subsidiaries.id = subsidiary_users.subsidiary_id").
+		Where("subsidiary_users.user_id = ?", user.ID).
+		Scan(&licenseUsers).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    for i, subsidiaryR := range licenseUsers {
-        DB.Table("program_users").
-            Select("program_users.id, program_users.user_id, program_users.program_id, program_users.license, programs.name").
-            Joins("INNER JOIN programs ON programs.id = program_users.program_id").
-            Where("program_users.user_id = ? AND programs.subsidiary_id = ?", user.ID, subsidiaryR.SubsidiaryID).
-            Scan(&licenseUsers[i].Programs)
-    }
+	for i, subsidiaryR := range licenseUsers {
+		DB.Table("program_users").
+			Select("program_users.id, program_users.user_id, program_users.program_id, program_users.license, programs.name").
+			Joins("INNER JOIN programs ON programs.id = program_users.program_id").
+			Where("program_users.user_id = ? AND programs.subsidiary_id = ?", user.ID, subsidiaryR.SubsidiaryID).
+			Scan(&licenseUsers[i].Programs)
+	}
 
-    // Response data
-    return c.JSON(http.StatusCreated, utilities.Response{
-        Success: true,
-        Data:    licenseUsers,
-    })
+	// Response data
+	return c.JSON(http.StatusCreated, utilities.Response{
+		Success: true,
+		Data:    licenseUsers,
+	})
 }

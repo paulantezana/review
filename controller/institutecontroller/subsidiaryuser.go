@@ -19,25 +19,25 @@ type subsidiaryUserResponse struct {
 }
 
 func SubsidiariesUserUpdate(c echo.Context) error {
-    // Get data request
-    subsidiaryUser := models.SubsidiaryUser{}
-    if err := c.Bind(&subsidiaryUser); err != nil {
-        return err
-    }
+	// Get data request
+	subsidiaryUser := models.SubsidiaryUser{}
+	if err := c.Bind(&subsidiaryUser); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Update module in database
-    DB.Model(&subsidiaryUser).Where("id = ?", subsidiaryUser.ID).UpdateColumn("license", subsidiaryUser.License)
+	// Update module in database
+	DB.Model(&subsidiaryUser).Where("id = ?", subsidiaryUser.ID).UpdateColumn("license", subsidiaryUser.License)
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    subsidiaryUser.ID,
-        Message: fmt.Sprintf("Los datos del se actualizaron correctamente"),
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    subsidiaryUser.ID,
+		Message: fmt.Sprintf("Los datos del se actualizaron correctamente"),
+	})
 }
 
 // get all subsidiaries by user id

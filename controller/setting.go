@@ -15,10 +15,10 @@ import (
 
 // GlobalSettings struct
 type gSettingsResponse struct {
-	Roles   []models.Role  `json:"roles"`
-	Setting models.Setting `json:"setting"`
-	User    models.User    `json:"user"`
-	Program models.Program `json:"program"`
+	Roles      []models.Role     `json:"roles"`
+	Setting    models.Setting    `json:"setting"`
+	User       models.User       `json:"user"`
+	Program    models.Program    `json:"program"`
 	Subsidiary models.Subsidiary `json:"subsidiary"`
 }
 
@@ -50,24 +50,24 @@ func GetGlobalSettings(c echo.Context) error {
 	}
 
 	// Fond subsidiary
-    subsidiary := models.Subsidiary{}
-    db.Where("id = ?",request.SubsidiaryID).First(&subsidiary)
+	subsidiary := models.Subsidiary{}
+	db.Where("id = ?", request.SubsidiaryID).First(&subsidiary)
 
-    // Find program
+	// Find program
 	program := models.Program{}
-    if currentUser.RoleID == 3 {
-        db.Where("id = ?",request.ProgramID).First(&program)
-    }
+	if currentUser.RoleID == 3 {
+		db.Where("id = ?", request.ProgramID).First(&program)
+	}
 
 	// Set object response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Message: "OK",
 		Data: gSettingsResponse{
-			User:    currentUser,
-			Setting: con,
-			Roles:   roles,
-			Program: program,
+			User:       currentUser,
+			Setting:    con,
+			Roles:      roles,
+			Program:    program,
 			Subsidiary: subsidiary,
 		},
 	})

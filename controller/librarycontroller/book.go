@@ -35,14 +35,14 @@ func GetBooksPaginate(c echo.Context) error {
 
 	// Query in database
 	if len(request.IDs) == 0 {
-        if err := DB.Table("books").Select("books.* ").
-            Joins("INNER JOIN categories ON books.category_id = categories.id").
-            Where("lower(books.name) LIKE lower(?) AND categories.program_id = ?", "%"+request.Search+"%", request.ProgramID).
-            Order("id desc").
-            Offset(offset).Limit(request.Limit).Scan(&books).
-            Offset(-1).Limit(-1).Count(&total).Error; err != nil {
-                return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
+		if err := DB.Table("books").Select("books.* ").
+			Joins("INNER JOIN categories ON books.category_id = categories.id").
+			Where("lower(books.name) LIKE lower(?) AND categories.program_id = ?", "%"+request.Search+"%", request.ProgramID).
+			Order("id desc").
+			Offset(offset).Limit(request.Limit).Scan(&books).
+			Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
 	} else {
 		if err := DB.Where("lower(name) LIKE lower(?) AND category_id in (?)", "%"+request.Search+"%", request.IDs).
 			Order("id desc").

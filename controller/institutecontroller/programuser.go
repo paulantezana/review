@@ -25,25 +25,25 @@ type programUserRequest struct {
 
 // Update
 func ProgramsUserUpdate(c echo.Context) error {
-    // Get data request
-    programUser := models.ProgramUser{}
-    if err := c.Bind(&programUser); err != nil {
-        return err
-    }
+	// Get data request
+	programUser := models.ProgramUser{}
+	if err := c.Bind(&programUser); err != nil {
+		return err
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Update module in database
-    DB.Model(&programUser).Where("id = ?", programUser.ID).UpdateColumn("license", programUser.License)
+	// Update module in database
+	DB.Model(&programUser).Where("id = ?", programUser.ID).UpdateColumn("license", programUser.License)
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    programUser.ID,
-        Message: fmt.Sprintf("Los datos del se actualizaron correctamente"),
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    programUser.ID,
+		Message: fmt.Sprintf("Los datos del se actualizaron correctamente"),
+	})
 }
 
 // Get all programs licenses by user

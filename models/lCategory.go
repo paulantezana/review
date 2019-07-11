@@ -10,7 +10,7 @@ type Category struct {
 	Name      string    `json:"name"`
 	ParentID  uint      `json:"parent_id"`
 	State     bool      `json:"state" gorm:"default:'true'"`
-	ProgramId uint `json:"program_id"`
+	ProgramId uint      `json:"program_id"`
 
 	Books []Book `json:"books, omitempty"`
 }

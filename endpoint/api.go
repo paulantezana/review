@@ -35,7 +35,12 @@ func PublicApi(e *echo.Echo) {
 	pb.POST("/admission/brochure", admissioncontroller.GetAdmissionExamResults)         // Prospecto
 	pb.POST("/admission/modalities", admissioncontroller.GetAdmissionExamResults)       // Modalidades
 	pb.POST("/admission/modalities/by/id", admissioncontroller.GetAdmissionExamResults) // Modalidades
-	pb.POST("/admission/pre/admission", admissioncontroller.SavePreAdmission)
+	pb.POST("/admission/pre/admission/save", admissioncontroller.SavePreAdmission)
+	pb.POST("/admission/pre/admission/get", admissioncontroller.GetPreAdmission)
+	pb.POST("/admission/pre/admission/by/id", admissioncontroller.SavePreAdmission)
+
+	pb.POST("/external/dni", controller.GetStudentByDni)
+	pb.POST("/external/ruc", controller.GetStudentByDni)
 }
 
 // ProtectedApi function protected urls
@@ -106,6 +111,7 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/student/paginate", institutecontroller.GetStudentsPaginate)
 	ar.POST("/student/paginate/by/subsidiary", institutecontroller.GetStudentsPaginateBySubsidiary)
 	ar.POST("/student/paginate/program", institutecontroller.GetStudentsPaginateByProgram)
+	ar.POST("/student/paginate/by/license", institutecontroller.GetStudentsPaginateByLicense)
 	ar.POST("/student/history", institutecontroller.GetStudentHistory)
 	ar.POST("/student/programs", institutecontroller.GetStudentPrograms)
 	ar.POST("/student/create", institutecontroller.CreateStudent)
@@ -375,8 +381,8 @@ func ProtectedApi(e *echo.Echo) {
 
 	// ---------------------------------------------------------------------------
 	//      External api -----------------------------------------------------
-	// RENIEC
-	ar.POST("/external/reniec", controller.Reniec)
+	ar.POST("/external/dni", controller.GetStudentByDni)
+	ar.POST("/external/ruc", controller.GetStudentByDni)
 
 	// ---------------------------------------------------------------------------
 	//      Student routes -----------------------------------------------------

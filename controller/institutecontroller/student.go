@@ -3,6 +3,7 @@ package institutecontroller
 import (
 	"crypto/sha256"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/paulantezana/review/models"
 	"io"
 	"net/http"
@@ -72,6 +73,96 @@ type customStudentSubsidiary struct {
 		YearAdmission uint   `json:"year_admission"`
 		YearPromotion uint   `json:"year_promotion"`
 	} `json:"programs"`
+}
+
+func GetStudentsPaginateByLicense(c echo.Context) error {
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
+
+	// Get data request
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
+
+	// Get connection
+	DB := config.GetConnection()
+	defer DB.Close()
+
+	// Pagination calculate
+	offset := request.Validate()
+
+	// Query Programs by subsidiary
+	studentIds := make([]utilities.Counter, 0)
+	switch currentUser.RoleID {
+	case 1:
+		if err := DB.Raw("SELECT student_id as id FROM student_programs "+
+			"INNER JOIN programs ON student_programs.program_id = programs.id "+
+			"WHERE programs.subsidiary_id = ?", request.SubsidiaryID).Scan(&studentIds).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	case 2:
+		if err := DB.Raw("SELECT student_id as id FROM student_programs "+
+			"INNER JOIN programs ON student_programs.program_id = programs.id "+
+			"WHERE programs.subsidiary_id = ?", request.SubsidiaryID).Scan(&studentIds).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	case 3:
+		if err := DB.Raw("SELECT student_id as id FROM student_programs "+
+			"WHERE student_programs.program_id = ?", request.ProgramID).Scan(&studentIds).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	default:
+		break
+	}
+
+	// Get only id
+	IDS := make([]uint, 0)
+	for _, count := range studentIds {
+		IDS = append(IDS, count.ID)
+	}
+
+	// Query in database
+	students := make([]customStudentSubsidiary, 0)
+	if err := DB.Raw("SELECT students.id, students.dni, students.full_name, students.birth_date, students.gender, students.phone, users.email, users.id as user_id FROM students "+
+		"INNER JOIN users ON students.user_id = users.id "+
+		"WHERE lower(students.full_name) LIKE lower(?) AND students.id IN (?) OR "+
+		"students.dni LIKE ? AND students.id IN (?) "+
+		"ORDER BY students.id desc "+
+		"OFFSET ? LIMIT ?", "%"+request.Search+"%", IDS, "%"+request.Search+"%", IDS, offset, request.Limit).
+		Scan(&students).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+	// total count
+	counter := utilities.Counter{}
+	if err := DB.Raw("SELECT count(*) as count FROM students "+
+		"INNER JOIN users ON students.user_id = users.id "+
+		"WHERE lower(students.full_name) LIKE lower(?) AND students.id IN (?) OR "+
+		"students.dni LIKE ? AND students.id IN (?)", "%"+request.Search+"%", IDS, "%"+request.Search+"%", IDS).
+		Scan(&counter).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+	// Query programs by students
+	for k, student := range students {
+		if err := DB.Raw("SELECT programs.id, programs.name, student_programs.by_default, student_programs.year_admission, student_programs.year_promotion FROM student_programs "+
+			"INNER JOIN programs ON student_programs.program_id = programs.id "+
+			"WHERE student_programs.student_id = ?", student.ID).Scan(&students[k].Programs).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	}
+
+	// Return response
+	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
+		Success:     true,
+		Data:        students,
+		Total:       counter.Count,
+		CurrentPage: request.CurrentPage,
+		Limit:       request.Limit,
+	})
 }
 
 func GetStudentsPaginateBySubsidiary(c echo.Context) error {
@@ -423,9 +514,14 @@ type getStudentProgramsResponse struct {
 }
 
 func GetStudentPrograms(c echo.Context) error {
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
+
 	// Get data request
-	student := models.Student{}
-	if err := c.Bind(&student); err != nil {
+	request := utilities.Request{}
+	if err := c.Bind(&request); err != nil {
 		return err
 	}
 
@@ -435,13 +531,34 @@ func GetStudentPrograms(c echo.Context) error {
 
 	// Query
 	studentPrograms := make([]getStudentProgramsResponse, 0)
-	if err := DB.Table("programs").
-		Select("programs.id, programs.name, programs.level, programs.subsidiary_id, student_programs.by_default, student_programs.year_admission, student_programs.year_promotion").
-		Joins("INNER JOIN student_programs ON programs.id = student_programs.program_id").
-		Order("programs.id desc").
-		Where("student_programs.student_id = ?", student.ID).
-		Scan(&studentPrograms).Error; err != nil {
-		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	switch currentUser.RoleID {
+	case 1:
+		if err := DB.Table("programs").
+			Select("programs.id, programs.name, programs.level, programs.subsidiary_id, student_programs.by_default, student_programs.year_admission, student_programs.year_promotion").
+			Joins("INNER JOIN student_programs ON programs.id = student_programs.program_id").
+			Order("programs.id desc").
+			Where("student_programs.student_id = ?", request.StudentID).
+			Scan(&studentPrograms).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	case 2:
+		if err := DB.Table("programs").
+			Select("programs.id, programs.name, programs.level, programs.subsidiary_id, student_programs.by_default, student_programs.year_admission, student_programs.year_promotion").
+			Joins("INNER JOIN student_programs ON programs.id = student_programs.program_id").
+			Order("programs.id desc").
+			Where("student_programs.student_id = ?", request.StudentID).
+			Scan(&studentPrograms).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	case 3:
+		if err := DB.Table("programs").
+			Select("programs.id, programs.name, programs.level, programs.subsidiary_id, student_programs.by_default, student_programs.year_admission, student_programs.year_promotion").
+			Joins("INNER JOIN student_programs ON programs.id = student_programs.program_id").
+			Order("programs.id desc").
+			Where("student_programs.student_id = ? AND programs.id = ?", request.StudentID, request.ProgramID).
+			Scan(&studentPrograms).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
 	}
 
 	// Return response

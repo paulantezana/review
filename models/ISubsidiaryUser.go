@@ -10,5 +10,5 @@ type SubsidiaryUser struct {
 	SubsidiaryID uint      `json:"subsidiary_id"`
 	License      bool      `json:"license"`
 
-    ProgramUsers []ProgramUser `json:"program_users, omitempty"`
+	ProgramUsers []ProgramUser `json:"program_users, omitempty"`
 }

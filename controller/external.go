@@ -1,31 +1,34 @@
 package controller
 
 import (
-	"fmt"
-	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
-	"github.com/paulantezana/review/models"
-	"github.com/paulantezana/review/utilities"
-	"io/ioutil"
-	"net/http"
-	"strings"
+    "fmt"
+    "github.com/labstack/echo"
+    "github.com/paulantezana/review/config"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/utilities"
+    "net/http"
 )
 
 type reniecRequest struct {
-	DNI string `json:"dni"`
+    DNI string `json:"dni"`
 }
 
 type reniecResponse struct {
-	Student models.Student `json:"student"`
-	User    models.User    `json:"user"`
-	Exist   bool           `json:"exist"`
+    Student models.Student `json:"student"`
+    User    models.User    `json:"user"`
+    Exist   bool           `json:"exist"`
 }
 
-func Reniec(c echo.Context) error {
+func GetStudentByDni(c echo.Context) error {
 	request := reniecRequest{}
 	if err := c.Bind(&request); err != nil {
 		return err
 	}
+
+	// Validate DNI
+    if !utilities.ValidateDni(request.DNI) {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Número de dni no valido")})
+    }
 
 	// get connection
 	DB := config.GetConnection()
@@ -40,32 +43,10 @@ func Reniec(c echo.Context) error {
 
 	// Validation
 	if student.ID == 0 {
-		url := "http://aplicaciones007.jne.gob.pe/srop_publico/Consulta/Afiliado/GetNombresCiudadano?DNI=" + request.DNI
-		req, _ := http.NewRequest("GET", url, nil)
-
-		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Error en la consulta a la Reniec")})
-		}
-		defer res.Body.Close()
-
-		body, _ := ioutil.ReadAll(res.Body)
-
-		// Split string
-		data := strings.Split(strings.ToLower(string(body)), "|")
-		lastName := strings.ToUpper(fmt.Sprintf("%s %s", data[0], data[1]))
-		firstName := strings.Title(data[2])
-
-		// Validation
-		if lastName == "" || firstName == "" {
-			return c.JSON(http.StatusOK, utilities.Response{
-				Message: fmt.Sprintf("No se encontró ningún resultado de búsqueda con el DNI %s", request.DNI),
-			})
-		}
-
-		// fill data
-		reniecResponse.Student.DNI = request.DNI
-		reniecResponse.Student.FullName = fmt.Sprintf("%s, %s", lastName, firstName)
+	    student, err := Dni(request.DNI)
+        if err == nil {
+            reniecResponse.Student = student
+        }
 	} else {
 		// Find User
 		user := models.User{}

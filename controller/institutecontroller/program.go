@@ -3,8 +3,8 @@ package institutecontroller
 import (
 	"crypto/sha256"
 	"fmt"
-    "github.com/dgrijalva/jwt-go"
-    "github.com/labstack/echo"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo"
 	"github.com/paulantezana/review/config"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
@@ -12,51 +12,51 @@ import (
 )
 
 func GetProgramsByLicense(c echo.Context) error {
-    // Get user token authenticate
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(*utilities.Claim)
-    currentUser := claims.User
+	// Get user token authenticate
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*utilities.Claim)
+	currentUser := claims.User
 
-    // Get data request
-    program := models.Program{}
-    if err := c.Bind(&program); err != nil {
-        return err
-    }
+	// Get data request
+	program := models.Program{}
+	if err := c.Bind(&program); err != nil {
+		return err
+	}
 
-    // Get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// Get connection
+	DB := config.GetConnection()
+	defer DB.Close()
 
-    // Execute instructions
-    programs := make([]models.Program, 0)
-    switch currentUser.RoleID {
-        case 1:
-            if err := DB.Where("subsidiary_id = ?", program.SubsidiaryID).Find(&programs).Order("id desc").
-                Error; err != nil {
-                return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-            }
-            break
-        case 2:
-            if err := DB.Where("subsidiary_id = ?", program.SubsidiaryID).Find(&programs).Order("id desc").
-                Error; err != nil {
-                return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-            }
-            break
-        case 3:
-            if err := DB.Where("id = ?", program.ID).Find(&programs).Order("id desc").
-                Error; err != nil {
-                return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-            }
-            break
-        default:
-            break
-    }
+	// Execute instructions
+	programs := make([]models.Program, 0)
+	switch currentUser.RoleID {
+	case 1:
+		if err := DB.Where("subsidiary_id = ?", program.SubsidiaryID).Find(&programs).Order("id desc").
+			Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+		break
+	case 2:
+		if err := DB.Where("subsidiary_id = ?", program.SubsidiaryID).Find(&programs).Order("id desc").
+			Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+		break
+	case 3:
+		if err := DB.Where("id = ?", program.ID).Find(&programs).Order("id desc").
+			Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+		break
+	default:
+		break
+	}
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    programs,
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    programs,
+	})
 }
 
 func GetPrograms(c echo.Context) error {
@@ -162,22 +162,22 @@ func CreateProgram(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-    // Create program user - relation
-    subsidiaryUser := models.SubsidiaryUser{
-        UserID:    user.ID,
-        SubsidiaryID: program.SubsidiaryID,
-        License:   true,
-    }
-    if err := TR.Create(&subsidiaryUser).Error; err != nil {
-        TR.Rollback()
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Create program user - relation
+	subsidiaryUser := models.SubsidiaryUser{
+		UserID:       user.ID,
+		SubsidiaryID: program.SubsidiaryID,
+		License:      true,
+	}
+	if err := TR.Create(&subsidiaryUser).Error; err != nil {
+		TR.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Create program user - relation
 	programUser := models.ProgramUser{
-		UserID:    user.ID,
-		ProgramID: program.ID,
-		License:   true,
+		UserID:           user.ID,
+		ProgramID:        program.ID,
+		License:          true,
 		SubsidiaryUserID: subsidiaryUser.ID,
 	}
 	if err := TR.Create(&programUser).Error; err != nil {
