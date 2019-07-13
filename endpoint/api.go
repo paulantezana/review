@@ -37,7 +37,7 @@ func PublicApi(e *echo.Echo) {
 	pb.POST("/admission/modalities/by/id", admissioncontroller.GetAdmissionExamResults) // Modalidades
 	pb.POST("/admission/pre/admission/save", admissioncontroller.SavePreAdmission)
 	pb.POST("/admission/pre/admission/get", admissioncontroller.GetPreAdmission)
-	pb.POST("/admission/pre/admission/by/id", admissioncontroller.SavePreAdmission)
+	pb.POST("/admission/pre/admission/by/id", admissioncontroller.GetPreAdmissionById)
 
 	pb.POST("/external/dni", controller.GetStudentByDni)
 	pb.POST("/external/ruc", controller.GetStudentByDni)

@@ -26,6 +26,34 @@ func GetPreAdmission(c echo.Context) error {
 	})
 }
 
+func GetPreAdmissionById(c echo.Context) error {
+    admissionSetting := models.AdmissionSetting{}
+    if err := c.Bind(&admissionSetting); err != nil {
+        return c.JSON(http.StatusBadRequest, utilities.Response{
+            Message: "La estructura no es válida",
+        })
+    }
+
+    // get connection
+    DB := config.GetConnection()
+    defer DB.Close()
+
+    // Query
+    DB.Where("pre_end_date >= ? AND pre_start_date <= ? AND id = ? AND pre_enabled = true", time.Now(), time.Now(), admissionSetting.ID).First(&admissionSetting)
+    if admissionSetting.ID == 0 {
+        // Return response
+        return c.JSON(http.StatusOK, utilities.Response{
+            Message: fmt.Sprintf("Cerrado"),
+        })
+    }
+
+    // Return response
+    return c.JSON(http.StatusOK, utilities.Response{
+       Success: true,
+       Data:    admissionSetting,
+    })
+}
+
 type savePreAdmissionRequest struct {
 	Student models.Student `json:"student"`
 	User    models.User    `json:"user"`
