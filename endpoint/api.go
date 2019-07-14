@@ -26,9 +26,13 @@ func PublicApi(e *echo.Echo) {
 	pb.POST("/library/paginate", controller.ForgotChange)
 	pb.POST("/library/by/id", controller.ForgotChange)
 
+	// Global
+	pb.GET("/setting",controller.GetSetting)
+
 	pb.GET("/subsidiaries", institutecontroller.GetSubsidiaries)
 	pb.POST("/programs", institutecontroller.GetPrograms)
 
+	// Admission
 	pb.POST("/admission/results", admissioncontroller.GetAdmissionExamResults)
 	pb.POST("/admission/results/by/id", admissioncontroller.GetAdmissionExamResultsById)
 	pb.POST("/admission/results/by/program/id", admissioncontroller.GetAdmissionExamResultsByProgramId)

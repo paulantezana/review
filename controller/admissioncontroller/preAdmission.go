@@ -57,6 +57,7 @@ func GetPreAdmissionById(c echo.Context) error {
 type savePreAdmissionRequest struct {
 	Student models.Student `json:"student"`
 	User    models.User    `json:"user"`
+    AdmissionSettingID uint `json:"admission_setting_id"`
 }
 
 func SavePreAdmission(c echo.Context) error {
@@ -66,12 +67,25 @@ func SavePreAdmission(c echo.Context) error {
 		return err
 	}
 
+    // Validate DNI
+    if !utilities.ValidateDni(request.Student.DNI) {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Número de dni no valido")})
+    }
+
+	// Validate required parameters
+    if request.AdmissionSettingID == 0 {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("No se especifico el proceso de admisión este campo es requerido.")})
+    }
+
 	// get connection
 	DB := config.GetConnection()
 	defer DB.Close()
 
 	// start transaction
 	TX := DB.Begin()
+
+	// Query student
+    DB.First(&request.Student, models.Student{DNI: request.Student.DNI})
 
 	// Validate if exist student
 	if request.Student.ID == 0 {
@@ -130,6 +144,27 @@ func SavePreAdmission(c echo.Context) error {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	}
+
+	// Register pre admission
+    preAdmission := models.PreAdmission{
+        StudentID: request.Student.ID,
+        AdmissionSettingID: request.AdmissionSettingID,
+    }
+
+    // Validate
+    DB.First(&preAdmission,preAdmission)
+    if preAdmission.ID >= 1 {
+        TX.Rollback()
+        return c.JSON(http.StatusOK, utilities.Response{
+            Message: fmt.Sprintf("El estudiante %s ya esta registrado en el proceso de preadmisión.", request.Student.FullName),
+        })
+    }
+
+    // Create pre admission
+    if err := TX.Create(&preAdmission).Error; err != nil {
+        TX.Rollback()
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
 
 	// Commit transaction
 	TX.Commit()
