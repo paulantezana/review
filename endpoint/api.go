@@ -351,6 +351,10 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/admission/admission/df/license", admissioncontroller.LicenseAdmissionDF)
 	ar.POST("/admission/admission/df/list", admissioncontroller.ListAdmissionDF)
 	ar.POST("/admission/admission/next/classroom", admissioncontroller.GetNextClassroomAdmission)
+
+	// Admission report PDF
+    ar.POST("/admission/admission/report/pdf/file", admissioncontroller.GetPDFAdmissionStudentFile)
+
 	// Admission export excel
 	ar.POST("/admission/admission/export", admissioncontroller.ExportAdmission)
 	ar.POST("/admission/admission/export/by/ids", admissioncontroller.ExportAdmissionByIds)
