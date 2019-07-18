@@ -24,18 +24,36 @@ func GetPDFAdmissionStudentLicense(c echo.Context) error {
     DB := config.GetConnection()
     defer DB.Close()
 
+    // Settings
+    pageMargin := 19.0
+
+    // Create PDF
+    pdf := gofpdf.New("P", "mm", "A4", "")
+    pdf.SetMargins(pageMargin,pageMargin,pageMargin)
+    pdf.AddPage()
+
+    // Set file name
+    cc := sha256.Sum256([]byte(time.Now().String()))
+    pwd := fmt.Sprintf("%x", cc)
+    fileName :=  fmt.Sprintf("static/rpe/%s.pdf",pwd)
+
+    // Save file
+    err := pdf.OutputFileAndClose(fileName)
+    if err != nil {
+        return err
+    }
 
     // Return response
     return c.JSON(http.StatusOK, utilities.Response{
         Success: true,
-        Data: "",
+        Data: fileName,
     })
 }
 
 func GetPDFAdmissionStudentList(c echo.Context) error {
     // Get data request
-    request := utilities.Request{}
-    if err := c.Bind(&request); err != nil {
+    admission := models.Admission{}
+    if err := c.Bind(&admission); err != nil {
         return err
     }
 
@@ -43,10 +61,29 @@ func GetPDFAdmissionStudentList(c echo.Context) error {
     DB := config.GetConnection()
     defer DB.Close()
 
+    // Settings
+    pageMargin := 19.0
+
+    // Create PDF
+    pdf := gofpdf.New("P", "mm", "A4", "")
+    pdf.SetMargins(pageMargin,pageMargin,pageMargin)
+    pdf.AddPage()
+
+    // Set file name
+    cc := sha256.Sum256([]byte(time.Now().String()))
+    pwd := fmt.Sprintf("%x", cc)
+    fileName :=  fmt.Sprintf("static/rpe/%s.pdf",pwd)
+
+    // Save file
+    err := pdf.OutputFileAndClose(fileName)
+    if err != nil {
+        return err
+    }
+
     // Return response
     return c.JSON(http.StatusOK, utilities.Response{
         Success: true,
-        Data: "",
+        Data: fileName,
     })
 }
 

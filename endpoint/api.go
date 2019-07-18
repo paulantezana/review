@@ -172,9 +172,10 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/review/create", reviewcontroller.CreateReview)
 	ar.PUT("/review/update", reviewcontroller.UpdateReview)
 	ar.DELETE("/review/delete", reviewcontroller.DeleteReview)
-	ar.POST("/review/acta", reviewcontroller.GetActaReview)
-	ar.POST("/review/cons", reviewcontroller.GetConstReview)
-	ar.POST("/review/consolidate", reviewcontroller.GetConsolidateReview)
+
+	ar.POST("/review/report/pdf/acta", reviewcontroller.GetPDFReviewStudentActa)
+	ar.POST("/review/report/pdf/cons", reviewcontroller.GetPDFReviewStudentConst)
+	ar.POST("/review/report/pdf/consolidate", reviewcontroller.GetPDFReviewStudentConsolidate)
 
 	// User
 	ar.POST("/user/all", controller.GetUsers)
@@ -213,9 +214,9 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/course/student/download/template/by/subsidiary", coursescontroller.GetTempUploadCourseStudentBySubsidiary)
 	ar.POST("/course/student/upload/template/by/subsidiary", coursescontroller.SetTempUploadStudentBySubsidiary)
 
-	ar.POST("/review/promotion/const", reviewcontroller.GetConstGraduated)
-	ar.POST("/review/promotion/certificate", reviewcontroller.GetCertGraduated)
-	ar.POST("/review/promotion/certificate/module", reviewcontroller.GetCertModule)
+	ar.POST("/review/report/pdf/promotion/const", reviewcontroller.GetPDFReviewStudentConstGraduated)
+	ar.POST("/review/report/pdf/promotion/certificate", reviewcontroller.GetPDFReviewStudentCertGraduated)
+	ar.POST("/review/report/pdf/promotion/certificate/module", reviewcontroller.GetPDFReviewStudentCertModule)
 
 	// ---------------------------------------------------------------------------
 	//      Monitoring routes ----------------------------------------------------
@@ -347,12 +348,12 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/admission/admission/cancel", admissioncontroller.CancelAdmission)
 	ar.PUT("/admission/admission/update", admissioncontroller.UpdateAdmission)
 	ar.PUT("/admission/admission/update/exam", admissioncontroller.UpdateExamAdmission)
-	ar.POST("/admission/admission/df/license", admissioncontroller.LicenseAdmissionDF)
-	ar.POST("/admission/admission/df/list", admissioncontroller.ListAdmissionDF)
 	ar.POST("/admission/admission/next/classroom", admissioncontroller.GetNextClassroomAdmission)
 
 	// Admission report PDF
     ar.POST("/admission/admission/report/pdf/file", admissioncontroller.GetPDFAdmissionStudentFile)
+    ar.POST("/admission/admission/report/pdf/license", admissioncontroller.GetPDFAdmissionStudentLicense)
+    ar.POST("/admission/admission/report/pdf/list", admissioncontroller.GetPDFAdmissionStudentList)
 
 	// Admission export excel
 	ar.POST("/admission/admission/export", admissioncontroller.ExportAdmission)
