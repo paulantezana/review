@@ -1,6 +1,7 @@
 package admissioncontroller
 
 import (
+    "crypto/sha256"
     "fmt"
     "github.com/jung-kurt/gofpdf"
     "github.com/labstack/echo"
@@ -9,6 +10,7 @@ import (
     "github.com/paulantezana/review/utilities"
     "net/http"
     "strings"
+    "time"
 )
 
 func GetPDFAdmissionStudentLicense(c echo.Context) error {
@@ -65,7 +67,6 @@ func GetPDFAdmissionStudentFile(c echo.Context) error {
         return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
     }
 
-
     pageMargin := 19.0
 
     pdf := gofpdf.New("P", "mm", "A4", "")
@@ -84,7 +85,6 @@ func GetPDFAdmissionStudentFile(c echo.Context) error {
     // Header
     pdf.SetHeaderFunc(func() {
         //pdf.SetY(19)
-
         pdf.Image("static/ministrySmall.jpg", pageMargin, pageMargin - 8, 70, 0, false, "", 0, "")
         pdf.Image(setting.Logo, (pageWidth + leftMargin) - 12, pageMargin - 8, 12, 0, false, "", 0, "")
 
@@ -117,12 +117,24 @@ func GetPDFAdmissionStudentFile(c echo.Context) error {
     })
 
     pdf.AddPage()
+
+    pdf.SetY(pdf.GetY() + 10)
+    pdf.SetFont("Calibri", "B", 13)
+    pdf.WriteAligned(pageWidth, 13, "FICHA DE INSCRIPCIÓN DEL POSTULANTE","C")
+    pdf.Ln(15)
+
     pdf.SetFont("Calibri", "", 10)
-    pdf.Cell(40, 10, "Hello, world")
-    //pdf.MultiCell(40,10,"Hola mundo \n sss",0, "L",false)
+    pdf.CellFormat(15, 6, "AÑO", "1", 0, "C", false, 0, "")
+    pdf.CellFormat(30, 6, "2019", "1", 0, "C", false, 0, "")
 
-    err := pdf.OutputFileAndClose("temp/admissionFile.pdf")
 
+    // Set file name
+    cc := sha256.Sum256([]byte(time.Now().String()))
+    pwd := fmt.Sprintf("%x", cc)
+    fileName :=  fmt.Sprintf("static/rpe/%s.pdf",pwd)
+
+    // Save file
+    err := pdf.OutputFileAndClose(fileName)
     if err != nil {
         return err
     }
@@ -130,6 +142,6 @@ func GetPDFAdmissionStudentFile(c echo.Context) error {
     // Return response
     return c.JSON(http.StatusOK, utilities.Response{
         Success: true,
-        Data: "",
+        Data: fileName,
     })
 }
