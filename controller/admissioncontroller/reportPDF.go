@@ -13,6 +13,21 @@ import (
     "time"
 )
 
+type licenceADF struct {
+    ID            uint      `json:"id"`
+    Observation   string    `json:"observation"`
+    Exonerated    bool      `json:"exonerated"`
+    AdmissionDate time.Time `json:"admission_date"`
+    Year          uint      `json:"year"`
+    Classroom     uint      `json:"classroom"`
+    Seat          uint      `json:"seat"`
+
+    DNI      string `json:"dni"`
+    FullName string `json:"full_name"`
+    Avatar   string `json:"avatar"`
+    Program  string `json:"program"`
+}
+
 func GetPDFAdmissionStudentLicense(c echo.Context) error {
     // Get data request
     request := utilities.Request{}
@@ -24,13 +39,100 @@ func GetPDFAdmissionStudentLicense(c echo.Context) error {
     DB := config.GetConnection()
     defer DB.Close()
 
+    // Query all students
+    admissionLicences := make([]licenceADF, 0)
+    if err := DB.Table("admissions").
+        Select("admissions.id, admissions.observation, admissions.exonerated, admissions.admission_date, admissions.year, admissions.classroom, admissions.seat, "+
+            "students.dni, students.full_name, programs.name as program, "+
+            "users.avatar").
+        Joins("INNER JOIN students ON admissions.student_id = students.id").
+        Joins("INNER JOIN users ON students.user_id = users.id").
+        Joins("INNER JOIN programs ON admissions.program_id = programs.id").
+        Where("admissions.id IN (?)", request.IDs).
+        Scan(&admissionLicences).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Find settings
+    setting := models.Setting{}
+    if err := DB.First(&setting).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
     // Settings
-    pageMargin := 19.0
+    pageMargin := 12.7
 
     // Create PDF
     pdf := gofpdf.New("P", "mm", "A4", "")
     pdf.SetMargins(pageMargin,pageMargin,pageMargin)
+    pdf.AddUTF8Font("Calibri", "", "static/font/Calibri_Regular.ttf")
+    pdf.AddUTF8Font("Calibri", "B", "static/font/Calibri_Bold.ttf")
+    pdf.AddUTF8Font("Calibri", "I", "static/font/Calibri_Italic.ttf")
+    pdf.AddUTF8Font("Calibri", "BI", "static/font/Calibri_Bold_Italic.ttf")
+    pdf.AddUTF8Font("Calibri", "L", "static/font/Calibri_Light.ttf")
+    pdf.AddUTF8Font("Calibri", "LI", "static/font/Calibri_Light_Italic.ttf")
+
+    // Settings
+    leftMargin, topMargin, rightMargin, _ := pdf.GetMargins()
+    pageWidth, _ := pdf.GetPageSize()
+    pageWidth -= leftMargin + rightMargin
+    fontFamilyName := "Calibri"
+    gutter := 2.0
+
+    // Init
     pdf.AddPage()
+    pdf.SetFont(fontFamilyName, "B", 10)
+
+    // Background
+    pdf.Image("static/backgroundPattern1.jpg", 0, 0, 110, 110, false, "", 0, "")
+    //pdf.Image("static/backgroundPattern1.jpg", 110, 0, 110, 110, false, "", 0, "")
+    //pdf.Image("static/backgroundPattern1.jpg", 0, 110, 110, 110, false, "", 0, "")
+    //pdf.Image("static/backgroundPattern1.jpg", 110, 110, 110, 110, false, "", 0, "")
+
+    gCols := 3.0
+    cCol := 0.0
+    cRow := 0.0
+    for _, license := range admissionLicences {
+        headerString := fmt.Sprintf("%s \n %s - Sicuani",setting.Prefix, setting.Institute )
+        headerString = strings.ToUpper(headerString)
+        pdf.Image(setting.NationalEmblem, leftMargin, topMargin, 9, 0, false, "", 0, "")
+        pdf.SetX(leftMargin + 9 + gutter)
+        pdf.MultiCell(70,3.5,headerString,"","C",false)
+        pdf.Image(setting.Logo, leftMargin + 79 + (gutter * 2), topMargin, 9, 0, false, "", 0, "")
+
+        // Profile
+        if utilities.FileExist(license.Avatar) {
+            pdf.Image(license.Avatar, leftMargin, topMargin + 15, 25, 0, false, "", 0, "")
+        }
+
+
+
+        rW := (pageWidth / gCols) - (gutter * (gCols - 1))
+        rH := 50.0
+
+        sX :=  leftMargin
+        if cCol > 0.0 {
+            sX = (rW * cCol) + leftMargin + (gutter * cCol)
+        }
+
+        sY := topMargin
+        if cRow == 0.0 {
+            sY = topMargin
+        }else {
+            sY = (rH * cRow) + topMargin + gutter
+        }
+
+
+        pdf.Rect(sX,sY,rW,rH,"")
+
+        // Set new params
+        if cCol < (gCols - 1) {
+            cCol += 1
+        }else {
+            cCol = 0.0
+            cRow += 1
+        }
+    }
 
     // Set file name
     cc := sha256.Sum256([]byte(time.Now().String()))

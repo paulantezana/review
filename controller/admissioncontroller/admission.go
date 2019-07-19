@@ -610,20 +610,7 @@ func FileAdmissionDF(c echo.Context) error {
 	})
 }
 
-type licenceADF struct {
-	ID            uint      `json:"id"`
-	Observation   string    `json:"observation"`
-	Exonerated    bool      `json:"exonerated"`
-	AdmissionDate time.Time `json:"admission_date"`
-	Year          uint      `json:"year"`
-	Classroom     uint      `json:"classroom"`
-	Seat          uint      `json:"seat"`
 
-	DNI      string `json:"dni"`
-	FullName string `json:"full_name"`
-	Avatar   string `json:"avatar"`
-	Program  string `json:"program"`
-}
 
 func LicenseAdmissionDF(c echo.Context) error {
 	// Get data request
