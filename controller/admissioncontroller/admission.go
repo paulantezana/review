@@ -644,19 +644,6 @@ func LicenseAdmissionDF(c echo.Context) error {
 	})
 }
 
-type listADF struct {
-	ID            uint      `json:"id"`
-	Observation   string    `json:"observation"`
-	Exonerated    bool      `json:"exonerated"`
-	AdmissionDate time.Time `json:"admission_date"`
-	Year          uint      `json:"year"`
-	Classroom     uint      `json:"classroom"`
-	Seat          uint      `json:"seat"`
-
-	DNI      string `json:"dni"`
-	FullName string `json:"full_name"`
-	Program  string `json:"program"`
-}
 
 func ListAdmissionDF(c echo.Context) error {
 	// Get data request
@@ -670,7 +657,7 @@ func ListAdmissionDF(c echo.Context) error {
 	defer DB.Close()
 
 	// Query all students
-	listADFs := make([]listADF, 0)
+	listADFs := make([]admissionList, 0)
 	if err := DB.Table("admissions").
 		Select("admissions.id, admissions.observation, admissions.exonerated, admissions.admission_date, admissions.year, admissions.classroom, admissions.seat, "+
 			"students.dni, students.full_name, programs.name as program ").

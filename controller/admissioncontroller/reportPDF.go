@@ -199,6 +199,20 @@ func GetPDFAdmissionStudentLicense(c echo.Context) error {
     })
 }
 
+type admissionList struct {
+    ID            uint
+    Observation   string
+    Exonerated    bool
+    AdmissionDate time.Time
+    Year          uint
+    Classroom     uint
+    Seat          uint
+
+    DNI      string
+    FullName string
+    Program  string
+}
+
 func GetPDFAdmissionStudentList(c echo.Context) error {
     // Get user token authenticate
     user := c.Get("user").(*jwt.Token)
@@ -212,8 +226,26 @@ func GetPDFAdmissionStudentList(c echo.Context) error {
     }
 
     // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+    db := config.GetConnection()
+    defer db.Close()
+
+    // Find settings
+    setting := models.Setting{}
+    if err := db.First(&setting).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Query all students
+    admissionLists := make([]admissionList, 0)
+    if err := db.Table("admissions").
+        Select("admissions.id, admissions.observation, admissions.exonerated, admissions.admission_date, admissions.year, admissions.classroom, admissions.seat, "+
+            "students.dni, students.full_name, programs.name as program ").
+        Joins("INNER JOIN students ON admissions.student_id = students.id").
+        Joins("INNER JOIN programs ON admissions.program_id = programs.id").
+        Where("admissions.admission_setting_id = ? AND admissions.state = true", admission.AdmissionSettingID).
+        Scan(&admissionLists).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
 
     // Settings
     pageMargin := 19.0
@@ -221,7 +253,64 @@ func GetPDFAdmissionStudentList(c echo.Context) error {
     // Create PDF
     pdf := gofpdf.New("P", "mm", "A4", "")
     pdf.SetMargins(pageMargin,pageMargin,pageMargin)
-    pdf.AddPage()
+    pdf.AddUTF8Font("Calibri", "", "static/font/Calibri_Regular.ttf")
+    pdf.AddUTF8Font("Calibri", "B", "static/font/Calibri_Bold.ttf")
+    pdf.AddUTF8Font("Calibri", "I", "static/font/Calibri_Italic.ttf")
+    pdf.AddUTF8Font("Calibri", "BI", "static/font/Calibri_Bold_Italic.ttf")
+    pdf.AddUTF8Font("Calibri", "L", "static/font/Calibri_Light.ttf")
+    pdf.AddUTF8Font("Calibri", "LI", "static/font/Calibri_Light_Italic.ttf")
+
+    // Settings
+    leftMargin, topMargin, rightMargin, _ := pdf.GetMargins()
+    pageWidth, _ := pdf.GetPageSize()
+    pageWidth -= leftMargin + rightMargin
+    fontFamilyName := "Calibri"
+    //gutter := 2.0
+
+    // Header
+    pdf.SetHeaderFunc(func() {
+
+        pdf.Image(setting.NationalEmblem, leftMargin, topMargin - 8, 12, 0, false, "", 0, "")
+        pdf.Image(setting.Logo, (pageWidth + leftMargin) - 12, topMargin - 8, 12, 0, false, "", 0, "")
+
+        pdf.SetY(topMargin - 8)
+        pdf.SetFont(fontFamilyName, "B", 13)
+        pdf.WriteAligned(pageWidth,5, strings.ToUpper(setting.Prefix),"C")
+        pdf.Ln(5)
+
+        pdf.SetFontSize(18)
+        pdf.WriteAligned(pageWidth,8,fmt.Sprintf("%s",strings.ToUpper(setting.Institute)),"C")
+        pdf.Ln(9)
+
+        pdf.SetFont(fontFamilyName, "", 7)
+        pdf.WriteAligned(pageWidth,2, fmt.Sprintf("Resolución de Creación %s - Resolución de Revalidación %s",setting.ResolutionAuthorization, setting.ResolutionRenovation),"C")
+        pdf.Ln(2)
+
+        pdf.SetLineWidth(0.3)
+        pdf.Line(leftMargin,pdf.GetY() + 2, pageWidth + leftMargin,pdf.GetY() + 2)
+    })
+
+    // Table
+    //aList := linq.From(admissionLists).GroupBy(
+    //    func(i interface{}) interface{} {
+    //        return i.(admissionList).Classroom
+    //    },
+    //    func(i interface{}) interface{} {
+    //        return i.(admissionList)
+    //    },
+    //)
+    //
+    //next := aList.Iterate()
+    //for item, ok := next(); ok; item, ok = next() {
+    //    gr := item.(linq.Group)
+    //    for _, value := range gr.Group {
+    //        admission := value.(admissionList)
+    //        pdf.Cell(0,5,fmt.Sprintf("%s",admission.FullName))
+    //    }
+    //
+    //    //pdf.SetAutoPageBreak(true,5)
+    //}
+
 
     // Set file name
     cc := sha256.Sum256([]byte(fmt.Sprintf("%d-%d",admission.ID, currentUser.ID )))
@@ -274,6 +363,7 @@ func GetPDFAdmissionStudentFile(c echo.Context) error {
     pdf.AddUTF8Font("Calibri", "L", "static/font/Calibri_Light.ttf")
     pdf.AddUTF8Font("Calibri", "LI", "static/font/Calibri_Light_Italic.ttf")
 
+    // Settings
     leftMargin, _, rightMargin, _ := pdf.GetMargins()
     pageWidth, _ := pdf.GetPageSize()
     pageWidth -= leftMargin + rightMargin
