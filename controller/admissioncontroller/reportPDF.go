@@ -9,6 +9,7 @@ import (
     "github.com/paulantezana/review/config"
     "github.com/paulantezana/review/models"
     "github.com/paulantezana/review/utilities"
+    "gopkg.in/ahmetb/go-linq.v3"
     "net/http"
     "strings"
     "time"
@@ -86,7 +87,7 @@ func GetPDFAdmissionStudentLicense(c echo.Context) error {
 
     // Settings
     leftMargin, topMargin, rightMargin, _ := pdf.GetMargins()
-    pageWidth, _ := pdf.GetPageSize()
+    pageWidth, pageHeight := pdf.GetPageSize()
     pageWidth -= leftMargin + rightMargin
     fontFamilyName := "Calibri"
     gutter := 2.0
@@ -106,6 +107,19 @@ func GetPDFAdmissionStudentLicense(c echo.Context) error {
 
         x :=  leftMargin + ( w * cCol) + ( gutter * cCol)
         y :=  topMargin + ( h * cRow) + ( gutter * cRow)
+
+        limitRow := pageHeight > (y + h + topMargin)
+        if !limitRow {
+            pdf.AddPage()
+
+            // Reset row col
+            cRow = 0.0
+            cCol = 0.0
+
+            // Redefine X Y
+            x = leftMargin + (w * cCol) + (gutter * cCol)
+            y = topMargin + (h * cRow) + (gutter * cRow)
+        }
 
         // Background
         if utilities.FileExist("static/backgroundMachupicchu.jpg") {
@@ -252,7 +266,7 @@ func GetPDFAdmissionStudentList(c echo.Context) error {
 
     // Create PDF
     pdf := gofpdf.New("P", "mm", "A4", "")
-    pdf.SetMargins(pageMargin,pageMargin,pageMargin)
+    pdf.SetMargins(pageMargin, pageMargin + 4, pageMargin)
     pdf.AddUTF8Font("Calibri", "", "static/font/Calibri_Regular.ttf")
     pdf.AddUTF8Font("Calibri", "B", "static/font/Calibri_Bold.ttf")
     pdf.AddUTF8Font("Calibri", "I", "static/font/Calibri_Italic.ttf")
@@ -262,18 +276,19 @@ func GetPDFAdmissionStudentList(c echo.Context) error {
 
     // Settings
     leftMargin, topMargin, rightMargin, _ := pdf.GetMargins()
-    pageWidth, _ := pdf.GetPageSize()
+    pageWidth, pageHeight := pdf.GetPageSize()
     pageWidth -= leftMargin + rightMargin
     fontFamilyName := "Calibri"
     //gutter := 2.0
 
     // Header
     pdf.SetHeaderFunc(func() {
+        clearTop := 12.7
 
-        pdf.Image(setting.NationalEmblem, leftMargin, topMargin - 8, 12, 0, false, "", 0, "")
-        pdf.Image(setting.Logo, (pageWidth + leftMargin) - 12, topMargin - 8, 12, 0, false, "", 0, "")
+        pdf.Image(setting.NationalEmblem, leftMargin, topMargin - clearTop, 12, 0, false, "", 0, "")
+        pdf.Image(setting.Logo, (pageWidth + leftMargin) - 12, topMargin - clearTop, 12, 0, false, "", 0, "")
 
-        pdf.SetY(topMargin - 8)
+        pdf.SetY(topMargin - clearTop)
         pdf.SetFont(fontFamilyName, "B", 13)
         pdf.WriteAligned(pageWidth,5, strings.ToUpper(setting.Prefix),"C")
         pdf.Ln(5)
@@ -288,29 +303,140 @@ func GetPDFAdmissionStudentList(c echo.Context) error {
 
         pdf.SetLineWidth(0.3)
         pdf.Line(leftMargin,pdf.GetY() + 2, pageWidth + leftMargin,pdf.GetY() + 2)
+        pdf.Ln(5)
     })
 
-    // Table
-    //aList := linq.From(admissionLists).GroupBy(
-    //    func(i interface{}) interface{} {
-    //        return i.(admissionList).Classroom
-    //    },
-    //    func(i interface{}) interface{} {
-    //        return i.(admissionList)
-    //    },
-    //)
-    //
-    //next := aList.Iterate()
-    //for item, ok := next(); ok; item, ok = next() {
-    //    gr := item.(linq.Group)
-    //    for _, value := range gr.Group {
-    //        admission := value.(admissionList)
-    //        pdf.Cell(0,5,fmt.Sprintf("%s",admission.FullName))
-    //    }
-    //
-    //    //pdf.SetAutoPageBreak(true,5)
-    //}
+    // Add Page
+    pdf.AddPage()
 
+    // Group By Classroom
+    aList := linq.From(admissionLists).GroupBy(
+      func(i interface{}) interface{} {
+          return i.(admissionList).Classroom
+      },
+      func(i interface{}) interface{} {
+          return i.(admissionList)
+      },
+    )
+
+    // Table
+    next := aList.Iterate()
+    for item, ok := next(); ok; item, ok = next() {
+        gr := item.(linq.Group)
+
+        pdf.SetFont(fontFamilyName,"",9)
+        pdf.WriteAligned(pageWidth,3,"AULA","C")
+        pdf.Ln(3)
+
+        pdf.SetFont(fontFamilyName,"B",18)
+        pdf.WriteAligned(pageWidth,8,fmt.Sprintf("%d",gr.Key),"C")
+        pdf.Ln(8)
+
+        // Table header
+        pdf.SetFont(fontFamilyName,"B",10)
+        pdf.SetFillColor(230,230,230)
+        pdf.CellFormat(10, 7, "Nº", "1", 0, "C", true, 0, "")
+        pdf.CellFormat(20, 7, "DNI", "1", 0, "C", true, 0, "")
+        pdf.CellFormat(80, 7, "APELLIDOS Y NOMBRES", "1", 0, "", true, 0, "")
+        pdf.CellFormat(42, 7, "PROGRAMA", "1", 0, "", true, 0, "")
+        pdf.CellFormat(10, 7, "AULA", "1", 0, "C", true, 0, "")
+        pdf.CellFormat(10, 7, "Nº", "1", 0, "C", true, 0, "")
+        pdf.Ln(-1)
+
+        for i, value := range gr.Group {
+            admission := value.(admissionList)
+
+            // Table Body
+            pdf.SetFont(fontFamilyName,"",10)
+            pdf.SetFillColor(255,255,255)
+            pdf.CellFormat(10, 7, fmt.Sprintf("%d",i), "1", 0, "C", false, 0, "")
+            pdf.CellFormat(20, 7, admission.DNI, "1", 0, "C", false, 0, "")
+            pdf.CellFormat(80, 7, admission.FullName, "1", 0, "", false, 0, "")
+            pdf.CellFormat(42, 7, admission.Program, "1", 0, "", false, 0, "")
+            pdf.CellFormat(10, 7, fmt.Sprintf("%d",admission.Classroom), "1", 0, "C", false, 0, "")
+            pdf.CellFormat(10, 7, fmt.Sprintf("%d",admission.Seat), "1", 0, "C", false, 0, "")
+            pdf.Ln(-1)
+        }
+
+        // Add New Page
+        pdf.AddPage()
+    }
+
+    // Table
+    nextTo := aList.Iterate()
+    for item, ok := nextTo(); ok; item, ok = nextTo() {
+        gr := item.(linq.Group)
+
+        pdf.SetFont(fontFamilyName,"",9)
+        pdf.WriteAligned(pageWidth,3,"AULA","C")
+        pdf.Ln(3)
+
+        pdf.SetFont(fontFamilyName,"B",18)
+        pdf.WriteAligned(pageWidth,8,fmt.Sprintf("%d",gr.Key),"C")
+        pdf.Ln(8)
+
+        gCols := 2.0
+        cCol := 0.0
+        cRow := 0.0
+        padding := 2.5
+        gutter := 2.0
+        topMarginAux := topMargin + 24
+
+        for _, value := range gr.Group {
+            admission := value.(admissionList)
+
+            w := (pageWidth - (gutter * (gCols - 1))) / gCols
+            h := 30.0
+
+            x := leftMargin + (w * cCol) + (gutter * cCol)
+            y := topMarginAux + (h * cRow) + (gutter * cRow)
+
+            limitRow := pageHeight > (y + h + topMargin)
+            if !limitRow {
+                pdf.AddPage()
+
+                // Reset row col
+                cRow = 0.0
+                cCol = 0.0
+
+                // Redefine X Y
+                x = leftMargin + (w * cCol) + (gutter * cCol)
+                y = topMarginAux + (h * cRow) + (gutter * cRow)
+            }
+
+            // Classroom and seat
+            pdf.SetXY(x + padding, y + padding)
+            pdf.SetFont(fontFamilyName,"B",20)
+            pdf.Cell(15,8,fmt.Sprintf("%d - %d",admission.Classroom, admission.Seat))
+
+            pdf.SetXY(x + padding, y + padding + 8)
+            pdf.SetFont(fontFamilyName,"",10)
+            pdf.Cell(15,3.5,fmt.Sprintf("%s",admission.Program))
+            pdf.SetXY(x + padding, y + padding + 11.5)
+            pdf.Cell(15,3.5,fmt.Sprintf("%s",admission.DNI))
+
+            // Line
+            pdf.Line(x+padding,y + padding + 17, x + (w - padding),y + padding + 17)
+
+            // Student Full Name
+            pdf.SetXY(x + padding, y + padding + 20)
+            pdf.SetFont(fontFamilyName,"B",11)
+            pdf.Cell(15,3.5,fmt.Sprintf("%s",admission.FullName))
+
+            // Raw Rect
+            pdf.Rect(x,y,w,h,"")
+
+            // Set new params
+            if cCol < ( gCols - 1 ) {
+                cCol += 1
+            }else {
+                cCol = 0.0
+                cRow += 1
+            }
+        }
+        // Add New Page
+        pdf.AddPage()
+    }
 
     // Set file name
     cc := sha256.Sum256([]byte(fmt.Sprintf("%d-%d",admission.ID, currentUser.ID )))
