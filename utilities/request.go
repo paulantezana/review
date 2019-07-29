@@ -1,6 +1,6 @@
 package utilities
 
-import "github.com/paulantezana/review/config"
+import "github.com/paulantezana/review/provider"
 
 type Request struct {
 	Search      string `json:"search"`
@@ -18,7 +18,7 @@ type Request struct {
 }
 
 func (r *Request) Validate() uint {
-	con := config.GetConfig()
+	con := provider.GetConfig()
 	if r.Limit == 0 {
 		r.Limit = con.Global.Paginate
 	}

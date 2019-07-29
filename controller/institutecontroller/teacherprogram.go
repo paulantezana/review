@@ -3,7 +3,7 @@ package institutecontroller
 import (
 	"fmt"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
@@ -29,7 +29,7 @@ func GetTeacherProgramByProgram(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -58,7 +58,7 @@ func CreateTeacherProgram(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Validation
@@ -97,7 +97,7 @@ func UpdateTeacherProgram(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Update teacherProgram in database
@@ -124,7 +124,7 @@ func DeleteTeacherProgram(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Delete teacher in database

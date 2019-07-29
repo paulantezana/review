@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"io"
@@ -29,7 +29,7 @@ func GetGroupsScroll(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Pagination calculate
@@ -143,7 +143,7 @@ func GetGroupByID(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -199,7 +199,7 @@ func CreateGroup(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// add data
@@ -230,7 +230,7 @@ func AddUsers(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Start transaction
@@ -264,7 +264,7 @@ func UpdateGroup(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	//
@@ -295,7 +295,7 @@ func IsActiveGroup(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Disable
@@ -320,7 +320,7 @@ func IsActiveUserGroup(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Disable
@@ -343,7 +343,7 @@ func UploadAvatarGroup(c echo.Context) error {
 	idGroup := c.FormValue("id")
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validation user exist

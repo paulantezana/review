@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -19,7 +19,7 @@ func GetQuestions(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Execute instructions
@@ -60,7 +60,7 @@ func SaveQuestions(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Insert companies in database
@@ -105,7 +105,7 @@ func UpdateQuestion(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Update question in database
@@ -133,7 +133,7 @@ func DeleteQuestion(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Delete question in database
@@ -158,7 +158,7 @@ func DeleteMultipleQuestion(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Delete question in database

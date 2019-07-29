@@ -1,0 +1,45 @@
+.Slide {
+    // background: linear-gradient(-60deg, 
+    //                             var(--snColor1Dark) 0%,
+    //                             var(--snColor1) 20%, var(--snColor1Dark) 20%, 
+    //                             var(--snColor1) 40%, var(--snColor1Dark) 40%,
+    //                             var(--snColor1) 60%, var(--snColor1Dark) 60%,
+    //                             var(--snColor1) 80%, var(--snColor1Dark) 80%,
+    //                             var(--snColor1) 100%, var(--snColor1Dark) 100%
+    //                         );
+    background: linear-gradient(-60deg, var(--snColor1Dark), var(--snColor1Light) );
+    color: var(--snColorDarkInverse);
+    position: relative;
+    padding: 4rem 0 0;
+    text-align: center;
+    &-bg{
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        position: absolute;
+        top: 0;
+        left: 0;
+        opacity: 0.2;
+    }
+    &-title {
+        color: white;
+        font-size: 2.5rem;
+        font-weight: lighter;
+        margin: auto;
+    }
+    &-data{
+        max-width: 750px;
+        position: relative;
+        z-index: 5;
+    }
+    &-text{
+        color: white;
+        margin: auto;
+    }
+    &-version{
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        color: white;
+        font-weight: lighter
+    }
+}

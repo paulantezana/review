@@ -1,0 +1,16 @@
+table{
+    width: 100%;
+    // thead{
+    //     background: $border-color;
+    // }
+    th,
+    td{
+        border: 1px solid $border-color;
+        padding: 8px 8px;
+    }
+    tr{
+        &:hover{
+            background: rgba(#000,.01);
+        }
+    }
+}

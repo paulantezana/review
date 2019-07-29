@@ -14,7 +14,7 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -27,7 +27,7 @@ func GetStudentsPaginate(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Pagination calculate
@@ -88,7 +88,7 @@ func GetStudentsPaginateByLicense(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Pagination calculate
@@ -173,7 +173,7 @@ func GetStudentsPaginateBySubsidiary(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Pagination calculate
@@ -254,7 +254,7 @@ func GetStudentsPaginateByProgram(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Pagination calculate
@@ -307,7 +307,7 @@ func GetStudentByID(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Execute instructions
@@ -338,7 +338,7 @@ func GetStudentByDNI(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Execute instructions
@@ -361,7 +361,7 @@ func GetStudentSearch(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Execute instructions
@@ -403,7 +403,7 @@ func CreateStudent(c echo.Context) error {
 
 	// Set program ID
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// start transaction
@@ -462,7 +462,7 @@ func UpdateStudent(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Update student in database
@@ -487,7 +487,7 @@ func DeleteStudent(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Delete student in database
@@ -526,7 +526,7 @@ func GetStudentPrograms(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Query
@@ -576,7 +576,7 @@ func GetStudentHistory(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Find history
@@ -599,7 +599,7 @@ func GetTempUploadStudentBySubsidiary(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -676,7 +676,7 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 	}
 
 	// GET CONNECTION DATABASE
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Prepare
@@ -814,7 +814,7 @@ func SetTempUploadStudentByProgram(c echo.Context) error {
 	}
 
 	// GET CONNECTION DATABASE
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Prepare

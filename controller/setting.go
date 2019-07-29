@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"io"
@@ -36,7 +36,7 @@ func GetGlobalSettings(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Find settings
@@ -90,7 +90,7 @@ func GetStudentSettings(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Execute instructions
@@ -131,14 +131,14 @@ func UpdateSetting(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validation first data
 	var exist uint
 	db.Model(&models.Setting{}).Count(&exist)
 
-	// Insert config in database
+	// Insert provider in database
 	if exist == 0 {
 		if err := db.Create(&con).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -150,7 +150,7 @@ func UpdateSetting(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	// Response config
+	// Response provider
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
 		Data:    con.ID,
@@ -165,7 +165,7 @@ func UploadLogoSetting(c echo.Context) error {
 	setting := models.Setting{}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validation user exist
@@ -216,7 +216,7 @@ func UploadLogoSetting(c echo.Context) error {
 // DownloadLogoSetting function dowloand logo settings
 func DownloadLogoSetting(c echo.Context) error {
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validation user exist
@@ -236,7 +236,7 @@ func UploadMinistrySetting(c echo.Context) error {
 	setting := models.Setting{}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validation user exist
@@ -287,7 +287,7 @@ func UploadMinistrySetting(c echo.Context) error {
 // DownloadMinistrySetting function dowloand logo settings
 func DownloadMinistrySetting(c echo.Context) error {
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validation user exist
@@ -308,7 +308,7 @@ func DownloadMinistrySmallSetting(c echo.Context) error {
 // DownloadNationalEmblemSetting function download logo settings
 func DownloadNationalEmblemSetting(c echo.Context) error {
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validation user exist

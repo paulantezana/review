@@ -3,7 +3,7 @@ package reviewcontroller
 import (
 	"fmt"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
@@ -32,7 +32,7 @@ func GetReviewsDetailByReview(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Execute instructions
@@ -64,7 +64,7 @@ func DeleteReviewDetail(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Delete review in database

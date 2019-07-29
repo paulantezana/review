@@ -2,7 +2,7 @@ package utilities
 
 import (
 	"github.com/dgrijalva/jwt-go"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"log"
 	"time"
@@ -29,7 +29,7 @@ func GenerateJWT(user models.User) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate encoded token and send it as response.
-	result, err := token.SignedString([]byte(config.GetConfig().Server.Key))
+	result, err := token.SignedString([]byte(provider.GetConfig().Server.Key))
 	if err != nil {
 		log.Fatal("No se pudo firmar el token")
 	}

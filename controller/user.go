@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -41,7 +41,7 @@ func Login(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Hash password
@@ -123,7 +123,7 @@ func LoginStudent(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Hash password
@@ -197,7 +197,7 @@ func LoginUserCheck(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Hash password
@@ -233,7 +233,7 @@ func LoginPasswordCheck(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Hash password
@@ -272,7 +272,7 @@ func ForgotSearch(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Validations
@@ -309,7 +309,7 @@ func ForgotSearch(c echo.Context) error {
 	}
 
 	// SEND EMAIL
-	err = config.SendEmail(
+	err = provider.SendEmail(
 		con.PrefixShortName+" "+con.Institute,
 		user.Email,
 		fmt.Sprint(key)+" es el código de recuperación de tu cuenta",
@@ -336,7 +336,7 @@ func ForgotValidate(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validations
@@ -363,7 +363,7 @@ func ForgotChange(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validate
@@ -413,7 +413,7 @@ func GetUsers(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Pagination calculate
@@ -477,7 +477,7 @@ func SearchUsers(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Find users
@@ -540,7 +540,7 @@ func GetUserByID(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Execute instructions
@@ -571,7 +571,7 @@ func CreateUser(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Hash password
@@ -603,7 +603,7 @@ func UpdateUser(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validation user exist
@@ -642,7 +642,7 @@ func DeleteUser(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validate
@@ -673,7 +673,7 @@ func UploadAvatarUser(c echo.Context) error {
 	user := models.User{}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validation user exist
@@ -734,7 +734,7 @@ func ResetPasswordUser(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validation user exist
@@ -771,7 +771,7 @@ func ChangePasswordUser(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validation user exist
@@ -845,7 +845,7 @@ func GetLicensePostLogin(c echo.Context) error {
 	currentUser := claims.User
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Query licenses
@@ -889,7 +889,7 @@ func GetLicenseUser(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Query Subsidiaries

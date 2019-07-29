@@ -1,0 +1,74 @@
+@mixin sn-menu($bp: l, $menu-class: '.Menu'){
+    #{$menu-class}{
+        @media print{ display: none; }
+        @include from($bp){  display: flex;  }
+    }
+
+    // Layout genera en mobile
+    #{$menu-class}{
+        li ul{
+            max-height: 0;
+            overflow: hidden;
+        }
+    }
+
+    // Layout general en Desktop
+    #{$menu-class}{
+        li{
+            @include from($bp){  position: relative;  }
+        }
+        li ul{
+            @include from($bp){  position: absolute; z-index: 400  }
+        }
+        li{
+            @include from($bp){
+                &:hover{
+                    & > ul{
+                        max-height: 1000px;
+                        overflow: visible;
+                    }
+                }
+            }
+        }
+        & > li > ul > li ul{
+            @include from($bp){  right: 100%;  top: 0;  }
+        }
+    }
+
+    // Mostrar los submenus en mobil
+    // Agregar la calse desde javascript
+    #{$menu-class}{
+        .is-show{
+            max-height: 1000px;
+        }
+    }
+
+
+    /*
+    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+          MENU STYLES
+    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    */
+    #{$menu-class}{
+        @extend %list;
+        li ul{  @extend %list;  }
+    }
+    #{$menu-class}{
+        a{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            .Toggle{
+                display: block;
+                padding: 0 12px;
+            }
+        }
+    }
+
+    // TOGGLE MENU IN MOBILE
+    #{$menu-class}-toggle{
+        @include from($bp){display: none}
+        @media print {  display: none;  }
+        cursor: pointer;
+    }
+}

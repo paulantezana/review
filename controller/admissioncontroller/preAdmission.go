@@ -4,16 +4,55 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 	"time"
 )
 
+func GetPreAdmissionsPaginate(c echo.Context) error {
+	// Get data request
+	request := admissionsPaginateRequest{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
+
+	// Pagination calculate
+	offset := request.validate()
+
+	// Get connection
+	DB := provider.GetConnection()
+	defer DB.Close()
+
+	// Execute instructions
+	var total uint
+	admissionsPaginateResponses := make([]admissionsPaginateResponse, 0)
+	if err := DB.Debug().Table("pre_admissions").
+		Select("pre_admissions.*, students.dni , students.full_name, users.id as user_id, users.email, users.avatar").
+		Joins("INNER JOIN students ON pre_admissions.student_id = students.id").
+		Joins("INNER JOIN users on students.user_id = users.id").
+		Where("students.dni LIKE ? AND pre_admissions.admission_setting_id = ? AND pre_admissions.program_id = ?", "%"+request.Search+"%", request.AdmissionSettingID, request.ProgramID).
+		Or("lower(students.full_name) LIKE lower(?) AND pre_admissions.admission_setting_id = ? AND pre_admissions.program_id = ?", "%"+request.Search+"%", request.AdmissionSettingID, request.ProgramID).
+		Order("pre_admissions.id desc").
+		Offset(offset).Limit(request.Limit).Scan(&admissionsPaginateResponses).
+		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+	// Return response
+	return c.JSON(http.StatusOK, utilities.ResponsePaginate{
+		Success:     true,
+		Data:        admissionsPaginateResponses,
+		Total:       total,
+		CurrentPage: request.CurrentPage,
+		Limit:       request.Limit,
+	})
+}
+
 func GetPreAdmission(c echo.Context) error {
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	admissionSettings := make([]models.AdmissionSetting, 0)
@@ -26,38 +65,69 @@ func GetPreAdmission(c echo.Context) error {
 	})
 }
 
+func GetPreAdmissionPrograms(c echo.Context) error {
+	// Get data request
+	admissionSetting := models.AdmissionSetting{}
+	if err := c.Bind(&admissionSetting); err != nil {
+		return c.JSON(http.StatusBadRequest, utilities.Response{
+			Message: "La estructura no es válida",
+		})
+	}
+
+	// get connection
+	DB := provider.GetConnection()
+	defer DB.Close()
+
+	// Query settings
+	DB.First(&admissionSetting, models.AdmissionModality{ID: admissionSetting.ID})
+
+	// Query programs
+	programs := make([]models.Program, 0)
+	if err := DB.Where("subsidiary_id = ?", admissionSetting.SubsidiaryID).Find(&programs).Order("id desc").
+		Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    programs,
+	})
+}
+
 func GetPreAdmissionById(c echo.Context) error {
-    admissionSetting := models.AdmissionSetting{}
-    if err := c.Bind(&admissionSetting); err != nil {
-        return c.JSON(http.StatusBadRequest, utilities.Response{
-            Message: "La estructura no es válida",
-        })
-    }
+	// Get data request
+	admissionSetting := models.AdmissionSetting{}
+	if err := c.Bind(&admissionSetting); err != nil {
+		return c.JSON(http.StatusBadRequest, utilities.Response{
+			Message: "La estructura no es válida",
+		})
+	}
 
-    // get connection
-    DB := config.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := provider.GetConnection()
+	defer DB.Close()
 
-    // Query
-    DB.Where("pre_end_date >= ? AND pre_start_date <= ? AND id = ? AND pre_enabled = true", time.Now(), time.Now(), admissionSetting.ID).First(&admissionSetting)
-    if admissionSetting.ID == 0 {
-        // Return response
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("Cerrado"),
-        })
-    }
+	// Query
+	DB.Where("pre_end_date >= ? AND pre_start_date <= ? AND id = ? AND pre_enabled = true", time.Now(), time.Now(), admissionSetting.ID).First(&admissionSetting)
+	if admissionSetting.ID == 0 {
+		// Return response
+		return c.JSON(http.StatusOK, utilities.Response{
+			Message: fmt.Sprintf("Cerrado"),
+		})
+	}
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-       Success: true,
-       Data:    admissionSetting,
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    admissionSetting,
+	})
 }
 
 type savePreAdmissionRequest struct {
-	Student models.Student `json:"student"`
-	User    models.User    `json:"user"`
-    AdmissionSettingID uint `json:"admission_setting_id"`
+	Student      models.Student      `json:"student"`
+	User         models.User         `json:"user"`
+	PreAdmission models.PreAdmission `json:"pre_admission"`
 }
 
 func SavePreAdmission(c echo.Context) error {
@@ -67,25 +137,25 @@ func SavePreAdmission(c echo.Context) error {
 		return err
 	}
 
-    // Validate DNI
-    if !utilities.ValidateDni(request.Student.DNI) {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Número de dni no valido")})
-    }
+	// Validate DNI
+	if !utilities.ValidateDni(request.Student.DNI) {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Número de dni no valido")})
+	}
 
 	// Validate required parameters
-    if request.AdmissionSettingID == 0 {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("No se especifico el proceso de admisión este campo es requerido.")})
-    }
+	if request.PreAdmission.ID == 0 {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("No se especifico el proceso de admisión este campo es requerido.")})
+	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// start transaction
 	TX := DB.Begin()
 
 	// Query student
-    DB.First(&request.Student, models.Student{DNI: request.Student.DNI})
+	DB.First(&request.Student, models.Student{DNI: request.Student.DNI})
 
 	// Validate if exist student
 	if request.Student.ID == 0 {
@@ -146,25 +216,28 @@ func SavePreAdmission(c echo.Context) error {
 	}
 
 	// Register pre admission
-    preAdmission := models.PreAdmission{
-        StudentID: request.Student.ID,
-        AdmissionSettingID: request.AdmissionSettingID,
-    }
+	preAdmission := models.PreAdmission{
+		StudentID:          request.Student.ID,
+		AdmissionSettingID: request.PreAdmission.AdmissionSettingID,
+		ProgramID:          request.PreAdmission.ProgramID,
+	}
 
-    // Validate
-    DB.First(&preAdmission,preAdmission)
-    if preAdmission.ID >= 1 {
-        TX.Rollback()
-        return c.JSON(http.StatusOK, utilities.Response{
-            Message: fmt.Sprintf("El estudiante %s ya esta registrado en el proceso de preadmisión.", request.Student.FullName),
-        })
-    }
+	// Validate
+	DB.First(&preAdmission, preAdmission)
+	if preAdmission.ID >= 1 {
+		TX.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{
+			Success: true,
+			Data:    request,
+			Message: fmt.Sprintf("El estudiante %s ya esta registrado en el proceso de preadmisión.", request.Student.FullName),
+		})
+	}
 
-    // Create pre admission
-    if err := TX.Create(&preAdmission).Error; err != nil {
-        TX.Rollback()
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Create pre admission
+	if err := TX.Create(&preAdmission).Error; err != nil {
+		TX.Rollback()
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
 	// Commit transaction
 	TX.Commit()

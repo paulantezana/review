@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
@@ -26,7 +26,7 @@ func SubsidiariesUserUpdate(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Update module in database
@@ -49,7 +49,7 @@ func GetSubsidiariesUserByUserID(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Query Subsidiaries
@@ -101,7 +101,7 @@ func GetSubsidiariesUserByUserIDLicense(c echo.Context) error {
 	currentUser := claims.User
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// ss

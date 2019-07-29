@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
@@ -18,7 +18,7 @@ func GetQuizzesPaginate(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Pagination calculate
@@ -55,7 +55,7 @@ func GetQuizzesAllByDiplomat(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Execute instructions
@@ -83,7 +83,7 @@ func GetQuizzesAllByDiplomatStudent(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Execute instructions
@@ -116,7 +116,7 @@ func GetQuizzesPaginateStudent(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Pagination calculate
@@ -158,7 +158,7 @@ func GetQuizByID(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Execute instructions
@@ -189,7 +189,7 @@ func CreateQuiz(c echo.Context) error {
 	//poll.ProgramID = currentUser.DefaultProgramID
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Insert companies in database
@@ -213,7 +213,7 @@ func UpdateQuiz(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Update poll in database
@@ -243,7 +243,7 @@ func UpdateStateQuiz(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Update columns
@@ -266,7 +266,7 @@ func DeleteQuiz(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Delete poll in database

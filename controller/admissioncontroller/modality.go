@@ -3,21 +3,15 @@ package admissioncontroller
 import (
 	"fmt"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
 func GetModalities(c echo.Context) error {
-	// Get data request
-	modality := models.AdmissionModality{}
-	if err := c.Bind(&modality); err != nil {
-		return err
-	}
-
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -31,6 +25,29 @@ func GetModalities(c echo.Context) error {
 	})
 }
 
+func GetModalityById(c echo.Context) error {
+	// Get data request
+	admissionModality := models.AdmissionModality{}
+	if err := c.Bind(&admissionModality); err != nil {
+		return err
+	}
+
+	// Get connection
+	DB := provider.GetConnection()
+	defer DB.Close()
+
+	// Execute instructions
+	if err := DB.First(&admissionModality, models.AdmissionModality{ID: admissionModality.ID}).Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
+
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    admissionModality,
+	})
+}
+
 func CreateModality(c echo.Context) error {
 	// Get data request
 	modality := models.AdmissionModality{}
@@ -39,7 +56,7 @@ func CreateModality(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Create new modality
@@ -63,7 +80,7 @@ func UpdateModality(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Update modality in database
@@ -85,7 +102,7 @@ func DeleteModality(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Delete teacher in database

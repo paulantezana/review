@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -19,7 +19,7 @@ type userTop struct {
 // TopUsers top all users
 func TopUsers(c echo.Context) error {
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Query database top 5
@@ -61,7 +61,7 @@ func TopStudentsWithReview(c echo.Context) error {
 	//currentUser := claims.User
 	//
 	//// Get connection
-	//db := config.GetConnection()
+	//db := provider.GetConnection()
 	//defer db.Close()
 	//
 	//// All modules

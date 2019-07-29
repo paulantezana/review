@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
@@ -24,7 +24,7 @@ func GetProgramsByLicense(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -67,7 +67,7 @@ func GetPrograms(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -92,7 +92,7 @@ func GetProgramByID(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -128,7 +128,7 @@ func CreateProgram(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// ------------------------------------
@@ -231,7 +231,7 @@ func UpdateProgram(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Update program in database

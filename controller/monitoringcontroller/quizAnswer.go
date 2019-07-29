@@ -3,7 +3,7 @@ package monitoringcontroller
 import (
 	"fmt"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"math"
@@ -20,7 +20,7 @@ func GetLastQuizAnswer(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Query answer
@@ -70,7 +70,7 @@ func GetAnalyzeQuizAnswerByStudent(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// analyzeQuizAnswerResponse
@@ -158,7 +158,7 @@ func CreateQuizAnswer(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Query answer
@@ -202,7 +202,7 @@ func CreateQuizAnswerDetail(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Insert answers in database
@@ -259,7 +259,7 @@ func TimeFinishQuizAnswer(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// update quiz

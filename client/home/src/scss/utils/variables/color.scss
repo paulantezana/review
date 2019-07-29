@@ -1,0 +1,122 @@
+$first-color: #1890ff;
+$first-color-inverse: #FFFFFF;
+
+$blue-1: #e6f7ff;
+$blue-2: #bae7ff;
+$blue-3: #91d5ff;
+$blue-4: #69c0ff;
+$blue-5: #40a9ff;
+$blue-6: #1890ff;
+$blue-7: #096dd9;
+$blue-8: #0050b3;
+$blue-9: #003a8c;
+$blue-10: #002766;
+
+$green-1: #f6ffed;
+$green-2: #d9f7be;
+$green-3: #b7eb8f;
+$green-4: #95de64;
+$green-5: #73d13d;
+$green-6: #52c41a;
+$green-7: #389e0d;
+$green-8: #237804;
+$green-9: #135200;
+$green-10: #092b00;
+
+$gold-1: #fffbe6;
+$gold-2: #fff1b8;
+$gold-3: #ffe58f;
+$gold-4: #ffd666;
+$gold-5: #ffc53d;
+$gold-6: #faad14;
+$gold-7: #d48806;
+$gold-8: #ad6800;
+$gold-9: #874d00;
+$gold-10: #613400;
+
+$red-1: #fff1f0;
+$red-2: #ffccc7;
+$red-3: #ffa39e;
+$red-4: #ff7875;
+$red-5: #ff4d4f;
+$red-6: #f5222d;
+$red-7: #cf1322;
+$red-8: #a8071a;
+$red-9: #820014;
+$red-10: #5c0011;
+
+
+$color-1: $blue-1;
+$color-2: $blue-2;
+$color-3: $blue-3;
+$color-4: $blue-4;
+$color-5: $blue-5;
+$color-6: $blue-6;
+$color-7: $blue-7;
+$color-8: $blue-8;
+$color-9: $blue-9;
+$color-10:$blue-10;
+
+
+
+$border-color: #EBECEE;
+$text-color: #54575A;
+$text-color-alt: #97999B;
+$body-bg: #ffffff;
+$body-bg-alt: #FFF;
+
+// Darck
+$dark-bg: #282D31;
+$dark-color: #A6ADB4;
+$dark-bg-alt: #141618;
+
+// Menu
+$menu-width: 220px;
+$menu-hover-bg: #F9F9F9;
+$menu-hover-color: $text-color;
+$menu-mobile-bg: #FFF;
+$menu-mobile-color: $text-color;
+
+// Footer
+$footer-bg: $dark-bg;
+$footer-bg-alt: $dark-bg-alt;
+$footer-color: $dark-color;
+
+// Top Bar
+$topBar-bg: $gold-6;
+$topBar-color: $gold-1;
+
+
+:root{
+    --snColor1: #9A40D6;
+    --snColor1Inverse: #FFFFFF;
+    --snColor1Light: #b358f0;
+    --snColor1Dark: #8c30c9;
+    
+    // second color
+    --snColor2: #faad14;
+    --snColor2Inverse: #FFFFFF;
+
+    // Colores que se usaran en los estados del calendario
+    --snError: #D73553;
+    --snSuccess: #31B243;
+    --snWarning: #FFC200;
+    --snDisable: #d9d9d9;
+
+    // Colores de fondo
+    --snColorBg: #FFFFFF;
+    --snColorBgAlt: #f5f5f5;
+    --snColorHover: #0000000d;
+
+    // Colores de texto
+    --snColorText: #333333;
+    --snColorTextAlt: rgb(202, 202, 202);
+
+    // Color del borde de forma general
+    --snColorBorder: #DFE2E2;
+
+    // Darck styles
+    --snColorDark: hsl(207, 30%, 17%);
+    --snColorDarkAlt: hsl(208, 29%, 10%);
+    --snColorDarkInverse: hsl(210, 6%, 93%);
+}

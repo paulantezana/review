@@ -10,7 +10,7 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -22,7 +22,7 @@ func GetCompanies(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Pagination calculate
@@ -58,7 +58,7 @@ func GetCompanySearch(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Execute instructions
@@ -92,7 +92,7 @@ func CreateCompany(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Insert companies in database
@@ -116,7 +116,7 @@ func UpdateCompany(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Update company in database
@@ -143,7 +143,7 @@ func DeleteCompany(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Delete company in database
@@ -167,7 +167,7 @@ func MultipleDeleteCompany(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	tx := db.Begin()
@@ -250,7 +250,7 @@ func SetTempUploadCompany(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Insert students in database
@@ -276,7 +276,7 @@ func SetTempUploadCompany(c echo.Context) error {
 
 func ExportAllCompanies(c echo.Context) error {
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Execute instructions

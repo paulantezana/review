@@ -3,7 +3,7 @@ package librarycontroller
 import (
 	"fmt"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
@@ -19,7 +19,7 @@ type libraryCount struct {
 
 func LibraryCounts(c echo.Context) error {
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Create struct
@@ -54,7 +54,7 @@ type top10Reading struct {
 
 func Top10ReadingByStudent(c echo.Context) error {
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Query count reading
@@ -96,7 +96,7 @@ func Top10ReadingByStudent(c echo.Context) error {
 
 func Top10ReadingByProgram(c echo.Context) error {
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	//
@@ -143,7 +143,7 @@ type topReadingByBookResponse struct {
 
 func TopReadingByBook(c echo.Context) error {
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Readings
@@ -177,7 +177,7 @@ type lastCommentsResponse struct {
 
 func LastComments(c echo.Context) error {
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Query last comments

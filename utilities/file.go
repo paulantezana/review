@@ -1,8 +1,8 @@
 package utilities
 
 import (
-    "os"
-    "time"
+	"os"
+	"time"
 )
 
 type File struct {
@@ -13,10 +13,10 @@ type File struct {
 
 // Exists reports whether the named file or directory exists.
 func FileExist(name string) bool {
-    if _, err := os.Stat(name); err != nil {
-        if os.IsNotExist(err) {
-            return false
-        }
-    }
-    return true
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
 }

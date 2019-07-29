@@ -1,0 +1,22 @@
+.Site{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    &-footer{
+        margin-top: auto;
+    }
+}
+
+.Container{
+    @extend %container;
+}
+
+.Full{
+    max-width: 100%;
+    width: 100%;
+}
+
+.Main-content{
+    margin: 16px;
+}

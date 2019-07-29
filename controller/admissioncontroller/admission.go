@@ -6,7 +6,7 @@ import (
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
@@ -41,7 +41,7 @@ type admissionsPaginateRequest struct {
 }
 
 func (r *admissionsPaginateRequest) validate() uint {
-	con := config.GetConfig()
+	con := provider.GetConfig()
 	if r.Limit == 0 {
 		r.Limit = con.Global.Paginate
 	}
@@ -63,7 +63,7 @@ func GetAdmissionsPaginate(c echo.Context) error {
 	offset := request.validate()
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -125,7 +125,7 @@ func GetAdmissionsByID(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Query admission
@@ -165,7 +165,7 @@ func GetAdmissionsPaginateExam(c echo.Context) error {
 	offset := request.validate()
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -211,7 +211,7 @@ func UpdateStudentAdmission(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// start transaction
@@ -305,7 +305,7 @@ func CreateAdmission(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	student := models.Student{}
@@ -379,7 +379,7 @@ func UpdateAdmission(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Update admission
@@ -414,7 +414,7 @@ func CancelAdmission(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// start transaction
@@ -463,7 +463,7 @@ func GetNextClassroomAdmission(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// get admission setting
@@ -503,7 +503,7 @@ func UpdateExamAdmission(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Set current time now
@@ -570,7 +570,7 @@ func FileAdmissionDF(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Response slice
@@ -610,8 +610,6 @@ func FileAdmissionDF(c echo.Context) error {
 	})
 }
 
-
-
 func LicenseAdmissionDF(c echo.Context) error {
 	// Get data request
 	request := utilities.Request{}
@@ -620,7 +618,7 @@ func LicenseAdmissionDF(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Query all students
@@ -644,7 +642,6 @@ func LicenseAdmissionDF(c echo.Context) error {
 	})
 }
 
-
 func ListAdmissionDF(c echo.Context) error {
 	// Get data request
 	admission := models.Admission{}
@@ -653,7 +650,7 @@ func ListAdmissionDF(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Query all students
@@ -683,7 +680,7 @@ func ExportAdmission(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// get admissions
@@ -705,7 +702,7 @@ func ExportAdmissionByIds(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// get admissions
@@ -739,7 +736,7 @@ func ReportAdmissionGeneral(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// data
@@ -781,7 +778,7 @@ func ExportAdmissionExamResults(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Details admission settings
@@ -856,7 +853,7 @@ func ExportAdmissionExamResults(c echo.Context) error {
 
 func exportExcel(admissions []models.Admission) string {
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// CREATE EXCEL FILE
@@ -933,7 +930,7 @@ func exportExcel(admissions []models.Admission) string {
 
 func createStudentHistory(studentID uint, userID uint, message string, action uint) error {
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Insert student history

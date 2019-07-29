@@ -3,13 +3,13 @@ package migration
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 )
 
 // migration function
 func Migrate() {
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	db.Debug().AutoMigrate(

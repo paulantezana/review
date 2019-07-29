@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -20,7 +20,7 @@ func GetPollsPaginate(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Pagination calculate
@@ -62,7 +62,7 @@ func GetPollsPaginateStudent(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Pagination calculate
@@ -104,7 +104,7 @@ func GetPollByID(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Execute instructions
@@ -135,7 +135,7 @@ func CreatePoll(c echo.Context) error {
 	//poll.ProgramID = currentUser.DefaultProgramID
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Insert companies in database
@@ -159,7 +159,7 @@ func UpdatePoll(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Update poll in database
@@ -188,7 +188,7 @@ func UpdateStatePoll(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Update columns
@@ -211,7 +211,7 @@ func DeletePoll(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Delete poll in database

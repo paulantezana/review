@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/gommon/log"
 	"github.com/olahol/melody"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"golang.org/x/net/websocket"
@@ -35,7 +35,7 @@ func GetCommentsAll(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -87,7 +87,7 @@ func CreateComment(c echo.Context) error {
 	comment.UserID = currentUser.ID
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Insert books in database
@@ -109,8 +109,8 @@ func CreateComment(c echo.Context) error {
 	})
 
 	// websocket
-	origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
-	url := fmt.Sprintf("ws://localhost:%s/ws/comment", config.GetConfig().Server.Port)
+	origin := fmt.Sprintf("http://localhost:%s/", provider.GetConfig().Server.Port)
+	url := fmt.Sprintf("ws://localhost:%s/ws/comment", provider.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -136,7 +136,7 @@ func UpdateComment(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Update category in database
@@ -159,8 +159,8 @@ func UpdateComment(c echo.Context) error {
 	})
 
 	// websocket
-	origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
-	url := fmt.Sprintf("ws://localhost:%s/ws/comment", config.GetConfig().Server.Port)
+	origin := fmt.Sprintf("http://localhost:%s/", provider.GetConfig().Server.Port)
+	url := fmt.Sprintf("ws://localhost:%s/ws/comment", provider.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -186,7 +186,7 @@ func DeleteComment(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Find data
@@ -216,8 +216,8 @@ func DeleteComment(c echo.Context) error {
 	})
 
 	// websocket
-	origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
-	url := fmt.Sprintf("ws://localhost:%s/ws/comment", config.GetConfig().Server.Port)
+	origin := fmt.Sprintf("http://localhost:%s/", provider.GetConfig().Server.Port)
+	url := fmt.Sprintf("ws://localhost:%s/ws/comment", provider.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -249,7 +249,7 @@ func CreateVote(c echo.Context) error {
 	vote.UserID = currentUser.ID
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Validate
@@ -285,8 +285,8 @@ func CreateVote(c echo.Context) error {
 		})
 
 		// websocket
-		origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
-		url := fmt.Sprintf("ws://localhost:%s/ws/comment", config.GetConfig().Server.Port)
+		origin := fmt.Sprintf("http://localhost:%s/", provider.GetConfig().Server.Port)
+		url := fmt.Sprintf("ws://localhost:%s/ws/comment", provider.GetConfig().Server.Port)
 
 		ws, err := websocket.Dial(url, "", origin)
 		if err != nil {
@@ -333,8 +333,8 @@ func CreateVote(c echo.Context) error {
 		})
 
 		// websocket
-		origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
-		url := fmt.Sprintf("ws://localhost:%s/ws/comment", config.GetConfig().Server.Port)
+		origin := fmt.Sprintf("http://localhost:%s/", provider.GetConfig().Server.Port)
+		url := fmt.Sprintf("ws://localhost:%s/ws/comment", provider.GetConfig().Server.Port)
 
 		ws, err := websocket.Dial(url, "", origin)
 		if err != nil {
@@ -361,7 +361,7 @@ func CreateVote(c echo.Context) error {
 func updateCommentVotes(commentID uint, vote bool) (err error) {
 	comment := models.Comment{}
 
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	rows := DB.First(&comment, commentID).RowsAffected
@@ -380,7 +380,7 @@ func updateCommentVotes(commentID uint, vote bool) (err error) {
 }
 
 func commentGetChildren(id uint) (children []models.Comment) {
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	DB.Where("parent_id = ?", id).Find(&children)

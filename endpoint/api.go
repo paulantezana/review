@@ -3,7 +3,7 @@ package endpoint
 import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/controller"
 	"github.com/paulantezana/review/controller/admissioncontroller"
 	"github.com/paulantezana/review/controller/coursescontroller"
@@ -27,21 +27,24 @@ func PublicApi(e *echo.Echo) {
 	pb.POST("/library/by/id", controller.ForgotChange)
 
 	// Global
-	pb.GET("/setting",controller.GetSetting)
+	pb.GET("/setting", controller.GetSetting)
 
 	pb.GET("/subsidiaries", institutecontroller.GetSubsidiaries)
-	pb.POST("/programs", institutecontroller.GetPrograms)
+	pb.GET("/subsidiaries/detail", admissioncontroller.GetSubsidiariesDetail)
 
 	// Admission
-	pb.POST("/admission/results", admissioncontroller.GetAdmissionExamResults)
+	pb.POST("/admission/results", admissioncontroller.GetAdmissionExamAllResults)
 	pb.POST("/admission/results/by/id", admissioncontroller.GetAdmissionExamResultsById)
 	pb.POST("/admission/results/by/program/id", admissioncontroller.GetAdmissionExamResultsByProgramId)
-	pb.POST("/admission/brochure", admissioncontroller.GetAdmissionExamResults)         // Prospecto
-	pb.POST("/admission/modalities", admissioncontroller.GetAdmissionExamResults)       // Modalidades
-	pb.POST("/admission/modalities/by/id", admissioncontroller.GetAdmissionExamResults) // Modalidades
+	pb.POST("/admission/brochure", admissioncontroller.GetAdmissionExamAllResults) // Prospecto
 	pb.POST("/admission/pre/admission/save", admissioncontroller.SavePreAdmission)
 	pb.POST("/admission/pre/admission/get", admissioncontroller.GetPreAdmission)
 	pb.POST("/admission/pre/admission/by/id", admissioncontroller.GetPreAdmissionById)
+	pb.POST("/admission/pre/admission/programs", admissioncontroller.GetPreAdmissionPrograms)
+
+	// modalities
+	pb.GET("/admission/modalities", admissioncontroller.GetModalities)
+	pb.POST("/admission/modalities/by/id", admissioncontroller.GetModalityById)
 
 	pb.POST("/external/dni", controller.GetStudentByDni)
 	pb.POST("/external/ruc", controller.GetStudentByDni)
@@ -54,7 +57,7 @@ func ProtectedApi(e *echo.Echo) {
 	// Configure middleware with the custom claims type
 	con := middleware.JWTConfig{
 		Claims:     &utilities.Claim{},
-		SigningKey: []byte(config.GetConfig().Server.Key),
+		SigningKey: []byte(provider.GetConfig().Server.Key),
 	}
 	ar.Use(middleware.JWTWithConfig(con))
 
@@ -350,10 +353,12 @@ func ProtectedApi(e *echo.Echo) {
 	ar.PUT("/admission/admission/update/exam", admissioncontroller.UpdateExamAdmission)
 	ar.POST("/admission/admission/next/classroom", admissioncontroller.GetNextClassroomAdmission)
 
+	ar.POST("/admission/pre/admission/paginate", admissioncontroller.GetPreAdmissionsPaginate)
+
 	// Admission report PDF
-    ar.POST("/admission/admission/report/pdf/file", admissioncontroller.GetPDFAdmissionStudentFile)
-    ar.POST("/admission/admission/report/pdf/license", admissioncontroller.GetPDFAdmissionStudentLicense)
-    ar.POST("/admission/admission/report/pdf/list", admissioncontroller.GetPDFAdmissionStudentList)
+	ar.POST("/admission/admission/report/pdf/file", admissioncontroller.GetPDFAdmissionStudentFile)
+	ar.POST("/admission/admission/report/pdf/license", admissioncontroller.GetPDFAdmissionStudentLicense)
+	ar.POST("/admission/admission/report/pdf/list", admissioncontroller.GetPDFAdmissionStudentList)
 
 	// Admission export excel
 	ar.POST("/admission/admission/export", admissioncontroller.ExportAdmission)

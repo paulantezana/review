@@ -1,0 +1,40 @@
+.ApiPage{
+    position: relative;
+    overflow: hidden;
+    &-anchor{
+        position: absolute;
+        top: 8px;
+        right: 20px;
+        @include to(m){
+            display: none;
+        }
+    }
+    &-content{
+        padding: 0 16px;
+        @include from(m){
+            padding: 0 200px 144px 32px;
+        }
+    }
+}
+
+.ApiMenuToggle{
+    position: absolute;
+    top: 72px;
+    width: 41px;
+    height: 40px;
+    cursor: pointer;
+    z-index: 0;
+    text-align: center;
+    line-height: 40px;
+    // font-size: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fff;
+
+    right: -40px;
+    border-radius: 0 4px 4px 0;
+    &.shadow{
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15)
+    }
+}

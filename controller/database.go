@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"io/ioutil"
 	"net/http"
@@ -13,7 +13,7 @@ import (
 )
 
 func BackupDB(c echo.Context) error {
-	con := config.GetConfig()
+	con := provider.GetConfig()
 
 	// Hash current time
 	cc := sha256.Sum256([]byte(time.Now().String()))

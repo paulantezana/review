@@ -8,7 +8,7 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 )
 
 func main() {
@@ -43,7 +43,7 @@ func main() {
 	// Custom port
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = config.GetConfig().Server.Port
+		port = provider.GetConfig().Server.Port
 	}
 
 	// Starting server echo

@@ -1,0 +1,148 @@
+@mixin SnBtn{
+    line-height: 2.2em;
+    position: relative;
+    display: inline-block;
+    font-weight: 400;
+    white-space: nowrap;
+    text-align: center;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.015);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+    user-select: none;
+    touch-action: manipulation;
+    padding: 0 15px;
+    font-size: 14px;
+    border-radius: 4px;
+    color: var(--snColorText);
+    border: 1px solid var(--snColorBorder);
+}
+
+.SnBtn {
+    @include SnBtn;
+    
+    &.block{
+        width: 100%;
+        display: block;
+    }
+    &:hover {
+        color: var(--snColor1);
+        border-color: var(--snColor1);
+    }
+    &:focus,
+    &:active {
+        outline: 0;
+        color: var(--snColor1Dark);
+        border-color: var(--snColor1Dark);
+    }
+    &.sm{
+        line-height: 1.6em;
+    }
+    &.lg{
+        line-height: 2.6em;
+    }
+    &.primary {
+        color: var(--snColor1Inverse);
+        background-color: var(--snColor1);
+        border-color: var(--snColor1);
+        text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.12);
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.045);
+        &:hover {
+            background-color: var(--snColor1Light);
+            border-color: var(--snColor1Light);
+        }
+        &:focus,
+        &:active {
+            background-color: var(--snColor1Dark);
+            border-color: var(--snColor1Dark);
+        }
+    }
+    &.success {
+        color: white;
+        background-color: var(--snSuccess);
+        border-color: var(--snSuccess);
+        text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.12);
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.045);
+        &:hover {
+            background-color: #34c447;
+            border-color: #34c447;
+        }
+        &:focus,
+        &:active {
+            background-color: #25a135;
+            border-color: #25a135;
+        }
+    }
+    &.warning {
+        color: white;
+        background-color: var(--snWarning);
+        border-color: var(--snWarning);
+        text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.12);
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.045);
+        &:hover {
+            background-color: #ffd139;
+            border-color: #ffd139;
+        }
+        &:focus,
+        &:active {
+            background-color: #ffa600;
+            border-color: #ffa600;
+        }
+    }
+    &.warning {
+        color: white;
+        background-color: var(--snError);
+        border-color: var(--snError);
+        text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.12);
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.045);
+        &:hover {
+            background-color: #e43d5c;
+            border-color: #e43d5c;
+        }
+        &:focus,
+        &:active {
+            background-color: #d32a49;
+            border-color: #d32a49;
+        }
+    }
+    &.white{
+        color: var(--snColor1Dark);
+        background: white;
+        border-color: white;
+        &:hover {
+            background-color: white;
+            border-color: white;
+        }
+        &:focus,
+        &:active {
+            background-color: white;
+            border-color: white;
+        }
+    }
+    &[disabled]:active,
+    &[disabled]:focus,
+    &[disabled]:hover,
+    &[disabled]{
+        box-shadow: none;
+        background: rgba(0,0,0,.02);
+        color: rgba(0,0,0,0.25);
+        // border-color: var(--snCellBorderColor);
+        cursor: no-drop;
+    }
+}
+
+.SnBtns {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    .SnBtn{
+        &:last-child{
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+        &:first-child{
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+    }
+}

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
@@ -21,7 +21,7 @@ func CreateAnswer(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Validate
@@ -73,7 +73,7 @@ func GetAnswerSummary(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Get questions
@@ -145,7 +145,7 @@ func GetAnswerNavigate(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Prepare
@@ -222,7 +222,7 @@ func ExportExcelAnswers(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Query answers
@@ -311,7 +311,7 @@ func ExportExcelAnswers(c echo.Context) error {
 // getQuestionAnswerCheck
 func getQuestionAnswerCheck(an string, questionID uint) string {
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Split string by ","
@@ -354,7 +354,7 @@ func getQuestionAnswerCheck(an string, questionID uint) string {
 // getQuestionAnswerMultiple
 func getQuestionAnswerMultiple(an string, questionID uint) string {
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// convert string to UINT == Convert answer to to id multiple question

@@ -3,7 +3,7 @@ package monitoringcontroller
 import (
 	"fmt"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
@@ -17,7 +17,7 @@ func GetMonitoringFilterQuery(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Query
@@ -55,7 +55,7 @@ func GetMonitoringFilterSearch(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Search
@@ -91,7 +91,7 @@ func SaveMonitoringFilter(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Reset all
@@ -114,7 +114,7 @@ func SaveMonitoringFilter(c echo.Context) error {
 
 func validateRestrictions(tableName string, user models.User) ([]uint, error) {
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Query all filters by quiz_diplomats

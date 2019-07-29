@@ -12,7 +12,7 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 )
 
@@ -29,7 +29,7 @@ func GetTeachers(c echo.Context) error {
 	}
 
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Pagination calculate
@@ -76,7 +76,7 @@ func GetTeachersPaginateByProgram(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Pagination calculate
@@ -134,7 +134,7 @@ func GetTeacherSearch(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -164,7 +164,7 @@ func GetTeacherSearchProgram(c echo.Context) error {
 	}
 
 	// Get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -199,7 +199,7 @@ func CreateTeacher(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// start transaction
@@ -254,7 +254,7 @@ func UpdateTeacher(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// start transaction
@@ -300,7 +300,7 @@ func DeleteTeacher(c echo.Context) error {
 	}
 
 	// get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Delete teacher in database
@@ -324,7 +324,7 @@ func GetTempUploadTeacherBySubsidiary(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Execute instructions
@@ -406,7 +406,7 @@ func SetTempUploadTeacherBySubsidiary(c echo.Context) error {
 	}
 
 	// GET CONNECTION DATABASE
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Prepare
@@ -513,7 +513,7 @@ func SetTempUploadTeacherByProgram(c echo.Context) error {
 
 func ExportAllTeachers(c echo.Context) error {
 	// Get connection
-	db := config.GetConnection()
+	db := provider.GetConnection()
 	defer db.Close()
 
 	// Query in database

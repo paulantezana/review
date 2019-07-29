@@ -8,8 +8,8 @@
     },
     "Server" : {
         "port": "1323",
-        "host": "http://localhost",
-        "socket": "ws://localhost",
+        "host": "http://api.localhost",
+        "socket": "ws://api.localhost",
         "key": "Mc]-7EEP}vJ{q{P@"
     },
     "Global": {

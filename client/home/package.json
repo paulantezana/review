@@ -1,0 +1,44 @@
+{
+  "name": "institutue_doc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "gatsby build",
+    "develop": "gatsby develop",
+    "format": "prettier --write src/**/*.{js,jsx}",
+    "start": "gatsby serve",
+    "test": "echo \"Write tests! -> https://gatsby.app/unit-testing\""
+  },
+  "dependencies": {
+    "antd": "^3.20.6",
+    "enquire-js": "^0.2.1",
+    "gatsby": "^2.1.18",
+    "gatsby-plugin-antd": "^2.0.2",
+    "gatsby-plugin-less": "^2.0.11",
+    "gatsby-plugin-offline": "^2.0.24",
+    "gatsby-plugin-react-helmet": "^3.0.7",
+    "gatsby-plugin-sass": "^2.0.10",
+    "gatsby-remark-autolink-headers": "^2.0.14",
+    "gatsby-remark-external-links": "0.0.4",
+    "gatsby-remark-prismjs": "^3.2.4",
+    "gatsby-remark-responsive-iframe": "^2.0.9",
+    "gatsby-source-filesystem": "^2.0.23",
+    "gatsby-transformer-remark": "^2.3.0",
+    "less": "^3.9.0",
+    "node-sass": "^4.11.0",
+    "prismjs": "^1.15.0",
+    "prismjs-material-theme": "^1.0.0",
+    "rc-queue-anim": "^1.6.12",
+    "rc-tween-one": "^2.3.3",
+    "react": "^16.8.3",
+    "react-dom": "^16.8.3",
+    "react-helmet": "^5.2.0"
+  },
+  "devDependencies": {
+    "prettier": "^1.16.4"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,17 @@
+.Exception404{
+    padding: 3rem 0;
+    @include from(m){
+        display: flex;
+        align-items: center;
+        &-img,
+        &-content{
+            width: 50%;
+        }
+    }
+    @include to(m){
+        text-align: center;
+        &-img{ 
+            margin-bottom: 3rem;
+        }
+    }
+}

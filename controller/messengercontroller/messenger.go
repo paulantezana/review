@@ -7,7 +7,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/olahol/melody"
-	"github.com/paulantezana/review/config"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
 	"github.com/paulantezana/review/utilities"
 	"golang.org/x/net/websocket"
@@ -88,7 +88,7 @@ func GetUsersMessageScroll(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Pagination calculate
@@ -202,7 +202,7 @@ func GetMessagesByGroup(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Pagination calculate
@@ -267,7 +267,7 @@ func GetMessages(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Pagination calculate
@@ -336,7 +336,7 @@ func CreateMessageFileUpload(c echo.Context) error {
 	recipientID := c.FormValue("recipient_id")
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Convert string to int
@@ -429,8 +429,8 @@ func CreateMessageFileUpload(c echo.Context) error {
 	})
 
 	// Socket
-	origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
-	url := fmt.Sprintf("ws://localhost:%s/ws/chat", config.GetConfig().Server.Port)
+	origin := fmt.Sprintf("http://localhost:%s/", provider.GetConfig().Server.Port)
+	url := fmt.Sprintf("ws://localhost:%s/ws/chat", provider.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -457,7 +457,7 @@ func CreateMessageFileUploadByGroup(c echo.Context) error {
 	recipientID := c.FormValue("recipient_id")
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Convert string to int
@@ -565,8 +565,8 @@ func CreateMessageFileUploadByGroup(c echo.Context) error {
 	})
 
 	// Socket
-	origin := fmt.Sprintf("http://localhost:%s/", config.GetConfig().Server.Port)
-	url := fmt.Sprintf("ws://localhost:%s/ws/chat", config.GetConfig().Server.Port)
+	origin := fmt.Sprintf("http://localhost:%s/", provider.GetConfig().Server.Port)
+	url := fmt.Sprintf("ws://localhost:%s/ws/chat", provider.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -603,7 +603,7 @@ func CreateMessage(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Start transaction
@@ -667,8 +667,8 @@ func CreateMessage(c echo.Context) error {
 	})
 
 	// Socket
-	origin := fmt.Sprintf("%s:%s/", config.GetConfig().Server.Host, config.GetConfig().Server.Port)
-	url := fmt.Sprintf("%s:%s/ws/chat", config.GetConfig().Server.Socket, config.GetConfig().Server.Port)
+	origin := fmt.Sprintf("%s:%s", provider.GetConfig().Server.Host, provider.GetConfig().Server.Port)
+	url := fmt.Sprintf("%s:%s/ws/chat", provider.GetConfig().Server.Socket, provider.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -703,7 +703,7 @@ func CreateGroupMessage(c echo.Context) error {
 	}
 
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Valida if user is active
@@ -777,8 +777,8 @@ func CreateGroupMessage(c echo.Context) error {
 	})
 
 	// Socket
-	origin := fmt.Sprintf("%s:%s/", config.GetConfig().Server.Host, config.GetConfig().Server.Port)
-	url := fmt.Sprintf("%s:%s/ws/chat", config.GetConfig().Server.Socket, config.GetConfig().Server.Port)
+	origin := fmt.Sprintf("%s:%s/", provider.GetConfig().Server.Host, provider.GetConfig().Server.Port)
+	url := fmt.Sprintf("%s:%s/ws/chat", provider.GetConfig().Server.Socket, provider.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -817,7 +817,7 @@ func UnreadMessages(c echo.Context) error {
 
 func getUnreadMessages(u models.User, socket bool) []utilities.Notice {
 	// get connection
-	DB := config.GetConnection()
+	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// query
@@ -861,8 +861,8 @@ func getUnreadMessages(u models.User, socket bool) []utilities.Notice {
 		})
 
 		// Socket
-		origin := fmt.Sprintf("%s:%s/", config.GetConfig().Server.Host, config.GetConfig().Server.Port)
-		url := fmt.Sprintf("%s:%s/ws/chat", config.GetConfig().Server.Socket, config.GetConfig().Server.Port)
+		origin := fmt.Sprintf("%s:%s/", provider.GetConfig().Server.Host, provider.GetConfig().Server.Port)
+		url := fmt.Sprintf("%s:%s/ws/chat", provider.GetConfig().Server.Socket, provider.GetConfig().Server.Port)
 
 		ws, err := websocket.Dial(url, "", origin)
 		if err != nil {

@@ -13,10 +13,13 @@ type AdmissionSetting struct {
 	Description     string    `json:"description"`
 	StartDate       time.Time `json:"start_date"`
 	EndDate         time.Time `json:"end_date"`
-	PreStartDate    time.Time `json:"pre_start_date"`
-	PreEndDate      time.Time `json:"pre_end_date"`
-	PreEnabled      bool      `json:"pre_enabled"`
-	PreDescription  string    `json:"pre_description"`
+
+	PreStartDate        time.Time `json:"pre_start_date"`
+	PreEndDate          time.Time `json:"pre_end_date"`
+	PreEnabled          bool      `json:"pre_enabled"`
+	PreTitle            string    `json:"pre_title"`
+	PreDescription      string    `json:"pre_description"`
+	PreShortDescription string    `json:"pre_short_description"`
 
 	SubsidiaryID uint        `json:"subsidiary_id"`
 	Admissions   []Admission `json:"admissions, omitempty"`
