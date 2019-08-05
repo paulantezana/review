@@ -95,6 +95,25 @@ func GetPreAdmissionPrograms(c echo.Context) error {
 	})
 }
 
+func GetPreAdmissionModalities(c echo.Context) error {
+    // get connection
+    DB := provider.GetConnection()
+    defer DB.Close()
+
+    // Query programs
+    admissionModalities := make([]models.AdmissionModality, 0)
+    if err := DB.Select("id, name").Find(&admissionModalities).Order("id desc").
+        Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Return response
+    return c.JSON(http.StatusOK, utilities.Response{
+        Success: true,
+        Data:    admissionModalities,
+    })
+}
+
 func GetPreAdmissionById(c echo.Context) error {
 	// Get data request
 	admissionSetting := models.AdmissionSetting{}
@@ -143,7 +162,7 @@ func SavePreAdmission(c echo.Context) error {
 	}
 
 	// Validate required parameters
-	if request.PreAdmission.ID == 0 {
+	if request.PreAdmission.AdmissionSettingID == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("No se especifico el proceso de admisión este campo es requerido.")})
 	}
 

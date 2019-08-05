@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-func GetCourseStudentsPaginate(c echo.Context) error {
+func GetLanguageCourseStudentsPaginate(c echo.Context) error {
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
@@ -30,12 +30,12 @@ func GetCourseStudentsPaginate(c echo.Context) error {
 
 	// Execute instructions
 	var total uint
-	courseStudents := make([]models.CourseStudent, 0)
+	LanguageCourseStudents := make([]models.LanguageCourseStudent, 0)
 
 	// Query in database
 	if err := db.Where("course_id = ?", request.CourseID).
 		Order("id desc").
-		Offset(offset).Limit(request.Limit).Find(&courseStudents).
+		Offset(offset).Limit(request.Limit).Find(&LanguageCourseStudents).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
@@ -43,17 +43,17 @@ func GetCourseStudentsPaginate(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
 		Success:     true,
-		Data:        courseStudents,
+		Data:        LanguageCourseStudents,
 		Total:       total,
 		CurrentPage: request.CurrentPage,
 		Limit:       request.Limit,
 	})
 }
 
-func CreateCourseStudent(c echo.Context) error {
+func CreateLanguageCourseStudent(c echo.Context) error {
 	// Get data request
-	courseStudent := models.CourseStudent{}
-	if err := c.Bind(&courseStudent); err != nil {
+	LanguageCourseStudent := models.LanguageCourseStudent{}
+	if err := c.Bind(&LanguageCourseStudent); err != nil {
 		return err
 	}
 
@@ -62,31 +62,31 @@ func CreateCourseStudent(c echo.Context) error {
 	defer DB.Close()
 
 	// Validation
-	VCStudent := models.CourseStudent{}
-	DB.First(&VCStudent, models.CourseStudent{DNI: courseStudent.DNI, CourseID: courseStudent.CourseID})
+	VCStudent := models.LanguageCourseStudent{}
+	DB.First(&VCStudent, models.LanguageCourseStudent{DNI: LanguageCourseStudent.DNI, CourseID: LanguageCourseStudent.CourseID})
 	if VCStudent.ID != 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("El estudiante %s ya está matriculado en este curso", courseStudent.FullName),
+			Message: fmt.Sprintf("El estudiante %s ya está matriculado en este curso", LanguageCourseStudent.FullName),
 		})
 	}
 
-	// Insert courseStudents in database
-	if err := DB.Create(&courseStudent).Error; err != nil {
+	// Insert LanguageCourseStudents in database
+	if err := DB.Create(&LanguageCourseStudent).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    courseStudent.ID,
-		Message: fmt.Sprintf("La participante %s se registro correctamente", courseStudent.FullName),
+		Data:    LanguageCourseStudent.ID,
+		Message: fmt.Sprintf("La participante %s se registro correctamente", LanguageCourseStudent.FullName),
 	})
 }
 
-func UpdateCourseStudent(c echo.Context) error {
+func UpdateLanguageCourseStudent(c echo.Context) error {
 	// Get data request
-	courseStudent := models.CourseStudent{}
-	if err := c.Bind(&courseStudent); err != nil {
+	LanguageCourseStudent := models.LanguageCourseStudent{}
+	if err := c.Bind(&LanguageCourseStudent); err != nil {
 		return err
 	}
 
@@ -95,25 +95,25 @@ func UpdateCourseStudent(c echo.Context) error {
 	defer db.Close()
 
 	// Update course in database
-	rows := db.Model(&courseStudent).Update(courseStudent).RowsAffected
+	rows := db.Model(&LanguageCourseStudent).Update(LanguageCourseStudent).RowsAffected
 	if rows == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", courseStudent.ID),
+			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", LanguageCourseStudent.ID),
 		})
 	}
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    courseStudent.ID,
-		Message: fmt.Sprintf("Los datos del la participante %s se actualizaron correctamente", courseStudent.FullName),
+		Data:    LanguageCourseStudent.ID,
+		Message: fmt.Sprintf("Los datos del la participante %s se actualizaron correctamente", LanguageCourseStudent.FullName),
 	})
 }
 
-func DeleteCourseStudent(c echo.Context) error {
+func DeleteLanguageCourseStudent(c echo.Context) error {
 	// Get data request
-	courseStudent := models.CourseStudent{}
-	if err := c.Bind(&courseStudent); err != nil {
+	LanguageCourseStudent := models.LanguageCourseStudent{}
+	if err := c.Bind(&LanguageCourseStudent); err != nil {
 		return err
 	}
 
@@ -122,32 +122,32 @@ func DeleteCourseStudent(c echo.Context) error {
 	defer db.Close()
 
 	// Delete course in database
-	if err := db.Delete(&courseStudent).Error; err != nil {
+	if err := db.Delete(&LanguageCourseStudent).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    courseStudent.ID,
-		Message: fmt.Sprintf("La participante %s se elimino correctamente", courseStudent.FullName),
+		Data:    LanguageCourseStudent.ID,
+		Message: fmt.Sprintf("La participante %s se elimino correctamente", LanguageCourseStudent.FullName),
 	})
 }
 
-type actCourseStudentDetail struct {
-	Student models.CourseStudent `json:"student"`
+type actLanguageCourseStudentDetail struct {
+	Student models.LanguageCourseStudent `json:"student"`
 	Program models.Program       `json:"program"`
 }
 
-type actCourseStudentResponse struct {
+type actLanguageCourseStudentResponse struct {
 	Course   models.Course            `json:"course"`
-	Students []actCourseStudentDetail `json:"students"`
+	Students []actLanguageCourseStudentDetail `json:"students"`
 }
 
-func ActCourseStudent(c echo.Context) error {
+func ActLanguageCourseStudent(c echo.Context) error {
 	// Get data request
-	courseStudents := make([]models.CourseStudent, 0)
-	if err := c.Bind(&courseStudents); err != nil {
+	LanguageCourseStudents := make([]models.LanguageCourseStudent, 0)
+	if err := c.Bind(&LanguageCourseStudents); err != nil {
 		return err
 	}
 
@@ -156,43 +156,43 @@ func ActCourseStudent(c echo.Context) error {
 	defer DB.Close()
 
 	// Prepare struct response
-	actCourseStudentDetails := make([]actCourseStudentDetail, 0)
+	actLanguageCourseStudentDetails := make([]actLanguageCourseStudentDetail, 0)
 
 	// Query
-	for _, cStudent := range courseStudents {
+	for _, cStudent := range LanguageCourseStudents {
 		// Query student
-		student := models.CourseStudent{}
-		DB.First(&student, models.CourseStudent{ID: cStudent.ID})
+		student := models.LanguageCourseStudent{}
+		DB.First(&student, models.LanguageCourseStudent{ID: cStudent.ID})
 
 		// Query program
 		program := models.Program{}
 		DB.First(&program, models.Program{ID: student.ProgramID})
 
 		// Set current student
-		actCourseStudentDetail := actCourseStudentDetail{
+		actLanguageCourseStudentDetail := actLanguageCourseStudentDetail{
 			Student: student,
 			Program: program,
 		}
-		actCourseStudentDetails = append(actCourseStudentDetails, actCourseStudentDetail)
+		actLanguageCourseStudentDetails = append(actLanguageCourseStudentDetails, actLanguageCourseStudentDetail)
 	}
 
 	course := models.Course{}
-	if actCourseStudentDetails[0].Student.ID >= 1 {
-		DB.First(&course, models.Course{ID: actCourseStudentDetails[0].Student.CourseID})
+	if actLanguageCourseStudentDetails[0].Student.ID >= 1 {
+		DB.First(&course, models.Course{ID: actLanguageCourseStudentDetails[0].Student.CourseID})
 	}
 
 	// Response data
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data: actCourseStudentResponse{
+		Data: actLanguageCourseStudentResponse{
 			Course:   course,
-			Students: actCourseStudentDetails,
+			Students: actLanguageCourseStudentDetails,
 		},
 	})
 }
 
-// GetTempUploadCourseStudentBySubsidiary download template
-func GetTempUploadCourseStudentBySubsidiary(c echo.Context) error {
+// GetTempUploadLanguageCourseStudentBySubsidiary download template
+func GetTempUploadLanguageCourseStudentBySubsidiary(c echo.Context) error {
 	// Get data request
 	request := utilities.Request{}
 	if err := c.Bind(&request); err != nil {
@@ -210,7 +210,7 @@ func GetTempUploadCourseStudentBySubsidiary(c echo.Context) error {
 	}
 
 	// Get excel file
-	fileDir := "templates/templateCourseStudent.xlsx"
+	fileDir := "templates/templateLanguageCourseStudent.xlsx"
 	excel, err := excelize.OpenFile(fileDir)
 	if err != nil {
 		fmt.Println(err)
@@ -291,7 +291,7 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 	TX := DB.Begin()
 
 	// Get all the rows in the student.
-	rows := excel.GetRows("CourseStudents")
+	rows := excel.GetRows("LanguageCourseStudents")
 	for k, row := range rows {
 
 		if k >= ignoreCols {
@@ -312,7 +312,7 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 
 			// DATABASE MODELS
 			// Create model student
-			student := models.CourseStudent{
+			student := models.LanguageCourseStudent{
 				DNI:       strings.TrimSpace(row[1]),
 				FullName:  strings.TrimSpace(row[2]),
 				Phone:     strings.TrimSpace(row[3]),

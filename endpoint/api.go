@@ -1,18 +1,17 @@
 package endpoint
 
 import (
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
-	"github.com/paulantezana/review/provider"
-	"github.com/paulantezana/review/controller"
-	"github.com/paulantezana/review/controller/admissioncontroller"
-	"github.com/paulantezana/review/controller/coursescontroller"
-	"github.com/paulantezana/review/controller/institutecontroller"
-	"github.com/paulantezana/review/controller/librarycontroller"
-	"github.com/paulantezana/review/controller/messengercontroller"
-	"github.com/paulantezana/review/controller/monitoringcontroller"
-	"github.com/paulantezana/review/controller/reviewcontroller"
-	"github.com/paulantezana/review/utilities"
+    "github.com/labstack/echo"
+    "github.com/labstack/echo/middleware"
+    "github.com/paulantezana/review/controller"
+    "github.com/paulantezana/review/controller/admissioncontroller"
+    "github.com/paulantezana/review/controller/institutecontroller"
+    "github.com/paulantezana/review/controller/librarycontroller"
+    "github.com/paulantezana/review/controller/messengercontroller"
+    "github.com/paulantezana/review/controller/monitoringcontroller"
+    "github.com/paulantezana/review/controller/reviewcontroller"
+    "github.com/paulantezana/review/provider"
+    "github.com/paulantezana/review/utilities"
 )
 
 // PublicApi function public urls
@@ -41,6 +40,7 @@ func PublicApi(e *echo.Echo) {
 	pb.POST("/admission/pre/admission/get", admissioncontroller.GetPreAdmission)
 	pb.POST("/admission/pre/admission/by/id", admissioncontroller.GetPreAdmissionById)
 	pb.POST("/admission/pre/admission/programs", admissioncontroller.GetPreAdmissionPrograms)
+	pb.POST("/admission/pre/admission/modalities", admissioncontroller.GetPreAdmissionModalities)
 
 	// modalities
 	pb.GET("/admission/modalities", admissioncontroller.GetModalities)
@@ -110,6 +110,7 @@ func ProtectedApi(e *echo.Echo) {
 
 	// Program
 	ar.POST("/semester/all", institutecontroller.GetSemesters)
+	ar.POST("/semester/by/id", institutecontroller.GetSemesterByID)
 	ar.POST("/semester/create", institutecontroller.CreateSemester)
 	ar.PUT("/semester/update", institutecontroller.UpdateSemester)
 	ar.DELETE("/semester/delete", institutecontroller.DeleteSemester)
@@ -159,7 +160,27 @@ func ProtectedApi(e *echo.Echo) {
 	ar.DELETE("/module/delete", institutecontroller.DeleteModule)
 	ar.POST("/module/search", institutecontroller.GetModuleSearch)
 
-	// Company
+	// Course
+    ar.POST("/course/paginate",institutecontroller.GetCoursesPaginate)
+    ar.POST("/course/by/id",institutecontroller.GetCourseByID)
+    ar.POST("/course/create",institutecontroller.CreateCourse)
+    ar.PUT("/course/update",institutecontroller.UpdateCourse)
+    ar.DELETE("/course/delete",institutecontroller.DeleteCourse)
+
+    // Course level
+    ar.POST("/course/level/paginate",institutecontroller.GetCourseLevelPaginate)
+    ar.POST("/course/level/all",institutecontroller.GetAllCourseLevel)
+    ar.POST("/course/level/create",institutecontroller.CreateCourseLevel)
+    ar.PUT("/course/level/update",institutecontroller.UpdateCourseLevel)
+    ar.DELETE("/course/level/delete",institutecontroller.DeleteCourseLevel)
+
+    // Course level
+    ar.POST("/course/node/paginate",institutecontroller.GetCourseNodePaginate)
+    ar.POST("/course/node/create",institutecontroller.CreateCourseNode)
+    ar.PUT("/course/node/update",institutecontroller.UpdateCourseNode)
+    ar.DELETE("/course/node/delete",institutecontroller.DeleteCourseNode)
+
+    // Company
 	ar.POST("/company/all", reviewcontroller.GetCompanies)
 	ar.POST("/company/create", reviewcontroller.CreateCompany)
 	ar.PUT("/company/update", reviewcontroller.UpdateCompany)
@@ -203,19 +224,20 @@ func ProtectedApi(e *echo.Echo) {
 
 	// ---------------------------------------------------------------------------
 	//      Certificate routes ----------------------------------------------------
-	ar.POST("/course/all", coursescontroller.GetCoursesPaginate)
-	ar.POST("/course/create", coursescontroller.CreateCourse)
-	ar.PUT("/course/update", coursescontroller.UpdateCourse)
-	ar.DELETE("/course/delete", coursescontroller.DeleteCourse)
-	ar.POST("/course/by/id", coursescontroller.GetCourseByID)
 
-	ar.POST("/course/student/all", coursescontroller.GetCourseStudentsPaginate)
-	ar.POST("/course/student/create", coursescontroller.CreateCourseStudent)
-	ar.PUT("/course/student/update", coursescontroller.UpdateCourseStudent)
-	ar.DELETE("/course/student/delete", coursescontroller.DeleteCourseStudent)
-	ar.POST("/course/student/act", coursescontroller.ActCourseStudent)
-	ar.POST("/course/student/download/template/by/subsidiary", coursescontroller.GetTempUploadCourseStudentBySubsidiary)
-	ar.POST("/course/student/upload/template/by/subsidiary", coursescontroller.SetTempUploadStudentBySubsidiary)
+	//ar.POST("/course/all", coursescontroller.GetCoursesPaginate)
+	//ar.POST("/course/create", coursescontroller.CreateCourse)
+	//ar.PUT("/course/update", coursescontroller.UpdateCourse)
+	//ar.DELETE("/course/delete", coursescontroller.DeleteCourse)
+	//ar.POST("/course/by/id", coursescontroller.GetCourseByID)
+    //
+	//ar.POST("/course/student/all", coursescontroller.GetLanguageCourseStudentsPaginate)
+	//ar.POST("/course/student/create", coursescontroller.CreateLanguageCourseStudent)
+	//ar.PUT("/course/student/update", coursescontroller.UpdateLanguageCourseStudent)
+	//ar.DELETE("/course/student/delete", coursescontroller.DeleteLanguageCourseStudent)
+	//ar.POST("/course/student/act", coursescontroller.ActLanguageCourseStudent)
+	//ar.POST("/course/student/download/template/by/subsidiary", coursescontroller.GetTempUploadLanguageCourseStudentBySubsidiary)
+	//ar.POST("/course/student/upload/template/by/subsidiary", coursescontroller.SetTempUploadStudentBySubsidiary)
 
 	ar.POST("/review/report/pdf/promotion/const", reviewcontroller.GetPDFReviewStudentConstGraduated)
 	ar.POST("/review/report/pdf/promotion/certificate", reviewcontroller.GetPDFReviewStudentCertGraduated)

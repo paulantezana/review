@@ -31,7 +31,9 @@ func Migrate() {
 		&models.Semester{},
 		&models.Module{},
 		&models.ModuleSemester{},
-		&models.Unity{},
+		&models.Course{},
+		&models.CourseLevel{},
+		&models.CourseNode{},
 
 		&models.StudentStatus{},
 		&models.Student{},
@@ -56,9 +58,9 @@ func Migrate() {
 		&models.Company{},
 
 		// Migration certification
-		&models.Course{},
-		&models.CourseStudent{},
-		&models.CourseExam{},
+		//&models.Course{},
+		//&models.CourseStudent{},
+		//&models.CourseExam{},
 
 		// Migration monitoring
 		&models.TypeQuestion{},
@@ -113,8 +115,10 @@ func Migrate() {
 	db.Model(&models.Semester{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.ModuleSemester{}).AddForeignKey("semester_id", "semesters(id)", "CASCADE", "CASCADE")
 	db.Model(&models.ModuleSemester{}).AddForeignKey("module_id", "modules(id)", "CASCADE", "CASCADE")
-	db.Model(&models.Unity{}).AddForeignKey("module_id", "modules(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.Unity{}).AddForeignKey("semester_id", "semesters(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Course{}).AddForeignKey("module_id", "modules(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Course{}).AddForeignKey("semester_id", "semesters(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.CourseLevel{}).AddForeignKey("course_id", "courses(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.CourseNode{}).AddForeignKey("course_level_id", "course_levels(id)", "RESTRICT", "RESTRICT")
 
 	db.Model(&models.Student{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.Student{}).AddForeignKey("student_status_id", "student_status(id)", "RESTRICT", "RESTRICT")
@@ -149,9 +153,9 @@ func Migrate() {
 	db.Model(&models.ReviewDetail{}).AddForeignKey("review_id", "reviews(id)", "RESTRICT", "RESTRICT")
 
 	// Certification ===========================================================
-	db.Model(&models.CourseStudent{}).AddForeignKey("course_id", "courses(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.CourseStudent{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.CourseExam{}).AddForeignKey("course_student_id", "course_students(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&models.CourseStudent{}).AddForeignKey("course_id", "courses(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&models.CourseStudent{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")
+	//db.Model(&models.CourseExam{}).AddForeignKey("course_student_id", "course_students(id)", "RESTRICT", "RESTRICT")
 
 	// Monitoring ==============================================================
 	db.Model(&models.Poll{}).AddForeignKey("program_id", "programs(id)", "RESTRICT", "RESTRICT")

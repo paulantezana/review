@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-type Course struct {
+type LanguageCourse struct {
 	ID                      uint      `json:"id" gorm:"primary_key"`
 	CreatedAt               time.Time `json:"created_at"`
 	UpdatedAt               time.Time `json:"updated_at"`
@@ -14,5 +14,5 @@ type Course struct {
 	ResolutionAuthorization string    `json:"resolution_authorization"`
 	DateExam                time.Time `json:"date_exam"`
 
-	CourseStudents []CourseStudent `json:"course_students"`
+	CourseStudents []LanguageCourseStudent `json:"course_students"`
 }

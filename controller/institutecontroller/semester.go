@@ -35,6 +35,29 @@ func GetSemesters(c echo.Context) error {
 	})
 }
 
+func GetSemesterByID(c echo.Context) error {
+    // Get data request
+    semester := models.Semester{}
+    if err := c.Bind(&semester); err != nil {
+        return err
+    }
+
+    // Get connection
+    DB := provider.GetConnection()
+    defer DB.Close()
+
+    // Execute instructions
+    if err := DB.First(&semester, semester.ID).Error; err != nil {
+        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+    }
+
+    // Return response
+    return c.JSON(http.StatusCreated, utilities.Response{
+        Success: true,
+        Data:    semester,
+    })
+}
+
 func CreateSemester(c echo.Context) error {
 	// Get data request
 	semester := models.Semester{}

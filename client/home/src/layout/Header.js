@@ -5,7 +5,7 @@ import { Link } from "gatsby"
 import { enquireScreen } from "enquire-js"
 import { DataIntances } from '../data/data';
 
-const LOGO_URL = "https://assets.paulantezana.com/logo-circle-white-purple.svg"
+import logoSvg from '../images/logo.svg';
 
 class Header extends React.Component {
     state = {
@@ -50,7 +50,7 @@ class Header extends React.Component {
         )
 
         return (
-            <div className="Header">
+            <div className="Header color">
                 {menuMode === "inline" ? (
                     <Popover
                         overlayClassName="popover-menu"
@@ -71,7 +71,7 @@ class Header extends React.Component {
                 <Row className="Container">
                     <Col xxl={4} xl={5} lg={8} md={8} sm={24} xs={24}>
                         <Link to="/" className="Header-logo">
-                            <img src={LOGO_URL} alt="logo" />
+                            <img src={logoSvg} alt="logo" />
                             <span>Documentacion</span>
                         </Link>
                     </Col>

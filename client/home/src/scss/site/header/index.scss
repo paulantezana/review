@@ -1,5 +1,4 @@
 .nav-phone-icon {
-  // display: none;
   position: absolute;
   right: 0;
   top: 0;
@@ -12,83 +11,73 @@
 
 .Header {
   --headerHeight: 50px;
+  @include from(l) {
+    --headerHeight: 56px;
+  }
   position: relative;
   z-index: 10;
-  height: 50px;
+  height: var(--headerHeight);
   border-bottom: 1px solid var(--snColorBorder);
 }
 
 .Header-logo {
-  //   overflow: hidden;
-  //   padding-left: 40px;
-  //   float: left;
   line-height: var(--headerHeight);
-  //   text-decoration: none;
   height: var(--headerHeight);
+  display: flex;
   img {
-    // display: inline;
-    // vertical-align: middle;
-    margin-right: 16px;
+    margin-right: 10px;
     width: 32px;
   }
   span {
-    // color: white;
     outline: none;
-    // font-size: 14px;
-    // line-height: 28px;
   }
-}
-
-.header-meta {
-  //   .clearfix();
-  //   padding-right: 40px;
 }
 
 .Menu {
   float: right;
-  //   overflow: hidden;
   height: 48px;
+  @include from(l) {
+    height: 54px;
+  }
   .ant-menu {
     line-height: 48px;
-    // background: transparent;
+    @include from(l) {
+      line-height: 54px;
+    }
   }
   .ant-menu-horizontal {
-    // a{
-    //   color: white;
-    //   &:hover,
-    //   &:active{
-    //     // color: $firstColorInverse;
-    //   }
-    // }
     border-bottom: none;
-    & > .ant-menu-item {
-      //   border-top: 2px solid transparent;
-      //   &:hover {
-      //     // border-top: 2px solid $firstColorInverse;
-      //     border-bottom: 2px solid transparent;
-      //   }
-    }
-    // & > .ant-menu-item-selected {
-    // //   border-top: 2px solid $firstColorInverse;
-    //   border-bottom: 2px solid transparent;
-    //   a {
-    //     // color: $firstColorInverse;
-    //   }
-    // }
   }
 }
 
 #preview {
   padding-top: 9px;
+  @include from(l) {
+    padding-top: 12px;
+  }
   float: right;
-  //   margin-left: 32px;
   button {
     border-radius: 32px;
   }
 }
 
-// #preview-button {
-//   .ant-btn {
-//     color: @site-text-color;
-//   }
-// }
+.Header.color {
+  background: var(--snColor1Dark);
+  border-bottom-color: var(--snColor1Dark);
+  .ant-menu {
+    background: transparent;
+  }
+  .ant-menu-horizontal {
+    a {
+      color: var(--snColor1Inverse);
+    }
+    & > .ant-menu-item {
+      &:hover {
+        border-bottom-color: var(--snColor1Inverse);
+      }
+    }
+  }
+  .Header-logo{
+    color: var(--snColor1Inverse);
+  }
+}

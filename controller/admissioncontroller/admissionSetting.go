@@ -98,6 +98,12 @@ func UpdateAdmissionSetting(c echo.Context) error {
 		})
 	}
 
+    if !admSetting.PreEnabled {
+        if err := db.Model(admSetting).UpdateColumn("pre_enabled", false).Error; err != nil {
+            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+        }
+    }
+
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
