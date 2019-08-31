@@ -23,12 +23,16 @@
     }
     &-title {
         color: white;
-        font-size: 2.5rem;
+        font-size: 3rem;
         font-weight: lighter;
         margin: auto;
     }
     &-data{
-        max-width: 750px;
+        // max-width: 750px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        
         position: relative;
         z-index: 5;
     }
@@ -36,10 +40,31 @@
         color: white;
         margin: auto;
     }
-    &-version{
-        font-size: 1.5rem;
-        margin-bottom: 2rem;
-        color: white;
-        font-weight: lighter
+    // &-version{
+    //     font-size: 1.5rem;
+    //     margin-bottom: 2rem;
+    //     color: white;
+    //     font-weight: lighter
+    // }
+    &-app{
+        max-width: 850px;
+    }
+    .CountdownRelase{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        background: var(--snColorDark);
+        border-radius: 20px;
+        padding: .5rem 1rem;
+        margin: 1rem 0 4rem;
+        .ant-statistic-title{
+            color: var(--snColor2);
+            margin-right: 8px;
+        }
+        .ant-statistic-content{
+            color: var(--snColorDarkInverse);
+            font-size: 14px;
+        }
     }
 }

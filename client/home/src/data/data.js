@@ -6,28 +6,38 @@ let protocol = "http";
 let SnInstitute = [
     {
         key: 1,
-        name: 'Web Site',
+        prefix: 'web site',
+        name: 'Página web',
         url: `${protocol}://${domainName}`,
+        text: 'Sitio web de la IEST Desarrollado en el CMS WordPress.',
     },
     {
         key: 2,
+        prefix: 'center',
         name: 'Computo',
         url: `${protocol}://computo.${domainName}`,
+        text: 'Punto de connecion con el resto de los Instancias.',
     },
     {
         key: 3,
+        prefix: 'admin',
         name: 'Admin',
         url: `${protocol}://administracion.${domainName}`,
+        text: 'Core principal del sistema que administra el IEST.',
     },
     {
         key: 4,
+        prefix: 'teacher',
         name: 'Profesor',
         url: `${protocol}://profesor.${domainName}`,
+        text: 'Intancia especialmente para el uso de los profesores de la IEST.',
     },
     {
         key: 5,
+        prefix: 'student',
         name: 'Alumno',
         url: `${protocol}://alumno.${domainName}`,
+        text: 'Especialmente para el uso de los alumnos egresados o regulares de la IEST.',
     },
 ];
 

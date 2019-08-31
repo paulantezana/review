@@ -1,7 +1,7 @@
 import React from "react"
 
 import { DataSvgIntances } from '../data/data';
-import { Tooltip } from "antd";
+import { Tooltip, Button } from "antd";
 
 export default () => (
     <div className="Instances">
@@ -18,6 +18,9 @@ export default () => (
                         <h3 className="Instance-title">
                             Api Rest
                         </h3>
+                        <p>
+                            La api es nucleo del sistema que analiza toda la informacion del sistema
+                        </p>
                     </div>
                 </div>
                 <div className="Instances-header-right">
@@ -30,14 +33,21 @@ export default () => (
                 {
                     DataSvgIntances.map(item => (
                         <article className="Instance" key={item.key} >
+                            <div className="Instance-img">
+                                { item.svg }
+                            </div>
+                            <p className="Instance-prefix">
+                                { item.prefix }
+                            </p>
+                            <h3 className="Instance-title">
+                                { item.name }
+                            </h3>
+                            <p className="Instance-text">
+                                { item.text }
+                            </p>
                             <Tooltip title="Ingresar a la demo">
                                 <a href={ item.url } target="_blanck">
-                                    <div className="Instance-img">
-                                        { item.svg }
-                                    </div>
-                                    <h3 className="Instance-title">
-                                        { item.name }
-                                    </h3>
+                                    <Button type="primary">Ingresar</Button>
                                 </a>
                             </Tooltip>
                         </article>

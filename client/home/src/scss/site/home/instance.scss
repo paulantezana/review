@@ -33,7 +33,7 @@
 }
 
 .Instances {
-    padding: 64px 0;
+    padding: 42px 0;
     @include from(l){
         margin: 70px 0;
     }
@@ -66,11 +66,13 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-
-    &-title{
-        font-weight: normal;
+    &-prefix{
         margin: 0;
-        font-size: 12px;
+    }
+    &-title{
+        // font-weight: normal;
+        margin: 0;
+        // font-size: 16px;
         
         // color: white;
     }
