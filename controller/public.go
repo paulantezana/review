@@ -2,8 +2,8 @@ package controller
 
 import (
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
@@ -21,7 +21,7 @@ func GetSetting(c echo.Context) error {
 	defer db.Close()
 
 	// Find settings
-	con := models.Setting{}
+	con := models.Institution{}
 	db.First(&con)
 
 	// Set object response

@@ -1,0 +1,69 @@
+.SnModal-wrapper,
+[data-modal] {
+    box-sizing: border-box;
+}
+
+.SnModal-wrapper {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,.65);
+    
+    z-index: 1000;
+    visibility: hidden;
+    opacity: 0;
+    transition: .35s ease-in-out;
+    pointer-events: none;
+}
+
+.SnModal-wrapper.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.SnModal{
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    max-width: 500px;
+    margin: auto;
+    background-color: var(--snColorBg);
+    background-clip: padding-box;
+    transition: .35s;
+    transform: translate(-50%, -50%);
+    overflow: auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 4px;
+
+    &-close{
+        width: 56px;
+        height: 56px;
+        position: absolute;
+        right: 0;
+        top: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        opacity: .5;
+        transition: opacity .4s;
+        svg{ color: var(--snColorText) }
+        &:hover{
+            opacity: 1;
+        }
+    }
+    &-header{
+        padding: 16px 24px;
+        color: var(--snColorText);
+        // font-weight: bold;
+        box-shadow: 0 1px var(--snColorBorder);
+        border-radius: 4px 4px 0 0;
+    }
+    &-body{
+        padding: 24px;
+    }
+}

@@ -5,6 +5,7 @@ import QueueAnim from "rc-queue-anim"
 import BannerImage from "../components/BannerImage"
 import { Link } from "gatsby"
 import SEO from "../components/seo"
+import slideHome from "../images/slide-home.jpg"
 
 export default ({ data }) => (
     <SiteLayout>
@@ -13,6 +14,7 @@ export default ({ data }) => (
             description="Documentación de código fuente del sistema cualquier cambio que realice en el sistema debe documentar en la API"
         />
         <div className="DocBanner">
+            <img src={slideHome} className="DocBanner-bg" alt="slide-bg"/>
             <div className="Container">
                 <QueueAnim className="DocBanner-data">
                     <h1> Documentacion Codigo Fuente</h1>

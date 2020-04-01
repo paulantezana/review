@@ -7,8 +7,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/olahol/melody"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"golang.org/x/net/websocket"
 	"io"
@@ -28,8 +28,8 @@ type userShort struct {
 	Avatar string `json:"avatar"`
 }
 
-// Use in list chat messages scroll reverse
-type chatMessage struct {
+// Use in list chat mssMessages scroll reverse
+type chatMssMessage struct {
 	ID          uint        `json:"id"`
 	Body        string      `json:"body"`
 	BodyType    uint8       `json:"body_type"` // 0 = plain string || 1 == file
@@ -45,7 +45,7 @@ type chatMessage struct {
 	Reads       []userShort `json:"reads, omitempty"`
 }
 
-type lastMessage struct {
+type lastMssMessage struct {
 	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"created_at"`
 	Mode      string    `json:"mode"` // user || group
@@ -53,7 +53,7 @@ type lastMessage struct {
 	Contact   userShort `json:"contact"`
 	CreatorID uint      `json:"creator_id"`
 }
-type timeSlice []lastMessage
+type timeSlice []lastMssMessage
 
 func (p timeSlice) Len() int {
 	return len(p)
@@ -74,8 +74,8 @@ func init() {
 	Melody.Config.MaxMessageSize = 1024 * 1024 * 1024
 }
 
-// Get all users width messages
-func GetUsersMessageScroll(c echo.Context) error {
+// Get all users width mssMessages
+func GetUsersMssMessageScroll(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*utilities.Claim)
@@ -100,38 +100,38 @@ func GetUsersMessageScroll(c echo.Context) error {
 	// Query users
 	users := make([]models.User, 0)
 	if err := DB.Raw("SELECT * FROM users "+
-		"WHERE  id IN ( SELECT creator_id FROM messages "+
-		"INNER JOIN message_recipients ON messages.id = message_recipients.message_id "+
-		"WHERE message_recipients.recipient_id = ? "+
-		") OR id IN ( SELECT recipient_id FROM message_recipients "+
-		"INNER JOIN messages ON message_recipients.message_id = messages.id "+
+		"WHERE  id IN ( SELECT creator_id FROM mssMessages "+
+		"INNER JOIN mssMessage_recipients ON mssMessages.id = mssMessage_recipients.mssMessage_id "+
+		"WHERE mssMessage_recipients.recipient_id = ? "+
+		") OR id IN ( SELECT recipient_id FROM mssMessage_recipients "+
+		"INNER JOIN mssMessages ON mssMessage_recipients.mssMessage_id = mssMessages.id "+
 		"WHERE creator_id = ?) "+
 		"OFFSET ? LIMIT ?", currentUser.ID, currentUser.ID, offset, request.Limit).Scan(&users).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 	if err := DB.Raw("SELECT count(*) FROM users "+
-		"WHERE  id IN ( SELECT creator_id FROM messages "+
-		"INNER JOIN message_recipients ON messages.id = message_recipients.message_id "+
-		"WHERE message_recipients.recipient_id = ? "+
-		") OR id IN ( SELECT recipient_id FROM message_recipients "+
-		"INNER JOIN messages ON message_recipients.message_id = messages.id "+
+		"WHERE  id IN ( SELECT creator_id FROM mssMessages "+
+		"INNER JOIN mssMessage_recipients ON mssMessages.id = mssMessage_recipients.mssMessage_id "+
+		"WHERE mssMessage_recipients.recipient_id = ? "+
+		") OR id IN ( SELECT recipient_id FROM mssMessage_recipients "+
+		"INNER JOIN mssMessages ON mssMessage_recipients.mssMessage_id = mssMessages.id "+
 		"WHERE creator_id = ?)", currentUser.ID, currentUser.ID).Scan(&counter).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	// Query last messages
-	lastMessages := make([]lastMessage, 0)
+	// Query last mssMessages
+	lastMssMessages := make([]lastMssMessage, 0)
 	for i := range users {
-		// Query messages
-		lastMessageByUser := make([]lastMessage, 0)
-		if err := DB.Table("messages").
-			Select("messages.body, message_recipients.is_read, messages.creator_id, messages.created_at").
-			Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
-			Where("messages.creator_id = ? AND message_recipients.recipient_id = ?", users[i].ID, currentUser.ID).
-			Or("messages.creator_id = ? AND message_recipients.recipient_id = ?", currentUser.ID, users[i].ID).
+		// Query mssMessages
+		lastMssMessageByUser := make([]lastMssMessage, 0)
+		if err := DB.Table("mssMessages").
+			Select("mssMessages.body, mssMessage_recipients.is_read, mssMessages.creator_id, mssMessages.created_at").
+			Joins("INNER JOIN mssMessage_recipients ON mssMessages.id = mssMessage_recipients.mssMessage_id").
+			Where("mssMessages.creator_id = ? AND mssMessage_recipients.recipient_id = ?", users[i].ID, currentUser.ID).
+			Or("mssMessages.creator_id = ? AND mssMessage_recipients.recipient_id = ?", currentUser.ID, users[i].ID).
 			Limit(1).
-			Order("messages.id desc").
-			Scan(&lastMessageByUser).Error; err != nil {
+			Order("mssMessages.id desc").
+			Scan(&lastMssMessageByUser).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
@@ -148,28 +148,28 @@ func GetUsersMessageScroll(c echo.Context) error {
 			}
 		}
 
-		// struct response message
-		lastMessage := lastMessage{
-			Body:      lastMessageByUser[0].Body,
-			CreatedAt: lastMessageByUser[0].CreatedAt,
-			IsRead:    lastMessageByUser[0].IsRead,
+		// struct response mssMessage
+		lastMssMessage := lastMssMessage{
+			Body:      lastMssMessageByUser[0].Body,
+			CreatedAt: lastMssMessageByUser[0].CreatedAt,
+			IsRead:    lastMssMessageByUser[0].IsRead,
 			Mode:      "user",
-			CreatorID: lastMessageByUser[0].CreatorID,
+			CreatorID: lastMssMessageByUser[0].CreatorID,
 			Contact: userShort{
 				ID:     users[i].ID,
 				Name:   users[i].UserName,
 				Avatar: users[i].Avatar,
 			},
 		}
-		lastMessages = append(lastMessages, lastMessage)
+		lastMssMessages = append(lastMssMessages, lastMssMessage)
 	}
 
 	// Order By date
-	lastMessagesSorted := make(timeSlice, 0, len(lastMessages))
-	for _, lasM := range lastMessages {
-		lastMessagesSorted = append(lastMessagesSorted, lasM)
+	lastMssMessagesSorted := make(timeSlice, 0, len(lastMssMessages))
+	for _, lasM := range lastMssMessages {
+		lastMssMessagesSorted = append(lastMssMessagesSorted, lasM)
 	}
-	sort.Sort(lastMessagesSorted)
+	sort.Sort(lastMssMessagesSorted)
 
 	// Validate scroll
 	var hasMore = false
@@ -182,14 +182,14 @@ func GetUsersMessageScroll(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusOK, utilities.ResponseScroll{
 		Success:     true,
-		Data:        lastMessagesSorted,
+		Data:        lastMssMessagesSorted,
 		HasMore:     hasMore,
 		CurrentPage: request.CurrentPage,
 	})
 }
 
-// Get messages by group
-func GetMessagesByGroup(c echo.Context) error {
+// Get mssMessages by group
+func GetMssMessagesByGroup(c echo.Context) error {
 	// Get user token authenticate
 	//user := c.Get("user").(*jwt.Token)
 	//claims := user.Claims.(*utilities.Claim)
@@ -211,29 +211,29 @@ func GetMessagesByGroup(c echo.Context) error {
 	// Check the number of matches
 	counter := utilities.Counter{}
 
-	// Query chatMessage scroll
-	chatMessages := make([]chatMessage, 0)
-	if err := DB.Raw("SELECT group_messages.id, group_messages.body, group_messages.body_type, group_messages.file_path, group_messages.created_at, group_messages.creator_id  FROM group_messages "+
-		"INNER JOIN group_message_recipients ON group_messages.id = group_message_recipients.message_id "+
-		"WHERE group_message_recipients.recipient_group_id = ? "+
-		"GROUP BY group_messages.id, group_messages.body, group_messages.body_type, group_messages.created_at, group_messages.created_at "+
-		"ORDER BY group_messages.created_at DESC "+
-		" OFFSET ? LIMIT ?", request.GroupID, offset, request.Limit).Scan(&chatMessages).Error; err != nil {
+	// Query chatMssMessage scroll
+	chatMssMessages := make([]chatMssMessage, 0)
+	if err := DB.Raw("SELECT group_mssMessages.id, group_mssMessages.body, group_mssMessages.body_type, group_mssMessages.file_path, group_mssMessages.created_at, group_mssMessages.creator_id  FROM group_mssMessages "+
+		"INNER JOIN group_mssMessage_recipients ON group_mssMessages.id = group_mssMessage_recipients.mssMessage_id "+
+		"WHERE group_mssMessage_recipients.recipient_group_id = ? "+
+		"GROUP BY group_mssMessages.id, group_mssMessages.body, group_mssMessages.body_type, group_mssMessages.created_at, group_mssMessages.created_at "+
+		"ORDER BY group_mssMessages.created_at DESC "+
+		" OFFSET ? LIMIT ?", request.MssGroupID, offset, request.Limit).Scan(&chatMssMessages).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
-	DB.Raw("SELECT count(*) FROM group_messages "+
-		"INNER JOIN group_message_recipients ON group_messages.id = group_message_recipients.message_id "+
-		"WHERE group_message_recipients.recipient_group_id = ? "+
-		"GROUP BY group_messages.id", request.GroupID).Scan(&counter)
+	DB.Raw("SELECT count(*) FROM group_mssMessages "+
+		"INNER JOIN group_mssMessage_recipients ON group_mssMessages.id = group_mssMessage_recipients.mssMessage_id "+
+		"WHERE group_mssMessage_recipients.recipient_group_id = ? "+
+		"GROUP BY group_mssMessages.id", request.MssGroupID).Scan(&counter)
 
 	// find user creator info
-	for i := range chatMessages {
+	for i := range chatMssMessages {
 		userShots := make([]userShort, 0)
-		DB.Raw("SELECT * FROM users WHERE id = ?", chatMessages[i].CreatorID).Scan(&userShots)
+		DB.Raw("SELECT * FROM users WHERE id = ?", chatMssMessages[i].CreatorID).Scan(&userShots)
 		if len(userShots) == 0 {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usuario no encontrado")})
 		}
-		chatMessages[i].Creator = userShots[0]
+		chatMssMessages[i].Creator = userShots[0]
 	}
 
 	// Validate scroll
@@ -247,14 +247,14 @@ func GetMessagesByGroup(c echo.Context) error {
 	// Return response data scroll reverse
 	return c.JSON(http.StatusOK, utilities.ResponseScroll{
 		Success:     true,
-		Data:        chatMessages,
+		Data:        chatMssMessages,
 		HasMore:     hasMore,
 		CurrentPage: request.CurrentPage,
 	})
 }
 
-// Get messages by user
-func GetMessages(c echo.Context) error {
+// Get mssMessages by user
+func GetMssMessages(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*utilities.Claim)
@@ -275,15 +275,15 @@ func GetMessages(c echo.Context) error {
 
 	// Query semesters
 	var total uint
-	chatMessages := make([]chatMessage, 0)
-	if err := DB.Table("messages").
-		Select("messages.body, messages.body_type, messages.file_path, message_recipients.is_read, messages.creator_id, messages.created_at, "+
-			"message_recipients.id as re_id,  message_recipients.recipient_id  ").
-		Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
-		Where("messages.creator_id = ? AND message_recipients.recipient_id = ?", request.UserID, currentUser.ID).
-		Or("messages.creator_id = ? AND message_recipients.recipient_id = ?", currentUser.ID, request.UserID).
-		Order("messages.id desc").Limit(request.Limit).Offset(offset).
-		Scan(&chatMessages).
+	chatMssMessages := make([]chatMssMessage, 0)
+	if err := DB.Table("mssMessages").
+		Select("mssMessages.body, mssMessages.body_type, mssMessages.file_path, mssMessage_recipients.is_read, mssMessages.creator_id, mssMessages.created_at, "+
+			"mssMessage_recipients.id as re_id,  mssMessage_recipients.recipient_id  ").
+		Joins("INNER JOIN mssMessage_recipients ON mssMessages.id = mssMessage_recipients.mssMessage_id").
+		Where("mssMessages.creator_id = ? AND mssMessage_recipients.recipient_id = ?", request.UserID, currentUser.ID).
+		Or("mssMessages.creator_id = ? AND mssMessage_recipients.recipient_id = ?", currentUser.ID, request.UserID).
+		Order("mssMessages.id desc").Limit(request.Limit).Offset(offset).
+		Scan(&chatMssMessages).
 		Offset(-1).Limit(-1).Count(&total).
 		Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -291,19 +291,19 @@ func GetMessages(c echo.Context) error {
 
 	// Get ids and read true
 	var rIds = make([]uint, 0)
-	for i, m := range chatMessages {
-		if chatMessages[i].RecipientID == currentUser.ID {
+	for i, m := range chatMssMessages {
+		if chatMssMessages[i].RecipientID == currentUser.ID {
 			rIds = append(rIds, m.ReID)
-			chatMessages[i].IsRead = true
+			chatMssMessages[i].IsRead = true
 		}
 
 		// Find data creator
 		userShots := make([]userShort, 0)
-		DB.Raw("SELECT * FROM users WHERE id = ?", chatMessages[i].CreatorID).Scan(&userShots)
+		DB.Raw("SELECT * FROM users WHERE id = ?", chatMssMessages[i].CreatorID).Scan(&userShots)
 		if len(userShots) == 0 {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usuario no encontrado")})
 		}
-		chatMessages[i].Creator = userShots[0]
+		chatMssMessages[i].Creator = userShots[0]
 	}
 
 	// Validate scroll
@@ -314,19 +314,19 @@ func GetMessages(c echo.Context) error {
 		}
 	}
 
-	// Read message
-	DB.Model(models.MessageRecipient{}).Where("id in (?)", rIds).Update(models.MessageRecipient{IsRead: true})
+	// Read mssMessage
+	DB.Model(models.MssMessageRecipient{}).Where("id in (?)", rIds).Update(models.MssMessageRecipient{IsRead: true})
 
 	// Return response data scroll reverse
 	return c.JSON(http.StatusOK, utilities.ResponseScroll{
 		Success:     true,
-		Data:        chatMessages,
+		Data:        chatMssMessages,
 		HasMore:     hasMore,
 		CurrentPage: request.CurrentPage,
 	})
 }
 
-func CreateMessageFileUpload(c echo.Context) error {
+func CreateMssMessageFileUpload(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*utilities.Claim)
@@ -374,22 +374,22 @@ func CreateMessageFileUpload(c echo.Context) error {
 	// Start transaction
 	TX := DB.Begin()
 
-	// create struct message
-	message := models.Message{
+	// create struct mssMessage
+	mssMessage := models.MssMessage{
 		Body:      file.Filename,
 		BodyType:  1,
 		FilePath:  fileSRC,
 		CreatorID: currentUser.ID,
 	}
-	if err := TX.Create(&message).Error; err != nil {
+	if err := TX.Create(&mssMessage).Error; err != nil {
 		TX.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// if is user
-	recipient := models.MessageRecipient{
+	recipient := models.MssMessageRecipient{
 		RecipientID: uint(rID),
-		MessageID:   message.ID,
+		MssMessageID:   mssMessage.ID,
 	}
 	if err := TX.Create(&recipient).Error; err != nil {
 		TX.Rollback()
@@ -404,12 +404,12 @@ func CreateMessageFileUpload(c echo.Context) error {
 	DB.Raw("SELECT id, user_name as name, avatar FROM users WHERE id = ? LIMIT 1", uint(rID)).Scan(&userRecipient)
 
 	// Socket init send data
-	chatMessage := chatMessage{
-		ID:        message.ID,
-		Body:      message.Body,
-		BodyType:  message.BodyType,
-		FilePath:  message.FilePath,
-		CreatedAt: message.CreatedAt,
+	chatMssMessage := chatMssMessage{
+		ID:        mssMessage.ID,
+		Body:      mssMessage.Body,
+		BodyType:  mssMessage.BodyType,
+		FilePath:  mssMessage.FilePath,
+		CreatedAt: mssMessage.CreatedAt,
 		Recipient: userShort{
 			ID:     userRecipient.ID,
 			Name:   userRecipient.Name,
@@ -425,7 +425,7 @@ func CreateMessageFileUpload(c echo.Context) error {
 	json, err := json.Marshal(&utilities.SocketResponse{
 		Type:   "chat",
 		Action: "create",
-		Data:   chatMessage,
+		Data:   chatMssMessage,
 	})
 
 	// Socket
@@ -443,11 +443,11 @@ func CreateMessageFileUpload(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Message: "OK",
+        Message: "OK",
 	})
 }
 
-func CreateMessageFileUploadByGroup(c echo.Context) error {
+func CreateMssMessageFileUploadByGroup(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*utilities.Claim)
@@ -467,11 +467,11 @@ func CreateMessageFileUploadByGroup(c echo.Context) error {
 	}
 
 	// Valida if user is active
-	userGroup := models.UserGroup{}
-	if err := DB.First(&userGroup, models.UserGroup{UserID: currentUser.ID, GroupID: uint(rID)}).Error; err != nil {
+	mssUserGroup := models.MssUserGroup{}
+	if err := DB.First(&mssUserGroup, models.MssUserGroup{UserID: currentUser.ID, MssGroupID: uint(rID)}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
-	if !userGroup.IsActive {
+	if !mssUserGroup.IsActive {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usted está bloqueado en este grupo")})
 	}
 
@@ -504,26 +504,26 @@ func CreateMessageFileUploadByGroup(c echo.Context) error {
 	// Start transaction
 	TX := DB.Begin()
 
-	// create struct message
-	groupMessage := models.GroupMessage{
+	// create struct mssMessage
+	mssGroupMessage := models.MssGroupMessage{
 		Body:      file.Filename,
 		BodyType:  1,
 		FilePath:  fileSRC,
 		CreatorID: currentUser.ID,
 	}
-	if err := TX.Create(&groupMessage).Error; err != nil {
+	if err := TX.Create(&mssGroupMessage).Error; err != nil {
 		TX.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	// create recipient message
-	userGroups := make([]models.UserGroup, 0)
-	DB.Find(&userGroups, models.UserGroup{GroupID: uint(rID)})
-	for _, uGroup := range userGroups {
-		recipient := models.GroupMessageRecipient{
+	// create recipient mssMessage
+	mssUserGroups := make([]models.MssUserGroup, 0)
+	DB.Find(&mssUserGroups, models.MssUserGroup{MssGroupID: uint(rID)})
+	for _, uGroup := range mssUserGroups {
+		recipient := models.MssGroupMessageRecipient{
 			RecipientGroupID: uint(rID),
 			RecipientID:      uGroup.UserID,
-			MessageID:        groupMessage.ID,
+			MssGroupMessageID:        mssGroupMessage.ID,
 		}
 		if err := TX.Create(&recipient).Error; err != nil {
 			TX.Rollback()
@@ -539,12 +539,12 @@ func CreateMessageFileUploadByGroup(c echo.Context) error {
 	DB.Raw("SELECT * FROM groups WHERE id = ? LIMIT 1", uint(rID)).Scan(&groupRecipient)
 
 	//Socket init send data
-	chatMessage := chatMessage{
-		ID:        groupMessage.ID,
-		Body:      groupMessage.Body,
-		BodyType:  groupMessage.BodyType,
-		FilePath:  groupMessage.FilePath,
-		CreatedAt: groupMessage.CreatedAt,
+	chatMssMessage := chatMssMessage{
+		ID:        mssGroupMessage.ID,
+		Body:      mssGroupMessage.Body,
+		BodyType:  mssGroupMessage.BodyType,
+		FilePath:  mssGroupMessage.FilePath,
+		CreatedAt: mssGroupMessage.CreatedAt,
 		Mode:      "group",
 		Recipient: userShort{
 			ID:     groupRecipient.ID,
@@ -561,7 +561,7 @@ func CreateMessageFileUploadByGroup(c echo.Context) error {
 	json, err := json.Marshal(&utilities.SocketResponse{
 		Type:   "chat",
 		Action: "create",
-		Data:   chatMessage,
+		Data:   chatMssMessage,
 	})
 
 	// Socket
@@ -579,25 +579,25 @@ func CreateMessageFileUploadByGroup(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Message: "OK",
+        Message: "OK",
 	})
 }
 
-type createMessageRequest struct {
+type createMssMessageRequest struct {
 	RecipientID uint   `json:"recipient_id"`
 	Body        string `json:"body"`
 	Mode        string `json:"mode"` // user || group
 }
 
-// Create message by user
-func CreateMessage(c echo.Context) error {
+// Create mssMessage by user
+func CreateMssMessage(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*utilities.Claim)
 	currentUser := claims.User
 
 	// Get data request
-	request := createMessageRequest{}
+	request := createMssMessageRequest{}
 	if err := c.Bind(&request); err != nil {
 		return err
 	}
@@ -609,20 +609,20 @@ func CreateMessage(c echo.Context) error {
 	// Start transaction
 	TX := DB.Begin()
 
-	// create struct message
-	message := models.Message{
+	// create struct mssMessage
+	mssMessage := models.MssMessage{
 		Body:      request.Body,
 		CreatorID: currentUser.ID,
 	}
-	if err := TX.Create(&message).Error; err != nil {
+	if err := TX.Create(&mssMessage).Error; err != nil {
 		TX.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	// Create message recipient if USER
-	recipient := models.MessageRecipient{
+	// Create mssMessage recipient if USER
+	recipient := models.MssMessageRecipient{
 		RecipientID: request.RecipientID,
-		MessageID:   message.ID,
+		MssMessageID:   mssMessage.ID,
 	}
 
 	if err := TX.Create(&recipient).Error; err != nil {
@@ -640,20 +640,20 @@ func CreateMessage(c echo.Context) error {
 	}
 
 	// Socket init send data
-	chatMessage := chatMessage{}
+	chatMssMessage := chatMssMessage{}
 	if request.Mode == "user" {
-		chatMessage.ID = message.ID
-		chatMessage.Body = message.Body
-		chatMessage.BodyType = message.BodyType
-		chatMessage.FilePath = message.FilePath
-		chatMessage.CreatedAt = message.CreatedAt
-		chatMessage.Mode = request.Mode
-		chatMessage.Recipient = userShort{
+		chatMssMessage.ID = mssMessage.ID
+		chatMssMessage.Body = mssMessage.Body
+		chatMssMessage.BodyType = mssMessage.BodyType
+		chatMssMessage.FilePath = mssMessage.FilePath
+		chatMssMessage.CreatedAt = mssMessage.CreatedAt
+		chatMssMessage.Mode = request.Mode
+		chatMssMessage.Recipient = userShort{
 			ID:     userRecipient.ID,
 			Name:   userRecipient.Name,
 			Avatar: userRecipient.Avatar,
 		}
-		chatMessage.Creator = userShort{
+		chatMssMessage.Creator = userShort{
 			ID:     currentUser.ID,
 			Name:   currentUser.UserName,
 			Avatar: currentUser.Avatar,
@@ -663,7 +663,7 @@ func CreateMessage(c echo.Context) error {
 	json, err := json.Marshal(&utilities.SocketResponse{
 		Type:   "chat",
 		Action: "create",
-		Data:   chatMessage,
+		Data:   chatMssMessage,
 	})
 
 	// Socket
@@ -680,24 +680,24 @@ func CreateMessage(c echo.Context) error {
 
 	// Send chat Notices
 	// Websocket las notices
-	getUnreadMessages(models.User{ID: request.RecipientID}, true)
+	getUnreadMssMessages(models.User{ID: request.RecipientID}, true)
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Message: "OK",
+        Message: "OK",
 	})
 }
 
-// Create message by group
-func CreateGroupMessage(c echo.Context) error {
+// Create mssMessage by group
+func CreateMssGroupMessage(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*utilities.Claim)
 	currentUser := claims.User
 
 	// Get data request
-	request := createMessageRequest{}
+	request := createMssMessageRequest{}
 	if err := c.Bind(&request); err != nil {
 		return err
 	}
@@ -707,35 +707,35 @@ func CreateGroupMessage(c echo.Context) error {
 	defer DB.Close()
 
 	// Valida if user is active
-	userGroup := models.UserGroup{}
-	if err := DB.First(&userGroup, models.UserGroup{UserID: currentUser.ID, GroupID: request.RecipientID}).Error; err != nil {
+	mssUserGroup := models.MssUserGroup{}
+	if err := DB.First(&mssUserGroup, models.MssUserGroup{UserID: currentUser.ID, MssGroupID: request.RecipientID}).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
-	if !userGroup.IsActive {
+	if !mssUserGroup.IsActive {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("Usted está bloqueado en este grupo")})
 	}
 
 	// Start transaction
 	TX := DB.Begin()
 
-	// create struct groupMessage
-	groupMessage := models.GroupMessage{
+	// create struct mssGroupMessage
+	mssGroupMessage := models.MssGroupMessage{
 		Body:      request.Body,
 		CreatorID: currentUser.ID,
 	}
-	if err := TX.Create(&groupMessage).Error; err != nil {
+	if err := TX.Create(&mssGroupMessage).Error; err != nil {
 		TX.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	// Create Recipient message by group
-	userGroups := make([]models.UserGroup, 0)
-	DB.Find(&userGroups, models.UserGroup{GroupID: request.RecipientID})
-	for _, uGroup := range userGroups {
-		recipient := models.GroupMessageRecipient{
+	// Create Recipient mssMessage by group
+	mssUserGroups := make([]models.MssUserGroup, 0)
+	DB.Find(&mssUserGroups, models.MssUserGroup{MssGroupID: request.RecipientID})
+	for _, uGroup := range mssUserGroups {
+		recipient := models.MssGroupMessageRecipient{
 			RecipientGroupID: request.RecipientID,
 			RecipientID:      uGroup.UserID,
-			MessageID:        groupMessage.ID,
+			MssGroupMessageID:        mssGroupMessage.ID,
 		}
 		if err := TX.Create(&recipient).Error; err != nil {
 			TX.Rollback()
@@ -751,12 +751,12 @@ func CreateGroupMessage(c echo.Context) error {
 	DB.Raw("SELECT * FROM groups WHERE id = ? LIMIT 1", request.RecipientID).Scan(&groupRecipient)
 
 	//Socket init send data
-	chatMessage := chatMessage{
-		ID:        groupMessage.ID,
-		Body:      groupMessage.Body,
-		BodyType:  groupMessage.BodyType,
-		FilePath:  groupMessage.FilePath,
-		CreatedAt: groupMessage.CreatedAt,
+	chatMssMessage := chatMssMessage{
+		ID:        mssGroupMessage.ID,
+		Body:      mssGroupMessage.Body,
+		BodyType:  mssGroupMessage.BodyType,
+		FilePath:  mssGroupMessage.FilePath,
+		CreatedAt: mssGroupMessage.CreatedAt,
 		Mode:      request.Mode,
 		Recipient: userShort{
 			ID:     groupRecipient.ID,
@@ -773,7 +773,7 @@ func CreateGroupMessage(c echo.Context) error {
 	json, err := json.Marshal(&utilities.SocketResponse{
 		Type:   "chat",
 		Action: "create",
-		Data:   chatMessage,
+		Data:   chatMssMessage,
 	})
 
 	// Socket
@@ -790,63 +790,63 @@ func CreateGroupMessage(c echo.Context) error {
 
 	// Send chat Notices
 	// Websocket las notices
-	getUnreadMessages(models.User{ID: request.RecipientID}, true)
+	getUnreadMssMessages(models.User{ID: request.RecipientID}, true)
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Message: "OK",
+        Message: "OK",
 	})
 }
 
-func UnreadMessages(c echo.Context) error {
+func UnreadMssMessages(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*utilities.Claim)
 	currentUser := claims.User
 
-	// Get  unread last messages
-	notices := getUnreadMessages(models.User{ID: currentUser.ID}, false)
+	// Get  unread last mssMessages
+	notices := getUnreadMssMessages(models.User{ID: currentUser.ID}, false)
 
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Message: "OK",
+        Message: "OK",
 		Data:    notices,
 	})
 }
 
-func getUnreadMessages(u models.User, socket bool) []utilities.Notice {
+func getUnreadMssMessages(u models.User, socket bool) []utilities.Notice {
 	// get connection
 	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// query
-	lastMessages := make([]lastMessage, 0)
-	if err := DB.Table("messages").
-		Select("messages.body, message_recipients.is_read, messages.creator_id, messages.created_at").
-		Joins("INNER JOIN message_recipients ON messages.id = message_recipients.message_id").
-		Where("message_recipients.recipient_id = ? AND message_recipients.is_read = false", u.ID).
+	lastMssMessages := make([]lastMssMessage, 0)
+	if err := DB.Table("mssMessages").
+		Select("mssMessages.body, mssMessage_recipients.is_read, mssMessages.creator_id, mssMessages.created_at").
+		Joins("INNER JOIN mssMessage_recipients ON mssMessages.id = mssMessage_recipients.mssMessage_id").
+		Where("mssMessage_recipients.recipient_id = ? AND mssMessage_recipients.is_read = false", u.ID).
 		Limit(1).
-		Order("messages.id desc").
-		Scan(&lastMessages).Error; err != nil {
+		Order("mssMessages.id desc").
+		Scan(&lastMssMessages).Error; err != nil {
 		log.Fatal(err)
 	}
 
 	notices := make([]utilities.Notice, 0)
-	for i := range lastMessages {
+	for i := range lastMssMessages {
 		user := models.User{}
-		if err := DB.First(&user, models.User{ID: lastMessages[i].CreatorID}).Error; err != nil {
+		if err := DB.First(&user, models.User{ID: lastMssMessages[i].CreatorID}).Error; err != nil {
 			log.Fatal(err)
 		}
 
 		notice := utilities.Notice{
-			ID:          lastMessages[i].CreatorID,
+			ID:          lastMssMessages[i].CreatorID,
 			Title:       user.UserName,
 			Avatar:      user.Avatar,
-			Description: lastMessages[i].Body,
-			Date:        lastMessages[i].CreatedAt,
+			Description: lastMssMessages[i].Body,
+			Date:        lastMssMessages[i].CreatedAt,
 			RecipientID: u.ID,
-			Type:        "message",
+			Type:        "mssMessage",
 		}
 
 		notices = append(notices, notice)

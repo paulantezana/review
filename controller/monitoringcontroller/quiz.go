@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )

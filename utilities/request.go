@@ -9,12 +9,12 @@ type Request struct {
 
 	CourseID       uint   `json:"course_id"`
 	ProgramID      uint   `json:"program_id"`
-	SemesterID uint `json:"semester_id"`
+	SemesterID     uint   `json:"semester_id"`
 	SubsidiaryID   uint   `json:"subsidiary_id"`
 	StudentID      uint   `json:"student_id"`
 	UserID         uint   `json:"user_id"`
-	GroupID        uint   `json:"group_id"`
-	CourseLevelID uint `json:"course_level_id"`
+	MssGroupID        uint `json:"mss_group_id"`
+	CourseLevelID  uint   `json:"course_level_id"`
 	QuizDiplomatID uint   `json:"quiz_diplomat_id"`
 	IDs            []uint `json:"i_ds"`
 }

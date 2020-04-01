@@ -1,0 +1,30 @@
+.BannerHome{
+    padding: 32px 0;
+    background: var(--snColorDark);
+    color: var(--snColorDarkInverse);
+
+    &-left{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;    
+    }
+    &-title{
+        font-weight: normal;
+        font-size: 2rem;
+        position: relative;
+        color: var(--snColorDarkInverse);
+        &:before{
+            position: absolute;
+            content: "";
+            top: -20px;
+            left: 0;
+            height: 3px;
+            width: 40px;
+            background: var(--snColor1Light);
+        }
+        div{
+            font-weight: bold;
+        }
+    }
+}

@@ -1,15 +1,16 @@
 import React from "react"
-import { graphql, Link } from "gatsby"
+import { graphql } from "gatsby"
 import SiteLayout from "../layout/SiteLayout"
-import MainBanner from "../components/MainBanner"
-import Instances  from '../components/Instances';
+import MainBanner from "../components/Home/MainBanner"
+import Instances  from '../components/Home/Instances';
 
 import ImageHome from '../images/app-responsive.png';
 
-import { Button, List } from "antd"
+import { Button } from "antd"
 import SEO from "../components/seo"
 
-import { Modules } from '../data/modules';
+// import { Modules } from '../data/modules';
+import Modules from '../components/Home/Modules';
 
 export default ({ data }) => (
     <SiteLayout>
@@ -36,19 +37,7 @@ export default ({ data }) => (
         </div>
 
         <div className="Container SnMt64 SnMb64">
-            <List
-                grid={{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 4, xxl: 4 }}
-                dataSource={Modules}
-                renderItem={item => (
-                    <List.Item>
-                        <div>
-                            <h3>{ item.title }</h3>
-                            <p>{ item.text }</p>
-                            <Link to={item.doc}>Seguir leendo</Link>
-                        </div>
-                    </List.Item>
-                )}
-            />
+            <Modules/>
         </div>
     </SiteLayout>
 )

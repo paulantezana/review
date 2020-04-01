@@ -96,7 +96,7 @@ func GetStudentsPaginateByLicense(c echo.Context) error {
 
 	// Query Programs by subsidiary
 	studentIds := make([]utilities.Counter, 0)
-	switch currentUser.RoleID {
+	switch currentUser.UserRoleID {
 	case 1:
 		if err := DB.Raw("SELECT student_id as id FROM student_programs "+
 			"INNER JOIN programs ON student_programs.program_id = programs.id "+
@@ -225,7 +225,7 @@ func GetStudentsPaginateBySubsidiary(c echo.Context) error {
 	}
 
 	// Return response
-	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
+	return c.JSON(http.StatusOK, utilities.ResponsePaginate{
 		Success:     true,
 		Data:        students,
 		Total:       counter.Count,
@@ -320,7 +320,7 @@ func GetStudentByID(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 	student.User.Password = ""
-	student.User.Key = ""
+	student.User.TempKey = ""
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
@@ -416,7 +416,7 @@ func CreateStudent(c echo.Context) error {
 	// Insert user in database
 	request.User.UserName = request.Student.DNI + "ST"
 	request.User.Password = pwd
-	request.User.RoleID = 5
+	request.User.UserRoleID = 5
 	if err := TX.Create(&request.User).Error; err != nil {
 		TX.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -531,7 +531,7 @@ func GetStudentPrograms(c echo.Context) error {
 
 	// Query
 	studentPrograms := make([]getStudentProgramsResponse, 0)
-	switch currentUser.RoleID {
+	switch currentUser.UserRoleID {
 	case 1:
 		if err := DB.Table("programs").
 			Select("programs.id, programs.name, programs.level, programs.subsidiary_id, student_programs.by_default, student_programs.year_admission, student_programs.year_promotion").
@@ -726,7 +726,7 @@ func SetTempUploadStudentBySubsidiary(c echo.Context) error {
 				UserName: student.DNI + "ST",
 				Email:    strings.TrimSpace(row[4]),
 				Password: pwd,
-				RoleID:   5,
+				UserRoleID:   5,
 			}
 
 			// Insert user in database
@@ -860,7 +860,7 @@ func SetTempUploadStudentByProgram(c echo.Context) error {
 				UserName: student.DNI + "ST",
 				Password: pwd,
 				Email:    strings.TrimSpace(row[3]),
-				RoleID:   5,
+				UserRoleID:   5,
 			}
 
 			// Insert user in database

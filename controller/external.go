@@ -3,8 +3,8 @@ package controller
 import (
 	"fmt"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
@@ -54,7 +54,7 @@ func GetStudentByDni(c echo.Context) error {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 		user.Password = ""
-		user.Key = ""
+		user.TempKey = ""
 
 		reniecResponse.Exist = true
 		reniecResponse.User = user

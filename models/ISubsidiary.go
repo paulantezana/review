@@ -15,6 +15,7 @@ type Subsidiary struct {
 	Address    string    `json:"address"`
 	Main       bool      `json:"main"`
 	Phone      string    `json:"phone"`
-
+    
+	InstitutionID uint `json:"institution_id"`
 	Programs []Program `json:"programs, omitempty"`
 }

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"io"
 	"net/http"
@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func GetGroupsScroll(c echo.Context) error {
+func GetMssGroupsScroll(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*utilities.Claim)
@@ -38,64 +38,64 @@ func GetGroupsScroll(c echo.Context) error {
 	// Check the number of matches
 	counter := utilities.Counter{}
 
-	// Query groups
-	groups := make([]models.Group, 0)
-	if err := DB.Raw("SELECT * FROM groups WHERE id IN "+
-		"( SELECT group_id FROM user_groups WHERE user_id = ? AND is_active = true)   "+
+	// Query mssGroups
+	mssGroups := make([]models.MssGroup, 0)
+	if err := DB.Raw("SELECT * FROM mssGroups WHERE id IN "+
+		"( SELECT mssGroup_id FROM user_mssGroups WHERE user_id = ? AND is_active = true)   "+
 		"ORDER BY id asc LIMIT ? OFFSET ? ", currentUser.ID, request.Limit, offset).
-		Scan(&groups).Error; err != nil {
+		Scan(&mssGroups).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	if err := DB.Raw("SELECT count(*) FROM groups WHERE id IN "+
-		"( SELECT group_id FROM user_groups WHERE user_id = ? )", currentUser.ID).
+	if err := DB.Raw("SELECT count(*) FROM mssGroups WHERE id IN "+
+		"( SELECT mssGroup_id FROM user_mssGroups WHERE user_id = ? )", currentUser.ID).
 		Scan(&counter).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// query las messages
-	lastMessages := make([]lastMessage, 0)
-	for _, group := range groups {
+	lastMssMessages := make([]lastMssMessage, 0)
+	for _, mssGroup := range mssGroups {
 		// Find last message
-		lastMessageByGroup := make([]lastMessage, 0)
-		if err := DB.Debug().Table("group_messages").
-			Select("group_messages.id, group_messages.body, group_messages.created_at, group_messages.creator_id").
-			Joins("INNER JOIN group_message_recipients ON group_messages.id = group_message_recipients.message_id").
-			Where("group_message_recipients.recipient_group_id = ?", group.ID).
+		lastMssMessageByMssGroup := make([]lastMssMessage, 0)
+		if err := DB.Debug().Table("mssGroup_messages").
+			Select("mssGroup_messages.id, mssGroup_messages.body, mssGroup_messages.created_at, mssGroup_messages.creator_id").
+			Joins("INNER JOIN mssGroup_message_recipients ON mssGroup_messages.id = mssGroup_message_recipients.message_id").
+			Where("mssGroup_message_recipients.recipient_mssGroup_id = ?", mssGroup.ID).
 			Limit(1).
-			Order("group_messages.id DESC").
-			Scan(&lastMessageByGroup).Error; err != nil {
+			Order("mssGroup_messages.id DESC").
+			Scan(&lastMssMessageByMssGroup).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
 		// struct response message
-		lastMessage := lastMessage{
+		lastMssMessage := lastMssMessage{
 			Mode: "user",
 			Contact: userShort{
-				ID:     group.ID,
-				Name:   group.Name,
-				Avatar: group.Avatar,
+				ID:     mssGroup.ID,
+				Name:   mssGroup.Name,
+				Avatar: mssGroup.Avatar,
 			},
 		}
 
 		// Set messages
-		if len(lastMessageByGroup) >= 1 {
-			lastMessage.Body = lastMessageByGroup[0].Body
-			lastMessage.CreatedAt = lastMessageByGroup[0].CreatedAt
-			lastMessage.IsRead = lastMessageByGroup[0].IsRead
-			lastMessage.CreatorID = lastMessageByGroup[0].CreatorID
+		if len(lastMssMessageByMssGroup) >= 1 {
+			lastMssMessage.Body = lastMssMessageByMssGroup[0].Body
+			lastMssMessage.CreatedAt = lastMssMessageByMssGroup[0].CreatedAt
+			lastMssMessage.IsRead = lastMssMessageByMssGroup[0].IsRead
+			lastMssMessage.CreatorID = lastMssMessageByMssGroup[0].CreatorID
 		}
 
 		// Add last message
-		lastMessages = append(lastMessages, lastMessage)
+		lastMssMessages = append(lastMssMessages, lastMssMessage)
 	}
 
 	// Order By date
-	lastMessagesSorted := make(timeSlice, 0, len(lastMessages))
-	for _, lasM := range lastMessages {
-		lastMessagesSorted = append(lastMessagesSorted, lasM)
+	lastMssMessagesSorted := make(timeSlice, 0, len(lastMssMessages))
+	for _, lasM := range lastMssMessages {
+		lastMssMessagesSorted = append(lastMssMessagesSorted, lasM)
 	}
-	sort.Sort(lastMessagesSorted)
+	sort.Sort(lastMssMessagesSorted)
 
 	// Validate scroll
 	var hasMore = false
@@ -108,13 +108,13 @@ func GetGroupsScroll(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusOK, utilities.ResponseScroll{
 		Success:     true,
-		Data:        lastMessagesSorted,
+		Data:        lastMssMessagesSorted,
 		HasMore:     hasMore,
 		CurrentPage: request.CurrentPage,
 	})
 }
 
-type userGroupResponse struct {
+type userMssGroupResponse struct {
 	ID        uint      `json:"id" gorm:"primary_key"`
 	CreatedAt time.Time `json:"created_at"`
 	IsActive  bool      `json:"is_active" gorm:"default:'true'"`
@@ -125,20 +125,20 @@ type userGroupResponse struct {
 	Avatar string `json:"avatar"`
 }
 
-type groupResponse struct {
+type mssGroupResponse struct {
 	ID        uint      `json:"id"`
 	Name      string    `json:"name"`
 	Avatar    string    `json:"avatar"`
 	CreatedAt time.Time `json:"created_at"`
 	IsActive  bool      `json:"is_active"`
 
-	Users []userGroupResponse `json:"users"`
+	Users []userMssGroupResponse `json:"users"`
 }
 
-func GetGroupByID(c echo.Context) error {
+func GetMssGroupByID(c echo.Context) error {
 	// Get data request
-	group := models.Group{}
-	if err := c.Bind(&group); err != nil {
+	mssGroup := models.MssGroup{}
+	if err := c.Bind(&mssGroup); err != nil {
 		return err
 	}
 
@@ -147,33 +147,33 @@ func GetGroupByID(c echo.Context) error {
 	defer DB.Close()
 
 	// Execute instructions
-	groupResponse := groupResponse{}
-	if err := DB.Raw("SELECT * FROM groups WHERE id = ?", group.ID).Scan(&groupResponse).Error; err != nil {
+	mssGroupResponse := mssGroupResponse{}
+	if err := DB.Raw("SELECT * FROM mssGroups WHERE id = ?", mssGroup.ID).Scan(&mssGroupResponse).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	userGroupResponses := make([]userGroupResponse, 0)
-	if err := DB.Table("user_groups").
-		Select("user_groups.id, user_groups.created_at, user_groups.is_active, user_groups.is_admin, user_groups.user_id, users.user_name as name, users.avatar").
-		Joins("INNER JOIN users ON user_groups.user_id = users.id").
-		Where("user_groups.group_id = ?", group.ID).
-		Order("user_groups.id asc").
-		Scan(&userGroupResponses).Error; err != nil {
+	userMssGroupResponses := make([]userMssGroupResponse, 0)
+	if err := DB.Table("user_mssGroups").
+		Select("user_mssGroups.id, user_mssGroups.created_at, user_mssGroups.is_active, user_mssGroups.is_admin, user_mssGroups.user_id, users.user_name as name, users.avatar").
+		Joins("INNER JOIN users ON user_mssGroups.user_id = users.id").
+		Where("user_mssGroups.mssGroup_id = ?", mssGroup.ID).
+		Order("user_mssGroups.id asc").
+		Scan(&userMssGroupResponses).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
-	groupResponse.Users = userGroupResponses
+	mssGroupResponse.Users = userMssGroupResponses
 
 	// Query current student Name
-	for i := range userGroupResponses {
+	for i := range userMssGroupResponses {
 		student := models.Student{}
-		DB.First(&student, models.Student{UserID: userGroupResponses[i].UserID})
+		DB.First(&student, models.Student{UserID: userMssGroupResponses[i].UserID})
 		if student.ID >= 1 {
-			userGroupResponses[i].Name = student.FullName
+			userMssGroupResponses[i].Name = student.FullName
 		} else {
 			teacher := models.Teacher{}
-			DB.First(&teacher, models.Teacher{UserID: userGroupResponses[i].UserID})
+			DB.First(&teacher, models.Teacher{UserID: userMssGroupResponses[i].UserID})
 			if teacher.ID >= 1 {
-				userGroupResponses[i].Name = fmt.Sprintf("%s %s", teacher.FirstName, teacher.LastName)
+				userMssGroupResponses[i].Name = fmt.Sprintf("%s %s", teacher.FirstName, teacher.LastName)
 			}
 		}
 
@@ -182,19 +182,19 @@ func GetGroupByID(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    groupResponse,
+		Data:    mssGroupResponse,
 	})
 }
 
-func CreateGroup(c echo.Context) error {
+func CreateMssGroup(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*utilities.Claim)
 	currentUser := claims.User
 
 	// Get data request
-	group := models.Group{}
-	if err := c.Bind(&group); err != nil {
+	mssGroup := models.MssGroup{}
+	if err := c.Bind(&mssGroup); err != nil {
 		return err
 	}
 
@@ -203,29 +203,29 @@ func CreateGroup(c echo.Context) error {
 	defer DB.Close()
 
 	// add data
-	group.Date = time.Now()
-	group.UserGroups = append(group.UserGroups, models.UserGroup{
+	mssGroup.Date = time.Now()
+	mssGroup.MssUserGroups = append(mssGroup.MssUserGroups, models.MssUserGroup{
 		UserID:  currentUser.ID,
 		IsAdmin: true,
 	})
 
 	// Insert courses in database
-	if err := DB.Create(&group).Error; err != nil {
+	if err := DB.Create(&mssGroup).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    group.ID,
-		Message: fmt.Sprintf("El canal %s se registro correctamente", group.Name),
+		Data:    mssGroup.ID,
+		Message: fmt.Sprintf("El canal %s se registro correctamente", mssGroup.Name),
 	})
 }
 
 func AddUsers(c echo.Context) error {
 	// Get data request
-	userGroups := make([]models.UserGroup, 0)
-	if err := c.Bind(&userGroups); err != nil {
+	mssUserGroups := make([]models.MssUserGroup, 0)
+	if err := c.Bind(&mssUserGroups); err != nil {
 		return err
 	}
 
@@ -238,8 +238,8 @@ func AddUsers(c echo.Context) error {
 
 	// Add new users
 	count := 0
-	for _, uGroup := range userGroups {
-		if err := TX.Create(&uGroup).Error; err != nil {
+	for _, uMssGroup := range mssUserGroups {
+		if err := TX.Create(&uMssGroup).Error; err != nil {
 			TX.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
@@ -256,10 +256,10 @@ func AddUsers(c echo.Context) error {
 	})
 }
 
-func UpdateGroup(c echo.Context) error {
+func UpdateMssGroup(c echo.Context) error {
 	// Get data request
-	group := models.Group{}
-	if err := c.Bind(&group); err != nil {
+	mssGroup := models.MssGroup{}
+	if err := c.Bind(&mssGroup); err != nil {
 		return err
 	}
 
@@ -268,29 +268,29 @@ func UpdateGroup(c echo.Context) error {
 	defer DB.Close()
 
 	//
-	group.Date = time.Now()
+	mssGroup.Date = time.Now()
 
 	// Insert courses in database
-	rows := DB.Model(&group).Update(&group).RowsAffected
+	rows := DB.Model(&mssGroup).Update(&mssGroup).RowsAffected
 	if rows == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %s", group.Name),
+			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %s", mssGroup.Name),
 		})
 	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    group.ID,
-		Message: fmt.Sprintf("Los datos del canal %s se modificarón correctamente.", group.Name),
+		Data:    mssGroup.ID,
+		Message: fmt.Sprintf("Los datos del canal %s se modificarón correctamente.", mssGroup.Name),
 	})
 }
 
-// Enable or disable group
-func IsActiveGroup(c echo.Context) error {
+// Enable or disable mssGroup
+func IsActiveMssGroup(c echo.Context) error {
 	// Get data request
-	group := models.Group{}
-	if err := c.Bind(&group); err != nil {
+	mssGroup := models.MssGroup{}
+	if err := c.Bind(&mssGroup); err != nil {
 		return err
 	}
 
@@ -299,23 +299,23 @@ func IsActiveGroup(c echo.Context) error {
 	defer DB.Close()
 
 	// Disable
-	if err := DB.Model(&group).UpdateColumn("is_active", group.IsActive).Error; err != nil {
+	if err := DB.Model(&mssGroup).UpdateColumn("is_active", mssGroup.IsActive).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    group.ID,
+		Data:    mssGroup.ID,
 		Message: fmt.Sprintf("Los datos del canal se modificaron correctamente."),
 	})
 }
 
-// Enable or disable user in group
-func IsActiveUserGroup(c echo.Context) error {
+// Enable or disable user in mssGroup
+func IsActiveUserMssGroup(c echo.Context) error {
 	// Get data request
-	userGroup := models.UserGroup{}
-	if err := c.Bind(&userGroup); err != nil {
+	userMssGroup := models.MssUserGroup{}
+	if err := c.Bind(&userMssGroup); err != nil {
 		return err
 	}
 
@@ -324,33 +324,33 @@ func IsActiveUserGroup(c echo.Context) error {
 	defer DB.Close()
 
 	// Disable
-	if err := DB.Model(&userGroup).Where("user_id = ? AND group_id = ?", userGroup.UserID, userGroup.GroupID).
-		UpdateColumn("is_active", userGroup.IsActive).Error; err != nil {
+	if err := DB.Model(&userMssGroup).Where("user_id = ? AND mssGroup_id = ?", userMssGroup.UserID, userMssGroup.MssGroupID).
+		UpdateColumn("is_active", userMssGroup.IsActive).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    userGroup.ID,
+		Data:    userMssGroup.ID,
 		Message: fmt.Sprintf("Los datos del canal se modificaron correctamente."),
 	})
 }
 
 // UploadAvatarUser function upload avatar user
-func UploadAvatarGroup(c echo.Context) error {
+func UploadAvatarMssGroup(c echo.Context) error {
 	// Read form fields
-	idGroup := c.FormValue("id")
+	idMssGroup := c.FormValue("id")
 
 	// get connection
 	db := provider.GetConnection()
 	defer db.Close()
 
 	// Validation user exist
-	group := models.Group{}
-	if db.First(&group, "id = ?", idGroup).RecordNotFound() {
+	mssGroup := models.MssGroup{}
+	if db.First(&mssGroup, "id = ?", idMssGroup).RecordNotFound() {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("No se encontró el registro con id %d", group.ID),
+			Message: fmt.Sprintf("No se encontró el registro con id %d", mssGroup.ID),
 		})
 	}
 
@@ -366,7 +366,7 @@ func UploadAvatarGroup(c echo.Context) error {
 	defer src.Close()
 
 	// Destination
-	ccc := sha256.Sum256([]byte(string(group.ID)))
+	ccc := sha256.Sum256([]byte(string(mssGroup.ID)))
 	name := fmt.Sprintf("%x%s", ccc, filepath.Ext(file.Filename))
 	avatarSRC := "static/profiles/" + name
 	dst, err := os.Create(avatarSRC)
@@ -374,7 +374,7 @@ func UploadAvatarGroup(c echo.Context) error {
 		return err
 	}
 	defer dst.Close()
-	group.Avatar = avatarSRC
+	mssGroup.Avatar = avatarSRC
 
 	// Copy
 	if _, err = io.Copy(dst, src); err != nil {
@@ -382,14 +382,14 @@ func UploadAvatarGroup(c echo.Context) error {
 	}
 
 	// Update database user
-	if err := db.Model(&group).Update(group).Error; err != nil {
+	if err := db.Model(&mssGroup).Update(mssGroup).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    group,
-		Message: fmt.Sprintf("El avatar del canal %s, se subió correctamente", group.Name),
+		Data:    mssGroup,
+		Message: fmt.Sprintf("El avatar del canal %s, se subió correctamente", mssGroup.Name),
 	})
 }

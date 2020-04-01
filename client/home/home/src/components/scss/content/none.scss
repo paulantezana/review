@@ -1,0 +1,18 @@
+.NotFound{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    &-title{
+        font-size: 2.5rem;
+        font-weight: normal;
+    }
+    & > * {
+        max-width: 800px;
+        margin-right: auto;
+        margin-left: auto;
+    }
+    input{
+        margin-bottom: 24px;
+    }
+}

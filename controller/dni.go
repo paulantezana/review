@@ -1,11 +1,11 @@
 package controller
 
 import (
-    "fmt"
-    "github.com/paulantezana/review/models"
-    "github.com/paulantezana/review/provider"
-    "strings"
-    "time"
+	"fmt"
+	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
+	"strings"
+	"time"
 )
 
 func Dni(dni string) (models.Student, error) {

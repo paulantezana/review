@@ -1,0 +1,35 @@
+// Calcula ancho de cada columna
+@mixin grid-column-width($i) {
+    // La cantidad de gaps es igual a la cantidad de columnas menos 1
+    $n : #{$i - 1};
+    // Formula para calcular el ancho de cada columna
+    $column-width : calc((100% - #{$gap} * #{$n}) / #{$i});
+    // Define las columnas en el contenedor
+    grid-template-columns : repeat($i, $column-width);
+}
+
+.Grid {
+    display: grid;
+    grid-template-columns: 100%;
+    grid-column-gap: $gap;
+    grid-row-gap: $gap;
+
+    // @for $i from 0 through 4 {
+    //     &.gap-#{$i} {
+    //         grid-column-gap: #{$l-unit * $i};
+    //     }
+    // }
+
+    // Define columnas en containers e items por breakpoint
+    @each $size, $_ in $breakpoints {
+        // Estilos por breakpoint
+        @include from($size) {
+            // Recorre la cantidad de columnas
+            @for $i from 1 through $max-grid-columns {
+                &.#{$size}-#{$i} {
+                    @include grid-column-width($i);
+                }
+            }
+        }
+    }
+}

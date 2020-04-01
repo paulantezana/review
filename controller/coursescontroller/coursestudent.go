@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"io"
 	"net/http"
@@ -136,11 +136,11 @@ func DeleteLanguageCourseStudent(c echo.Context) error {
 
 type actLanguageCourseStudentDetail struct {
 	Student models.LanguageCourseStudent `json:"student"`
-	Program models.Program       `json:"program"`
+	Program models.Program               `json:"program"`
 }
 
 type actLanguageCourseStudentResponse struct {
-	Course   models.Course            `json:"course"`
+	Course   models.Course                    `json:"course"`
 	Students []actLanguageCourseStudentDetail `json:"students"`
 }
 

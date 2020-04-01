@@ -1,0 +1,20 @@
+.Card{
+    display: flex;
+    flex-direction: column;
+    background: var(--snColorBg);
+    border: 1px solid var(--snColorBorder);
+    color: var(--snColorText);
+    &:hover{
+        box-shadow: 0 0.5rem 1rem -0.5rem #CCC;
+    }
+    &-cover{
+
+    }
+    &-title,
+    &-description{
+        margin: 0;
+    }
+    &-body{
+        padding: 1rem;
+    }
+}

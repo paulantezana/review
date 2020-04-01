@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
-type programUserResponse struct {
+type userProgramResponse struct {
 	ID        uint   `json:"id"`
 	UserID    uint   `json:"user_id"`
 	ProgramID uint   `json:"program_id"`
@@ -18,7 +18,7 @@ type programUserResponse struct {
 	Name      string `json:"name"`
 }
 
-type programUserRequest struct {
+type userProgramRequest struct {
 	UserID       uint `json:"user_id"`
 	SubsidiaryID uint `json:"subsidiary_id"`
 }
@@ -26,8 +26,8 @@ type programUserRequest struct {
 // Update
 func ProgramsUserUpdate(c echo.Context) error {
 	// Get data request
-	programUser := models.ProgramUser{}
-	if err := c.Bind(&programUser); err != nil {
+	userProgram := models.UserProgram{}
+	if err := c.Bind(&userProgram); err != nil {
 		return err
 	}
 
@@ -36,12 +36,12 @@ func ProgramsUserUpdate(c echo.Context) error {
 	defer DB.Close()
 
 	// Update module in database
-	DB.Model(&programUser).Where("id = ?", programUser.ID).UpdateColumn("license", programUser.License)
+	DB.Model(&userProgram).Where("id = ?", userProgram.ID).UpdateColumn("license", userProgram.License)
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    programUser.ID,
+		Data:    userProgram.ID,
 		Message: fmt.Sprintf("Los datos del se actualizaron correctamente"),
 	})
 }
@@ -49,7 +49,7 @@ func ProgramsUserUpdate(c echo.Context) error {
 // Get all programs licenses by user
 func GetProgramsUserByUserID(c echo.Context) error {
 	// Get data request
-	request := programUserRequest{}
+	request := userProgramRequest{}
 	if err := c.Bind(&request); err != nil {
 		return err
 	}
@@ -70,11 +70,11 @@ func GetProgramsUserByUserID(c echo.Context) error {
 
 	// Insert SubsidiaryUsers
 	for _, program := range programs {
-		programUser := models.ProgramUser{
+		userProgram := models.UserProgram{
 			UserID:    request.UserID,
 			ProgramID: program.ID,
 		}
-		if err := TR.Create(&programUser).Error; err != nil {
+		if err := TR.Create(&userProgram).Error; err != nil {
 			TR.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
@@ -84,19 +84,19 @@ func GetProgramsUserByUserID(c echo.Context) error {
 	TR.Commit()
 
 	// Query SubsidiaryUsers
-	programUsers := make([]programUserResponse, 0)
+	userPrograms := make([]userProgramResponse, 0)
 	if err := DB.Table("program_users").
 		Select("program_users.id, program_users.user_id, program_users.program_id, program_users.license, programs.name").
 		Joins("INNER JOIN programs ON programs.id = program_users.program_id").
 		Where("program_users.user_id = ? AND programs.subsidiary_id = ?", request.UserID, request.SubsidiaryID).
-		Scan(&programUsers).Error; err != nil {
+		Scan(&userPrograms).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Response data
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    programUsers,
+		Data:    userPrograms,
 	})
 }
 

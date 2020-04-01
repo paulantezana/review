@@ -49,7 +49,7 @@ func Login(c echo.Context) error {
 	pwd := fmt.Sprintf("%x", cc)
 
 	// Validate user and email
-	if user.RoleID == 0 {
+	if user.UserRoleID == 0 {
 		// login without using the profile
 		if DB.Where("user_name = ? and password = ?", user.UserName, pwd).First(&user).RecordNotFound() {
 			if DB.Where("email = ? and password = ?", user.UserName, pwd).First(&user).RecordNotFound() {
@@ -60,8 +60,8 @@ func Login(c echo.Context) error {
 		}
 	} else {
 		// login with profile
-		if DB.Where("user_name = ? and password = ? and role_id = ?", user.UserName, pwd, user.RoleID).First(&user).RecordNotFound() {
-			if DB.Where("email = ? and password = ? and role_id = ?", user.UserName, pwd, user.RoleID).First(&user).RecordNotFound() {
+		if DB.Where("user_name = ? and password = ? and role_id = ?", user.UserName, pwd, user.UserRoleID).First(&user).RecordNotFound() {
+			if DB.Where("email = ? and password = ? and role_id = ?", user.UserName, pwd, user.UserRoleID).First(&user).RecordNotFound() {
 				return c.JSON(http.StatusOK, utilities.Response{
 					Message: "El nombre de usuario o contraseña es incorecta",
 				})
@@ -75,20 +75,20 @@ func Login(c echo.Context) error {
 	}
 
 	// Exception users student and invited
-	if !(user.RoleID >= 1 && user.RoleID <= 4) {
+	if !(user.UserRoleID >= 1 && user.UserRoleID <= 4) {
 		return c.NoContent(http.StatusForbidden)
 	}
 
 	// Prepare response data
 	user.Password = ""
-	user.Key = ""
+	user.TempKey = ""
 
-	// Insert new Session
-	session := models.Session{
+	// Insert new UserSession
+	userSession := models.UserSession{
 		UserID:       user.ID,
 		LastActivity: time.Now(),
 	}
-	if err := DB.Create(&session).Error; err != nil {
+	if err := DB.Create(&userSession).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -146,7 +146,7 @@ func LoginStudent(c echo.Context) error {
 
 	// Prepare response data
 	user.Password = ""
-	user.Key = ""
+	user.TempKey = ""
 
 	// Query student
 	student := models.Student{}
@@ -162,12 +162,12 @@ func LoginStudent(c echo.Context) error {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	// Insert new Session
-	session := models.Session{
+	// Insert new UserSession
+	userSession := models.UserSession{
 		UserID:       user.ID,
 		LastActivity: time.Now(),
 	}
-	if err := DB.Create(&session).Error; err != nil {
+	if err := DB.Create(&userSession).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
@@ -212,7 +212,7 @@ func LoginUserCheck(c echo.Context) error {
 
 	// Prepare response data
 	user.Password = ""
-	user.Key = ""
+	user.TempKey = ""
 
 	// Login success
 	return c.JSON(http.StatusOK, utilities.Response{
@@ -252,7 +252,7 @@ func LoginPasswordCheck(c echo.Context) error {
 
 	// Prepare response data
 	user.Password = ""
-	user.Key = ""
+	user.TempKey = ""
 
 	// Login success
 	return c.JSON(http.StatusOK, utilities.Response{
@@ -284,7 +284,7 @@ func ForgotSearch(c echo.Context) error {
 
 	// Generate key validation
 	key := (int)(rand.Float32() * 10000000)
-	user.Key = fmt.Sprint(key)
+	user.TempKey = fmt.Sprint(key)
 
 	// Update database
 	if err := DB.Model(&user).Update(user).Error; err != nil {
@@ -292,7 +292,7 @@ func ForgotSearch(c echo.Context) error {
 	}
 
 	// Query Database Get Settings
-	con := models.Setting{}
+	con := models.Institution{}
 	DB.First(&con)
 
 	// SEND EMAIL get html template
@@ -340,9 +340,9 @@ func ForgotValidate(c echo.Context) error {
 	defer db.Close()
 
 	// Validations
-	if err := db.Where("id = ? AND key = ?", user.ID, user.Key).First(&user).Error; err != nil {
+	if err := db.Where("id = ? AND key = ?", user.ID, user.TempKey).First(&user).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("El número %s que ingresaste no coincide con tu código de seguridad. Vuelve a intentarlo", user.Key),
+			Message: fmt.Sprintf("El número %s que ingresaste no coincide con tu código de seguridad. Vuelve a intentarlo", user.TempKey),
 		})
 	}
 
@@ -424,7 +424,7 @@ func GetUsers(c echo.Context) error {
 	users := make([]models.User, 0)
 
 	// Find users
-	if err := DB.Where("user_name LIKE ? AND role_id >= ?", "%"+request.Search+"%", currentUser.RoleID).
+	if err := DB.Where("user_name LIKE ? AND role_id >= ?", "%"+request.Search+"%", currentUser.UserRoleID).
 		Order("id desc").Offset(offset).Limit(request.Limit).Find(&users).
 		Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
@@ -566,8 +566,8 @@ func CreateUser(c echo.Context) error {
 	}
 
 	// Default empty values
-	if user.RoleID == 0 {
-		user.RoleID = 6
+	if user.UserRoleID == 0 {
+		user.UserRoleID = 6
 	}
 
 	// get connection
@@ -902,42 +902,42 @@ func GetLicenseUser(c echo.Context) error {
 	// Start Transaction
 	TR := DB.Begin()
 
-	// Insert SubsidiaryUsers
+	// Insert UserSubsidiarys
 	for _, subsidiary := range subsidiaries {
-		subsidiaryUser := models.SubsidiaryUser{
+		userSubsidiary := models.UserSubsidiary{
 			UserID:       user.ID,
 			SubsidiaryID: subsidiary.ID,
 		}
-		if err := TR.Create(&subsidiaryUser).Error; err != nil {
+		if err := TR.Create(&userSubsidiary).Error; err != nil {
 			TR.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	}
 
 	// Get all subsidiary users
-	subsidiaryUsers := make([]models.SubsidiaryUser, 0)
+	userSubsidiarys := make([]models.UserSubsidiary, 0)
 	if err := DB.Where("user_id = ?", user.ID).
-		Find(&subsidiaryUsers).Error; err != nil {
+		Find(&userSubsidiarys).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	// loop subsidiaryUsers
-	for _, subsidiaryUser := range subsidiaryUsers {
+	// loop userSubsidiarys
+	for _, userSubsidiary := range userSubsidiarys {
 		// Query Programs
 		programs := make([]models.Program, 0)
-		if err := DB.Raw("SELECT * FROM programs WHERE id NOT IN (SELECT program_id  FROM program_users WHERE user_id = ? AND subsidiary_user_id = ?) AND subsidiary_id = ?", user.ID, subsidiaryUser.ID, subsidiaryUser.SubsidiaryID).
+		if err := DB.Raw("SELECT * FROM programs WHERE id NOT IN (SELECT program_id  FROM program_users WHERE user_id = ? AND subsidiary_user_id = ?) AND subsidiary_id = ?", user.ID, userSubsidiary.ID, userSubsidiary.SubsidiaryID).
 			Scan(&programs).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
-		// Insert SubsidiaryUsers
+		// Insert UserSubsidiarys
 		for _, program := range programs {
-			programUser := models.ProgramUser{
+			userProgram := models.UserProgram{
 				UserID:           user.ID,
 				ProgramID:        program.ID,
-				SubsidiaryUserID: subsidiaryUser.ID,
+				UserSubsidiaryID: userSubsidiary.ID,
 			}
-			if err := TR.Create(&programUser).Error; err != nil {
+			if err := TR.Create(&userProgram).Error; err != nil {
 				TR.Rollback()
 				return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 			}
@@ -947,7 +947,7 @@ func GetLicenseUser(c echo.Context) error {
 	// End Transaction
 	TR.Commit()
 
-	// Query SubsidiaryUsers
+	// Query UserSubsidiarys
 	licenseUsers := make([]licenseUser, 0)
 	if err := DB.Table("subsidiary_users").
 		Select("subsidiary_users.id, subsidiary_users.user_id, subsidiary_users.subsidiary_id, subsidiary_users.license, subsidiaries.name").

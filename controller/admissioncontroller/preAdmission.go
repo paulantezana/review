@@ -4,8 +4,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 	"time"
@@ -96,22 +96,22 @@ func GetPreAdmissionPrograms(c echo.Context) error {
 }
 
 func GetPreAdmissionModalities(c echo.Context) error {
-    // get connection
-    DB := provider.GetConnection()
-    defer DB.Close()
+	// get connection
+	DB := provider.GetConnection()
+	defer DB.Close()
 
-    // Query programs
-    admissionModalities := make([]models.AdmissionModality, 0)
-    if err := DB.Select("id, name").Find(&admissionModalities).Order("id desc").
-        Error; err != nil {
-        return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-    }
+	// Query programs
+	admissionModalities := make([]models.AdmissionModality, 0)
+	if err := DB.Select("id, name").Find(&admissionModalities).Order("id desc").
+		Error; err != nil {
+		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+	}
 
-    // Return response
-    return c.JSON(http.StatusOK, utilities.Response{
-        Success: true,
-        Data:    admissionModalities,
-    })
+	// Return response
+	return c.JSON(http.StatusOK, utilities.Response{
+		Success: true,
+		Data:    admissionModalities,
+	})
 }
 
 func GetPreAdmissionById(c echo.Context) error {
@@ -185,7 +185,7 @@ func SavePreAdmission(c echo.Context) error {
 		// Insert user in database
 		request.User.UserName = request.Student.DNI + "ST"
 		request.User.Password = pwd
-		request.User.RoleID = 5
+		request.User.UserRoleID = 5
 
 		if err := TX.Create(&request.User).Error; err != nil {
 			TX.Rollback()

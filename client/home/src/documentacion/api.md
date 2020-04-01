@@ -1,3 +1,8 @@
+---
+title: "API"
+date: "2017-08-10"
+---
+
 # API
 Debido a que es un sistema centralizado los datos que viajan desde es servidor a los clientes es mediante un servicio web (API SERVICE)
 El api servicie esta desarrollado con el lenguaje de programación [GoLang]. usando [JWT]. para la encriptación de los datos que viajan desde el servidor al cliente y viceversa.

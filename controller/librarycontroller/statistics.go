@@ -3,8 +3,8 @@ package librarycontroller
 import (
 	"fmt"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 	"time"
@@ -181,7 +181,7 @@ func LastComments(c echo.Context) error {
 	defer DB.Close()
 
 	// Query last comments
-	comments := make([]models.Comment, 0)
+	comments := make([]models.PostComment, 0)
 	if err := DB.Limit(10).Order("created_at DESC").Find(&comments).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
@@ -197,8 +197,8 @@ func LastComments(c echo.Context) error {
 			Body:      comment.Body,
 			CreatedAt: comment.CreatedAt,
 			UpdatedAt: comment.UpdatedAt,
-			Votes:     comment.Votes,
-			HasVote:   comment.HasVote,
+			Votes:     comment.PostVotes,
+			HasVote:   comment.HasPostVote,
 		}
 		lastC.User.ID = user.ID
 		lastC.User.UserName = user.UserName

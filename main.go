@@ -38,6 +38,7 @@ func main() {
 	// Sting API services
 	endpoint.PublicApi(e)
 	endpoint.ProtectedApi(e)
+	endpoint.CoreApi(e)
 	endpoint.PublicWs(e)
 
 	// Custom port

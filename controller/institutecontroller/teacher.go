@@ -59,7 +59,7 @@ func GetTeachers(c echo.Context) error {
 	}
 
 	// Return response
-	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
+	return c.JSON(http.StatusOK, utilities.ResponsePaginate{
 		Success:     true,
 		Data:        teachers,
 		Total:       total,
@@ -213,7 +213,7 @@ func CreateTeacher(c echo.Context) error {
 	userAccount := models.User{
 		UserName: teacher.DNI + "TA",
 		Password: pwd,
-		RoleID:   4,
+		UserRoleID:   4,
 	}
 	if err := TR.Create(&userAccount).Error; err != nil {
 		TR.Rollback()
@@ -459,7 +459,7 @@ func SetTempUploadTeacherBySubsidiary(c echo.Context) error {
 				UserName: teacher.DNI + "TA",
 				Email:    strings.TrimSpace(row[4]),
 				Password: pwd,
-				RoleID:   5,
+				UserRoleID:   5,
 			}
 
 			// Insert user in database

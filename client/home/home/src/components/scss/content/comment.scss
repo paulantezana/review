@@ -1,0 +1,42 @@
+.comment{
+    &-author{
+        display: flex;
+        align-items: center;
+        img{ margin-right: 8px; }
+    }
+    &-meta{
+        display: flex;
+        align-items: center;
+    }
+    &-metadata{
+        font-size: .7em;
+        margin-left: 8px;
+        a{
+            color: var(--text-color-alt);
+        }
+    }
+    &-content{
+        p{ margin: 0; }
+    }
+    &-body{
+        margin-bottom: 16px;
+    }
+}
+.Comments{
+    h3{
+        font-size: 1rem;
+        font-weight: normal;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 8px;
+    }
+}
+.commentlist{
+    list-style: none;
+    @extend %list;
+}
+.comment-respond{
+    h3{ margin-bottom: 0; }
+    .comment-form{
+        p{ margin: 0 }
+    }
+}

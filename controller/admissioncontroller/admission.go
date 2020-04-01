@@ -6,8 +6,8 @@ import (
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 	"time"
@@ -141,7 +141,7 @@ func GetAdmissionsByID(c echo.Context) error {
 
 	// Reset response
 	user.Password = ""
-	user.Key = ""
+	user.TempKey = ""
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
@@ -226,7 +226,7 @@ func UpdateStudentAdmission(c echo.Context) error {
 		// Insert user in database
 		request.User.UserName = request.Student.DNI + "ST"
 		request.User.Password = pwd
-		request.User.RoleID = 5
+		request.User.UserRoleID = 5
 
 		if err := TX.Create(&request.User).Error; err != nil {
 			TX.Rollback()

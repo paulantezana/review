@@ -3,8 +3,8 @@ package librarycontroller
 import (
 	"fmt"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
@@ -25,7 +25,7 @@ func GetCategoriesPaginate(c echo.Context) error {
 
 	// Execute instructions
 	var total uint
-	categories := make([]models.Category, 0)
+	categories := make([]models.PostCategory, 0)
 
 	// Query in database
 	if err := db.Where("lower(name) LIKE lower(?) AND program_id = ?", "%"+request.Search+"%", request.ProgramID).
@@ -47,7 +47,7 @@ func GetCategoriesPaginate(c echo.Context) error {
 
 func GetCategoriesAll(c echo.Context) error {
 	// Get data request
-	request := models.Category{}
+	request := models.PostCategory{}
 	if err := c.Bind(&request); err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func GetCategoriesAll(c echo.Context) error {
 	defer db.Close()
 
 	// Execute instructions
-	categories := make([]models.Category, 0)
+	categories := make([]models.PostCategory, 0)
 
 	// Query in database
 	if err := db.Where("program_id = ?", request.ProgramId).Order("id desc").Find(&categories).Error; err != nil {
@@ -71,10 +71,10 @@ func GetCategoriesAll(c echo.Context) error {
 	})
 }
 
-func GetCategoryByID(c echo.Context) error {
+func GetPostCategoryByID(c echo.Context) error {
 	// Get data request
-	category := models.Category{}
-	if err := c.Bind(&category); err != nil {
+	postCategory := models.PostCategory{}
+	if err := c.Bind(&postCategory); err != nil {
 		return err
 	}
 
@@ -83,21 +83,21 @@ func GetCategoryByID(c echo.Context) error {
 	defer db.Close()
 
 	// Execute instructions
-	if err := db.First(&category, category.ID).Error; err != nil {
+	if err := db.First(&postCategory, postCategory.ID).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    category,
+		Data:    postCategory,
 	})
 }
 
-func CreateCategory(c echo.Context) error {
+func CreatePostCategory(c echo.Context) error {
 	// Get data request
-	category := models.Category{}
-	if err := c.Bind(&category); err != nil {
+	postCategory := models.PostCategory{}
+	if err := c.Bind(&postCategory); err != nil {
 		return err
 	}
 
@@ -106,22 +106,22 @@ func CreateCategory(c echo.Context) error {
 	defer db.Close()
 
 	// Insert categories in database
-	if err := db.Create(&category).Error; err != nil {
+	if err := db.Create(&postCategory).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    category.ID,
-		Message: fmt.Sprintf("La categoria %s se registro correctamente", category.Name),
+		Data:    postCategory.ID,
+		Message: fmt.Sprintf("La categoria %s se registro correctamente", postCategory.Name),
 	})
 }
 
-func UpdateCategory(c echo.Context) error {
+func UpdatePostCategory(c echo.Context) error {
 	// Get data request
-	category := models.Category{}
-	if err := c.Bind(&category); err != nil {
+	postCategory := models.PostCategory{}
+	if err := c.Bind(&postCategory); err != nil {
 		return err
 	}
 
@@ -129,26 +129,26 @@ func UpdateCategory(c echo.Context) error {
 	db := provider.GetConnection()
 	defer db.Close()
 
-	// Update category in database
-	rows := db.Model(&category).Update(category).RowsAffected
+	// Update postCategory in database
+	rows := db.Model(&postCategory).Update(postCategory).RowsAffected
 	if rows == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", category.ID),
+			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", postCategory.ID),
 		})
 	}
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    category.ID,
-		Message: fmt.Sprintf("Los datos de la categoria %s se actualizaron correctamente", category.Name),
+		Data:    postCategory.ID,
+		Message: fmt.Sprintf("Los datos de la categoria %s se actualizaron correctamente", postCategory.Name),
 	})
 }
 
-func DeleteCategory(c echo.Context) error {
+func DeletePostCategory(c echo.Context) error {
 	// Get data request
-	category := models.Category{}
-	if err := c.Bind(&category); err != nil {
+	postCategory := models.PostCategory{}
+	if err := c.Bind(&postCategory); err != nil {
 		return err
 	}
 
@@ -156,15 +156,15 @@ func DeleteCategory(c echo.Context) error {
 	db := provider.GetConnection()
 	defer db.Close()
 
-	// Delete category in database
-	if err := db.Delete(&category).Error; err != nil {
+	// Delete postCategory in database
+	if err := db.Delete(&postCategory).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    category.ID,
-		Message: fmt.Sprintf("La categoria con el id %d se elimino correctamente", category.ID),
+		Data:    postCategory.ID,
+		Message: fmt.Sprintf("La categoria con el id %d se elimino correctamente", postCategory.ID),
 	})
 }

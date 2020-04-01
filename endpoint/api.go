@@ -1,22 +1,57 @@
 package endpoint
 
 import (
-    "github.com/labstack/echo"
-    "github.com/labstack/echo/middleware"
-    "github.com/paulantezana/review/controller"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+	"github.com/paulantezana/review/controller"
+    "github.com/paulantezana/review/controller/Institutioncontroller"
     "github.com/paulantezana/review/controller/admissioncontroller"
+    "github.com/paulantezana/review/controller/appcontroller"
     "github.com/paulantezana/review/controller/institutecontroller"
-    "github.com/paulantezana/review/controller/librarycontroller"
-    "github.com/paulantezana/review/controller/messengercontroller"
-    "github.com/paulantezana/review/controller/monitoringcontroller"
-    "github.com/paulantezana/review/controller/reviewcontroller"
-    "github.com/paulantezana/review/provider"
-    "github.com/paulantezana/review/utilities"
+	"github.com/paulantezana/review/controller/librarycontroller"
+	"github.com/paulantezana/review/controller/messengercontroller"
+	"github.com/paulantezana/review/controller/monitoringcontroller"
+	"github.com/paulantezana/review/controller/reviewcontroller"
+	"github.com/paulantezana/review/provider"
+	"github.com/paulantezana/review/utilities"
 )
+
+// CoreApi functions
+func CoreApi(e *echo.Echo) {
+    cor := e.Group("/api/v1/core")
+
+    // Configure middleware with the custom claims type
+    con := middleware.JWTConfig{
+        Claims:     &utilities.CoreClaim{},
+        SigningKey: []byte(provider.GetConfig().Server.Key),
+    }
+    cor.Use(middleware.JWTWithConfig(con))
+
+    cor.POST("/institution/paginate", institutecontroller.GetInstitutions)
+    cor.POST("/institution/by/id", institutecontroller.GetInstitutionByID)
+    cor.POST("/institution/create", institutecontroller.CreateInstitution)
+    cor.PUT("/institution/update", institutecontroller.UpdateInstitution)
+
+    cor.POST("/app/by/id", appcontroller.GetAppByID)
+    cor.PUT("/app/update", appcontroller.UpdateApp)
+
+    cor.POST("/app/module/paginate", appcontroller.GetAppModules)
+    cor.POST("/app/module/by/id", appcontroller.GetAppModuleByID)
+    cor.POST("/app/module/create", appcontroller.CreateAppModule)
+    cor.PUT("/app/module/update", appcontroller.UpdateAppModule)
+
+    cor.POST("/app/function/paginate", appcontroller.GetAppModuleFunctions)
+    cor.POST("/app/function/by/id", appcontroller.GetAppModuleFunctionByID)
+    cor.POST("/app/function/create", appcontroller.CreateAppModuleFunction)
+    cor.PUT("/app/function/update", appcontroller.UpdateAppModuleFunction)
+}
 
 // PublicApi function public urls
 func PublicApi(e *echo.Echo) {
 	pb := e.Group("/api/v1/public")
+
+    pb.POST("/core/user/login", appcontroller.Login)
+
 	pb.POST("/user/login", controller.Login)
 	pb.POST("/user/login/student", controller.LoginStudent)
 	pb.POST("/user/forgot/search", controller.ForgotSearch)
@@ -48,6 +83,11 @@ func PublicApi(e *echo.Echo) {
 
 	pb.POST("/external/dni", controller.GetStudentByDni)
 	pb.POST("/external/ruc", controller.GetStudentByDni)
+
+
+	// APP
+    pb.POST("/app", appcontroller.GetAppByID)
+    pb.POST("/app/module", appcontroller.GetAppModules)
 }
 
 // ProtectedApi function protected urls
@@ -70,15 +110,15 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/login/password/check", controller.LoginPasswordCheck)
 
 	// Global settings
-	ar.POST("/setting/global", controller.GetGlobalSettings)
-	ar.PUT("/setting/update", controller.UpdateSetting)
-	ar.POST("/setting/upload/logo", controller.UploadLogoSetting)
-	ar.GET("/setting/download/logo", controller.DownloadLogoSetting)
-	ar.POST("/setting/upload/ministry", controller.UploadMinistrySetting)
-	ar.POST("/setting/download/file", controller.DownloadFile)
-	ar.GET("/setting/download/ministry", controller.DownloadMinistrySetting)
-	ar.GET("/setting/download/ministry/small", controller.DownloadMinistrySmallSetting)
-	ar.GET("/setting/download/national/emblem", controller.DownloadNationalEmblemSetting)
+	ar.POST("/setting/global", Institutioncontroller.GetInstitutionSetting)
+	ar.PUT("/setting/update", Institutioncontroller.UpdateInstitution)
+	ar.POST("/setting/upload/logo", Institutioncontroller.UploadLogoInstitution)
+	ar.GET("/setting/download/logo", Institutioncontroller.DownloadLogoInstitution)
+	ar.POST("/setting/upload/ministry", Institutioncontroller.UploadMinistryInstitution)
+	ar.POST("/setting/download/file", Institutioncontroller.DownloadFile)
+	ar.GET("/setting/download/ministry", Institutioncontroller.DownloadMinistryInstitution)
+	ar.GET("/setting/download/ministry/small", Institutioncontroller.DownloadMinistrySmallInstitution)
+	ar.GET("/setting/download/national/emblem", Institutioncontroller.DownloadNationalEmblemInstitution)
 
 	// ============================================================================
 	//   Institutional controller api
@@ -161,26 +201,26 @@ func ProtectedApi(e *echo.Echo) {
 	ar.POST("/module/search", institutecontroller.GetModuleSearch)
 
 	// Course
-    ar.POST("/course/paginate",institutecontroller.GetCoursesPaginate)
-    ar.POST("/course/by/id",institutecontroller.GetCourseByID)
-    ar.POST("/course/create",institutecontroller.CreateCourse)
-    ar.PUT("/course/update",institutecontroller.UpdateCourse)
-    ar.DELETE("/course/delete",institutecontroller.DeleteCourse)
+	ar.POST("/course/paginate", institutecontroller.GetCoursesPaginate)
+	ar.POST("/course/by/id", institutecontroller.GetCourseByID)
+	ar.POST("/course/create", institutecontroller.CreateCourse)
+	ar.PUT("/course/update", institutecontroller.UpdateCourse)
+	ar.DELETE("/course/delete", institutecontroller.DeleteCourse)
 
-    // Course level
-    ar.POST("/course/level/paginate",institutecontroller.GetCourseLevelPaginate)
-    ar.POST("/course/level/all",institutecontroller.GetAllCourseLevel)
-    ar.POST("/course/level/create",institutecontroller.CreateCourseLevel)
-    ar.PUT("/course/level/update",institutecontroller.UpdateCourseLevel)
-    ar.DELETE("/course/level/delete",institutecontroller.DeleteCourseLevel)
+	// Course level
+	ar.POST("/course/level/paginate", institutecontroller.GetCourseLevelPaginate)
+	ar.POST("/course/level/all", institutecontroller.GetAllCourseLevel)
+	ar.POST("/course/level/create", institutecontroller.CreateCourseLevel)
+	ar.PUT("/course/level/update", institutecontroller.UpdateCourseLevel)
+	ar.DELETE("/course/level/delete", institutecontroller.DeleteCourseLevel)
 
-    // Course level
-    ar.POST("/course/node/paginate",institutecontroller.GetCourseNodePaginate)
-    ar.POST("/course/node/create",institutecontroller.CreateCourseNode)
-    ar.PUT("/course/node/update",institutecontroller.UpdateCourseNode)
-    ar.DELETE("/course/node/delete",institutecontroller.DeleteCourseNode)
+	// Course level
+	ar.POST("/course/node/paginate", institutecontroller.GetCourseNodePaginate)
+	ar.POST("/course/node/create", institutecontroller.CreateCourseNode)
+	ar.PUT("/course/node/update", institutecontroller.UpdateCourseNode)
+	ar.DELETE("/course/node/delete", institutecontroller.DeleteCourseNode)
 
-    // Company
+	// Company
 	ar.POST("/company/all", reviewcontroller.GetCompanies)
 	ar.POST("/company/create", reviewcontroller.CreateCompany)
 	ar.PUT("/company/update", reviewcontroller.UpdateCompany)
@@ -230,7 +270,7 @@ func ProtectedApi(e *echo.Echo) {
 	//ar.PUT("/course/update", coursescontroller.UpdateCourse)
 	//ar.DELETE("/course/delete", coursescontroller.DeleteCourse)
 	//ar.POST("/course/by/id", coursescontroller.GetCourseByID)
-    //
+	//
 	//ar.POST("/course/student/all", coursescontroller.GetLanguageCourseStudentsPaginate)
 	//ar.POST("/course/student/create", coursescontroller.CreateLanguageCourseStudent)
 	//ar.PUT("/course/student/update", coursescontroller.UpdateLanguageCourseStudent)
@@ -317,29 +357,29 @@ func ProtectedApi(e *echo.Echo) {
 	// category
 	ar.POST("/library/category/paginate", librarycontroller.GetCategoriesPaginate)
 	ar.POST("/library/category/all", librarycontroller.GetCategoriesAll)
-	ar.POST("/library/category/create", librarycontroller.CreateCategory)
-	ar.PUT("/library/category/update", librarycontroller.UpdateCategory)
-	ar.DELETE("/library/category/delete", librarycontroller.DeleteCategory)
-	ar.POST("/library/category/by/id", librarycontroller.GetCategoryByID)
+	ar.POST("/library/category/create", librarycontroller.CreatePostCategory)
+	ar.PUT("/library/category/update", librarycontroller.UpdatePostCategory)
+	ar.DELETE("/library/category/delete", librarycontroller.DeletePostCategory)
+	ar.POST("/library/category/by/id", librarycontroller.GetPostCategoryByID)
 
 	// book
-	ar.POST("/library/book/paginate", librarycontroller.GetBooksPaginate)
-	ar.POST("/library/book/paginate/reading", librarycontroller.GetBooksPaginateByReading)
-	ar.POST("/library/book/like", librarycontroller.CreateLike)
-	ar.POST("/library/book/create", librarycontroller.CreateBook)
-	ar.PUT("/library/book/update", librarycontroller.UpdateBook)
-	ar.DELETE("/library/book/delete", librarycontroller.DeleteBook)
-	ar.POST("/library/book/by/id", librarycontroller.GetBookByID)
-	ar.POST("/library/book/by/id/reading", librarycontroller.GetBookByIDReading)
-	ar.POST("/library/book/upload/avatar", librarycontroller.UploadAvatarBook)
-	ar.POST("/library/book/upload/pdf", librarycontroller.UploadPdfBook)
+	ar.POST("/library/book/paginate", librarycontroller.GetPostsPaginate)
+	ar.POST("/library/book/paginate/reading", librarycontroller.GetPostsPaginateByPostReading)
+	ar.POST("/library/book/like", librarycontroller.CreatePostLike)
+	ar.POST("/library/book/create", librarycontroller.CreatePost)
+	ar.PUT("/library/book/update", librarycontroller.UpdatePost)
+	ar.DELETE("/library/book/delete", librarycontroller.DeletePost)
+	ar.POST("/library/book/by/id", librarycontroller.GetPostByID)
+	ar.POST("/library/book/by/id/reading", librarycontroller.GetPostByIDPostReading)
+	ar.POST("/library/book/upload/avatar", librarycontroller.UploadAvatarPost)
+	ar.POST("/library/book/upload/pdf", librarycontroller.UploadPdfPost)
 
 	// Comments
-	ar.POST("/library/comment/all", librarycontroller.GetCommentsAll)
-	ar.POST("/library/comment/create", librarycontroller.CreateComment)
-	ar.POST("/library/comment/vote", librarycontroller.CreateVote)
-	ar.PUT("/library/comment/update", librarycontroller.UpdateComment)
-	ar.DELETE("/library/comment/delete", librarycontroller.DeleteComment)
+	ar.POST("/library/comment/all", librarycontroller.GetPostCommentsAll)
+	ar.POST("/library/comment/create", librarycontroller.CreatePostComment)
+	ar.POST("/library/comment/vote", librarycontroller.CreatePostVote)
+	ar.PUT("/library/comment/update", librarycontroller.UpdatePostComment)
+	ar.DELETE("/library/comment/delete", librarycontroller.DeletePostComment)
 
 	// Statics
 	ar.POST("/library/statics/counts", librarycontroller.LibraryCounts)
@@ -397,22 +437,22 @@ func ProtectedApi(e *echo.Echo) {
 
 	// ---------------------------------------------------------------------------
 	//      Messenger api -----------------------------------------------------
-	ar.POST("/messenger/message/user/scroll", messengercontroller.GetUsersMessageScroll)
-	ar.POST("/messenger/message/create", messengercontroller.CreateMessage)
-	ar.POST("/messenger/message/create/by/group", messengercontroller.CreateGroupMessage)
-	ar.POST("/messenger/message/create/upload/file", messengercontroller.CreateMessageFileUpload)
-	ar.POST("/messenger/message/create/upload/file/by/group", messengercontroller.CreateMessageFileUploadByGroup)
-	ar.POST("/messenger/message/by/user", messengercontroller.GetMessages)
-	ar.POST("/messenger/message/by/group", messengercontroller.GetMessagesByGroup)
-	ar.POST("/messenger/message/unread", messengercontroller.UnreadMessages)
-	ar.POST("/messenger/group/scroll", messengercontroller.GetGroupsScroll)
-	ar.POST("/messenger/group/by/id", messengercontroller.GetGroupByID)
-	ar.POST("/messenger/group/create", messengercontroller.CreateGroup)
-	ar.POST("/messenger/group/upload/avatar", messengercontroller.UploadAvatarGroup)
+	ar.POST("/messenger/message/user/scroll", messengercontroller.GetUsersMssMessageScroll)
+	ar.POST("/messenger/message/create", messengercontroller.CreateMssMessage)
+	ar.POST("/messenger/message/create/by/group", messengercontroller.CreateMssGroupMessage)
+	ar.POST("/messenger/message/create/upload/file", messengercontroller.CreateMssMessageFileUpload)
+	ar.POST("/messenger/message/create/upload/file/by/group", messengercontroller.CreateMssMessageFileUploadByGroup)
+	ar.POST("/messenger/message/by/user", messengercontroller.GetMssMessages)
+	ar.POST("/messenger/message/by/group", messengercontroller.GetMssMessagesByGroup)
+	ar.POST("/messenger/message/unread", messengercontroller.UnreadMssMessages)
+	ar.POST("/messenger/group/scroll", messengercontroller.GetMssGroupsScroll)
+	ar.POST("/messenger/group/by/id", messengercontroller.GetMssGroupByID)
+	ar.POST("/messenger/group/create", messengercontroller.CreateMssGroup)
+	ar.POST("/messenger/group/upload/avatar", messengercontroller.UploadAvatarMssGroup)
 	ar.POST("/messenger/group/add/users", messengercontroller.AddUsers)
-	ar.PUT("/messenger/group/update", messengercontroller.UpdateGroup)
-	ar.POST("/messenger/group/is/active", messengercontroller.IsActiveGroup)
-	ar.POST("/messenger/group/user/is/active", messengercontroller.IsActiveUserGroup)
+	ar.PUT("/messenger/group/update", messengercontroller.UpdateMssGroup)
+	ar.POST("/messenger/group/is/active", messengercontroller.IsActiveMssGroup)
+	ar.POST("/messenger/group/user/is/active", messengercontroller.IsActiveUserMssGroup)
 
 	// ---------------------------------------------------------------------------
 	//      External api -----------------------------------------------------
@@ -421,5 +461,5 @@ func ProtectedApi(e *echo.Echo) {
 
 	// ---------------------------------------------------------------------------
 	//      Student routes -----------------------------------------------------
-	ar.POST("/setting/global/student", controller.GetStudentSettings)
+	//ar.POST("/setting/global/student", controller.GetStudentSettings)
 }

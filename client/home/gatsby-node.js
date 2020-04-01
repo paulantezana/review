@@ -30,13 +30,24 @@ exports.createPages = ({ graphql, actions }) => {
     `
     ).then(result => {
         result.data.allMarkdownRemark.edges.forEach(({ node }) => {
-            createPage({
-                path: node.fields.slug,
-                component: path.resolve(`./src/templates/api.js`),
-                context: {
-                    slug: node.fields.slug,
-                },
-            })
+            const markPath =  node.fields.slug;
+            if (markPath.match(/^\/documentacion/)) {
+                createPage({
+                    path: node.fields.slug,
+                    component: path.resolve(`./src/templates/documentacion.js`),
+                    context: {
+                        slug: node.fields.slug,
+                    },
+                });
+            } else if(markPath.match(/^\/tutorial/)){
+                createPage({
+                    path: node.fields.slug,
+                    component: path.resolve(`./src/templates/tutorial.js`),
+                    context: {
+                        slug: node.fields.slug,
+                    },
+                });
+            }
         })
     })
 }

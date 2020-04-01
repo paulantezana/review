@@ -2,8 +2,8 @@ package utilities
 
 import (
 	"github.com/dgrijalva/jwt-go"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"log"
 	"time"
 )

@@ -9,6 +9,10 @@ module.exports = {
         // },
     },
     plugins: [
+        {
+            resolve: `gatsby-plugin-create-client-paths`,
+            options: { prefixes: [`/admin/*`] },
+        },
         `gatsby-plugin-react-helmet`,
         {
             resolve: 'gatsby-plugin-less',

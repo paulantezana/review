@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
@@ -29,7 +29,7 @@ func GetProgramsByLicense(c echo.Context) error {
 
 	// Execute instructions
 	programs := make([]models.Program, 0)
-	switch currentUser.RoleID {
+	switch currentUser.UserRoleID {
 	case 1:
 		if err := DB.Where("subsidiary_id = ?", program.SubsidiaryID).Find(&programs).Order("id desc").
 			Error; err != nil {
@@ -154,7 +154,7 @@ func CreateProgram(c echo.Context) error {
 		UserName: request.UserName,
 		Password: pwd,
 		Email:    request.Email,
-		RoleID:   3,
+		UserRoleID:   3,
 		Freeze:   true,
 	}
 	if err := TR.Create(&user).Error; err != nil {
@@ -163,24 +163,24 @@ func CreateProgram(c echo.Context) error {
 	}
 
 	// Create program user - relation
-	subsidiaryUser := models.SubsidiaryUser{
+	userSubsidiary := models.UserSubsidiary{
 		UserID:       user.ID,
 		SubsidiaryID: program.SubsidiaryID,
 		License:      true,
 	}
-	if err := TR.Create(&subsidiaryUser).Error; err != nil {
+	if err := TR.Create(&userSubsidiary).Error; err != nil {
 		TR.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Create program user - relation
-	programUser := models.ProgramUser{
+	userProgram := models.UserProgram{
 		UserID:           user.ID,
 		ProgramID:        program.ID,
 		License:          true,
-		SubsidiaryUserID: subsidiaryUser.ID,
+		UserSubsidiaryID: userSubsidiary.ID,
 	}
-	if err := TR.Create(&programUser).Error; err != nil {
+	if err := TR.Create(&userProgram).Error; err != nil {
 		TR.Rollback()
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}

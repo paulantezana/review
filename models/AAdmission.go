@@ -18,8 +18,8 @@ type Admission struct {
 	Seat          uint      `json:"seat"`
 	State         bool      `json:"state" gorm:"default:'true'"`
 
-    School string `json:"school"`
-    SchoolPromotionYear uint `json:"school_promotion_year"`
+	School              string `json:"school"`
+	SchoolPromotionYear uint   `json:"school_promotion_year"`
 
 	StudentID          uint `json:"student_id"`
 	ProgramID          uint `json:"program_id"`

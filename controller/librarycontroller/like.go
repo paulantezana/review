@@ -4,40 +4,40 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
-func CreateLike(c echo.Context) error {
+func CreatePostLike(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*utilities.Claim)
 	currentUser := claims.User
 
 	// Get data request
-	like := models.Like{}
-	if err := c.Bind(&like); err != nil {
+	postLike := models.PostLike{}
+	if err := c.Bind(&postLike); err != nil {
 		return err
 	}
-	like.UserID = currentUser.ID
+	postLike.UserID = currentUser.ID
 
 	// get connection
 	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Validate
-	currentLike := models.Like{
+	currentPostLike := models.PostLike{
 		UserID: currentUser.ID,
-		BookID: like.BookID,
+		PostID: postLike.PostID,
 	}
-	DB.Where(&currentLike).First(&currentLike)
+	DB.Where(&currentPostLike).First(&currentPostLike)
 
 	// If not exist
-	if currentLike.ID == 0 {
+	if currentPostLike.ID == 0 {
 		// Insert books in database
-		if err := DB.Create(&like).Error; err != nil {
+		if err := DB.Create(&postLike).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
@@ -49,11 +49,11 @@ func CreateLike(c echo.Context) error {
 			Message: fmt.Sprintf("Voto registrado"),
 		})
 		// If exist and update vote false to true OR true to false
-	} else if currentLike.Stars != like.Stars {
-		currentLike.Stars = like.Stars
+	} else if currentPostLike.Stars != postLike.Stars {
+		currentPostLike.Stars = postLike.Stars
 
 		// Insert books in database
-		if err := DB.Save(&currentLike).Error; err != nil {
+		if err := DB.Save(&currentPostLike).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 

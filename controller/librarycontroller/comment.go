@@ -8,8 +8,8 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/gommon/log"
 	"github.com/olahol/melody"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"golang.org/x/net/websocket"
 	"net/http"
@@ -22,15 +22,15 @@ func init() {
 	Melody.Config.MaxMessageSize = 1024 * 1024 * 1024
 }
 
-func GetCommentsAll(c echo.Context) error {
+func GetPostCommentsAll(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*utilities.Claim)
 	currentUser := claims.User
 
 	// Get data request
-	comment := models.Comment{}
-	if err := c.Bind(&comment); err != nil {
+	postComment := models.PostComment{}
+	if err := c.Bind(&postComment); err != nil {
 		return err
 	}
 
@@ -39,29 +39,29 @@ func GetCommentsAll(c echo.Context) error {
 	defer DB.Close()
 
 	// Execute instructions
-	comments := make([]models.Comment, 0)
+	postComments := make([]models.PostComment, 0)
 
 	// Query in database
-	if err := DB.Where("parent_id = 0 AND book_id = ?", comment.BookID).Order("id asc").Find(&comments).Error; err != nil {
+	if err := DB.Where("parent_id = 0 AND book_id = ?", postComment.PostID).Order("id asc").Find(&postComments).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	// find users by comment
-	vote := models.Vote{}
-	for i := range comments {
-		DB.Model(&comments[i]).Related(&comments[i].User)
-		comments[i].User[0].Password = ""
-		comments[i].User[0].Key = ""
-		comments[i].Children = commentGetChildren(comments[i].ID)
+	// find users by postComment
+	postVote := models.PostVote{}
+	for i := range postComments {
+		DB.Model(&postComments[i]).Related(&postComments[i].User)
+		postComments[i].User[0].Password = ""
+		postComments[i].User[0].TempKey = ""
+		postComments[i].Children = postCommentGetChildren(postComments[i].ID)
 
-		// Find votes if Has Vote
-		vote.CommentID = comments[i].ID
-		vote.UserID = currentUser.ID
-		if count := DB.Where(&vote).Find(&vote).RowsAffected; count > 0 {
-			if vote.Value {
-				comments[i].HasVote = 1
+		// Find postVotes if Has PostVote
+		postVote.PostCommentID = postComments[i].ID
+		postVote.UserID = currentUser.ID
+		if count := DB.Where(&postVote).Find(&postVote).RowsAffected; count > 0 {
+			if postVote.Value {
+				postComments[i].HasPostVote = 1
 			} else {
-				comments[i].HasVote = -1
+				postComments[i].HasPostVote = -1
 			}
 		}
 	}
@@ -69,48 +69,48 @@ func GetCommentsAll(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.ResponsePaginate{
 		Success: true,
-		Data:    comments,
+		Data:    postComments,
 	})
 }
 
-func CreateComment(c echo.Context) error {
+func CreatePostComment(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*utilities.Claim)
 	currentUser := claims.User
 
 	// Get data request
-	comment := models.Comment{}
-	if err := c.Bind(&comment); err != nil {
+	postComment := models.PostComment{}
+	if err := c.Bind(&postComment); err != nil {
 		return err
 	}
-	comment.UserID = currentUser.ID
+	postComment.UserID = currentUser.ID
 
 	// get connection
 	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Insert books in database
-	if err := DB.Create(&comment).Error; err != nil {
+	if err := DB.Create(&postComment).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Find current user
-	if err := DB.Model(&comment).Related(&comment.User).Error; err != nil {
+	if err := DB.Model(&postComment).Related(&postComment.User).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
-	comment.User[0].Password = ""
-	comment.User[0].Key = ""
+	postComment.User[0].Password = ""
+	postComment.User[0].TempKey = ""
 
 	// Serialize struct to json
 	json, err := json.Marshal(&utilities.SocketResponse{
 		Type: "create",
-		Data: comment,
+		Data: postComment,
 	})
 
 	// websocket
 	origin := fmt.Sprintf("http://localhost:%s/", provider.GetConfig().Server.Port)
-	url := fmt.Sprintf("ws://localhost:%s/ws/comment", provider.GetConfig().Server.Port)
+	url := fmt.Sprintf("ws://localhost:%s/ws/postComment", provider.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -123,15 +123,15 @@ func CreateComment(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    comment.ID,
-		Message: fmt.Sprintf("El comentario %d se registro correctamente", comment.ID),
+		Data:    postComment.ID,
+		Message: fmt.Sprintf("El comentario %d se registro correctamente", postComment.ID),
 	})
 }
 
-func UpdateComment(c echo.Context) error {
+func UpdatePostComment(c echo.Context) error {
 	// Get data request
-	comment := models.Comment{}
-	if err := c.Bind(&comment); err != nil {
+	postComment := models.PostComment{}
+	if err := c.Bind(&postComment); err != nil {
 		return err
 	}
 
@@ -140,27 +140,27 @@ func UpdateComment(c echo.Context) error {
 	defer db.Close()
 
 	// Update category in database
-	rows := db.Model(&comment).Update(&comment).RowsAffected
+	rows := db.Model(&postComment).Update(&postComment).RowsAffected
 	if rows == 0 {
 		return c.JSON(http.StatusOK, utilities.Response{
-			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", comment.ID),
+			Message: fmt.Sprintf("No se pudo actualizar el registro con el id = %d", postComment.ID),
 		})
 	}
 
 	// Find data
-	if err := db.First(&comment, comment.ID).Error; err != nil {
+	if err := db.First(&postComment, postComment.ID).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Serialize struct to json
 	json, err := json.Marshal(&utilities.SocketResponse{
 		Type: "update",
-		Data: comment,
+		Data: postComment,
 	})
 
 	// websocket
 	origin := fmt.Sprintf("http://localhost:%s/", provider.GetConfig().Server.Port)
-	url := fmt.Sprintf("ws://localhost:%s/ws/comment", provider.GetConfig().Server.Port)
+	url := fmt.Sprintf("ws://localhost:%s/ws/postComment", provider.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -173,15 +173,15 @@ func UpdateComment(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    comment.ID,
-		Message: fmt.Sprintf("Los datos del curso %s se actualizaron correctamente", comment.ID),
+		Data:    postComment.ID,
+		Message: fmt.Sprintf("Los datos del curso %s se actualizaron correctamente", postComment.ID),
 	})
 }
 
-func DeleteComment(c echo.Context) error {
+func DeletePostComment(c echo.Context) error {
 	// Get data request
-	comment := models.Comment{}
-	if err := c.Bind(&comment); err != nil {
+	postComment := models.PostComment{}
+	if err := c.Bind(&postComment); err != nil {
 		return err
 	}
 
@@ -190,34 +190,34 @@ func DeleteComment(c echo.Context) error {
 	defer db.Close()
 
 	// Find data
-	if err := db.First(&comment, comment.ID).Error; err != nil {
+	if err := db.First(&postComment, postComment.ID).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Delete book in database
-	if err := db.Delete(&comment).Error; err != nil {
+	if err := db.Delete(&postComment).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
-	// Delete comments children
-	if comment.ID >= 1 {
-		if err := db.Delete(models.Comment{}, "parent_id = ?", comment.ID).Error; err != nil {
+	// Delete postComments children
+	if postComment.ID >= 1 {
+		if err := db.Delete(models.PostComment{}, "parent_id = ?", postComment.ID).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 	}
 
 	// Empty data
-	comment.Body = ""
+	postComment.Body = ""
 
 	// Serialize struct to json
 	json, err := json.Marshal(&utilities.SocketResponse{
 		Type: "delete",
-		Data: comment,
+		Data: postComment,
 	})
 
 	// websocket
 	origin := fmt.Sprintf("http://localhost:%s/", provider.GetConfig().Server.Port)
-	url := fmt.Sprintf("ws://localhost:%s/ws/comment", provider.GetConfig().Server.Port)
+	url := fmt.Sprintf("ws://localhost:%s/ws/postComment", provider.GetConfig().Server.Port)
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
@@ -230,63 +230,63 @@ func DeleteComment(c echo.Context) error {
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    comment.ID,
-		Message: fmt.Sprintf("El curso %s se elimino correctamente", comment.ID),
+		Data:    postComment.ID,
+		Message: fmt.Sprintf("El curso %s se elimino correctamente", postComment.ID),
 	})
 }
 
-func CreateVote(c echo.Context) error {
+func CreatePostVote(c echo.Context) error {
 	// Get user token authenticate
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*utilities.Claim)
 	currentUser := claims.User
 
 	// Get data request
-	vote := models.Vote{}
-	if err := c.Bind(&vote); err != nil {
+	postVote := models.PostVote{}
+	if err := c.Bind(&postVote); err != nil {
 		return err
 	}
-	vote.UserID = currentUser.ID
+	postVote.UserID = currentUser.ID
 
 	// get connection
 	DB := provider.GetConnection()
 	defer DB.Close()
 
 	// Validate
-	currentVote := models.Vote{
+	currentPostVote := models.PostVote{
 		UserID:    currentUser.ID,
-		CommentID: vote.CommentID,
+		PostCommentID: postVote.PostCommentID,
 	}
-	DB.Where(&currentVote).First(&currentVote)
+	DB.Where(&currentPostVote).First(&currentPostVote)
 
 	// If not exist
-	if currentVote.ID == 0 {
+	if currentPostVote.ID == 0 {
 		// Insert books in database
-		if err := DB.Create(&vote).Error; err != nil {
+		if err := DB.Create(&postVote).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
-		// Update votes in comments
-		if err := updateCommentVotes(vote.CommentID, vote.Value); err != nil {
+		// Update postVotes in postComments
+		if err := updatePostCommentPostVotes(postVote.PostCommentID, postVote.Value); err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
 		// Find data
-		comment := models.Comment{}
-		if err := DB.First(&comment, vote.CommentID).Error; err != nil {
+		postComment := models.PostComment{}
+		if err := DB.First(&postComment, postVote.PostCommentID).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
-		comment.HasVote = 1
+		postComment.HasPostVote = 1
 
 		// Serialize struct to json
 		json, err := json.Marshal(&utilities.SocketResponse{
 			Type: "update",
-			Data: comment,
+			Data: postComment,
 		})
 
 		// websocket
 		origin := fmt.Sprintf("http://localhost:%s/", provider.GetConfig().Server.Port)
-		url := fmt.Sprintf("ws://localhost:%s/ws/comment", provider.GetConfig().Server.Port)
+		url := fmt.Sprintf("ws://localhost:%s/ws/postComment", provider.GetConfig().Server.Port)
 
 		ws, err := websocket.Dial(url, "", origin)
 		if err != nil {
@@ -301,40 +301,40 @@ func CreateVote(c echo.Context) error {
 			Success: true,
 			Message: fmt.Sprintf("Voto registrado"),
 		})
-		// If exist and update vote false to true OR true to false
-	} else if currentVote.Value != vote.Value {
-		currentVote.Value = vote.Value
+		// If exist and update postVote false to true OR true to false
+	} else if currentPostVote.Value != postVote.Value {
+		currentPostVote.Value = postVote.Value
 
 		// Insert books in database
-		if err := DB.Save(&currentVote).Error; err != nil {
+		if err := DB.Save(&currentPostVote).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
-		// Update votes in comments
-		if err := updateCommentVotes(vote.CommentID, vote.Value); err != nil {
+		// Update postVotes in postComments
+		if err := updatePostCommentPostVotes(postVote.PostCommentID, postVote.Value); err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
 
 		// Find data
-		comment := models.Comment{}
-		if err := DB.First(&comment, vote.CommentID).Error; err != nil {
+		postComment := models.PostComment{}
+		if err := DB.First(&postComment, postVote.PostCommentID).Error; err != nil {
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
-		if vote.Value {
-			comment.HasVote = 1
+		if postVote.Value {
+			postComment.HasPostVote = 1
 		} else {
-			comment.HasVote = -1
+			postComment.HasPostVote = -1
 		}
 
 		// Serialize struct to json
 		json, err := json.Marshal(&utilities.SocketResponse{
 			Type: "update",
-			Data: comment,
+			Data: postComment,
 		})
 
 		// websocket
 		origin := fmt.Sprintf("http://localhost:%s/", provider.GetConfig().Server.Port)
-		url := fmt.Sprintf("ws://localhost:%s/ws/comment", provider.GetConfig().Server.Port)
+		url := fmt.Sprintf("ws://localhost:%s/ws/postComment", provider.GetConfig().Server.Port)
 
 		ws, err := websocket.Dial(url, "", origin)
 		if err != nil {
@@ -357,29 +357,29 @@ func CreateVote(c echo.Context) error {
 	})
 }
 
-// update votes count in table comments
-func updateCommentVotes(commentID uint, vote bool) (err error) {
-	comment := models.Comment{}
+// update postVotes count in table postComments
+func updatePostCommentPostVotes(postCommentID uint, postVote bool) (err error) {
+	postComment := models.PostComment{}
 
 	DB := provider.GetConnection()
 	defer DB.Close()
 
-	rows := DB.First(&comment, commentID).RowsAffected
+	rows := DB.First(&postComment, postCommentID).RowsAffected
 
 	if rows > 0 {
-		if vote {
-			comment.Votes++
+		if postVote {
+			postComment.PostVotes++
 		} else {
-			comment.Votes--
+			postComment.PostVotes--
 		}
-		DB.Save(&comment)
+		DB.Save(&postComment)
 	} else {
 		err = errors.New(fmt.Sprintf("No se encontró un registro de comentario para asignarle el voto"))
 	}
 	return
 }
 
-func commentGetChildren(id uint) (children []models.Comment) {
+func postCommentGetChildren(id uint) (children []models.PostComment) {
 	DB := provider.GetConnection()
 	defer DB.Close()
 
@@ -387,9 +387,9 @@ func commentGetChildren(id uint) (children []models.Comment) {
 	for i := range children {
 		DB.Model(&children[i]).Related(&children[i].User)
 		children[i].User[0].Password = ""
-		children[i].User[0].Key = ""
+		children[i].User[0].TempKey = ""
 		if children[i].ParentID >= 1 {
-			children[i].Children = commentGetChildren(children[i].ID)
+			children[i].Children = postCommentGetChildren(children[i].ID)
 		}
 	}
 	return

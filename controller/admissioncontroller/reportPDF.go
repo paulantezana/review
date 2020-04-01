@@ -6,8 +6,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jung-kurt/gofpdf"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"gopkg.in/ahmetb/go-linq.v3"
 	"net/http"
@@ -61,7 +61,7 @@ func GetPDFAdmissionStudentLicense(c echo.Context) error {
 	}
 
 	// Find settings
-	setting := models.Setting{}
+	setting := models.Institution{}
 	if err := DB.First(&setting).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
@@ -244,7 +244,7 @@ func GetPDFAdmissionStudentList(c echo.Context) error {
 	defer db.Close()
 
 	// Find settings
-	setting := models.Setting{}
+	setting := models.Institution{}
 	if err := db.First(&setting).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
@@ -473,7 +473,7 @@ func GetPDFAdmissionStudentFile(c echo.Context) error {
 	defer db.Close()
 
 	// Find settings
-	setting := models.Setting{}
+	setting := models.Institution{}
 	if err := db.First(&setting).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}

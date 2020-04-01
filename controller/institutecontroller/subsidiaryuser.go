@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
 
-type subsidiaryUserResponse struct {
+type userSubsidiaryResponse struct {
 	ID           uint   `json:"id" gorm:"primary_key"`
 	UserID       uint   `json:"user_id"`
 	SubsidiaryID uint   `json:"subsidiary_id"`
@@ -20,8 +20,8 @@ type subsidiaryUserResponse struct {
 
 func SubsidiariesUserUpdate(c echo.Context) error {
 	// Get data request
-	subsidiaryUser := models.SubsidiaryUser{}
-	if err := c.Bind(&subsidiaryUser); err != nil {
+	userSubsidiary := models.UserSubsidiary{}
+	if err := c.Bind(&userSubsidiary); err != nil {
 		return err
 	}
 
@@ -30,12 +30,12 @@ func SubsidiariesUserUpdate(c echo.Context) error {
 	defer DB.Close()
 
 	// Update module in database
-	DB.Model(&subsidiaryUser).Where("id = ?", subsidiaryUser.ID).UpdateColumn("license", subsidiaryUser.License)
+	DB.Model(&userSubsidiary).Where("id = ?", userSubsidiary.ID).UpdateColumn("license", userSubsidiary.License)
 
 	// Return response
 	return c.JSON(http.StatusOK, utilities.Response{
 		Success: true,
-		Data:    subsidiaryUser.ID,
+		Data:    userSubsidiary.ID,
 		Message: fmt.Sprintf("Los datos del se actualizaron correctamente"),
 	})
 }
@@ -62,13 +62,13 @@ func GetSubsidiariesUserByUserID(c echo.Context) error {
 	// Start Transaction
 	TR := DB.Begin()
 
-	// Insert SubsidiaryUsers
+	// Insert UserSubsidiarys
 	for _, subsidiary := range subsidiaries {
-		subsidiaryUser := models.SubsidiaryUser{
+		userSubsidiary := models.UserSubsidiary{
 			UserID:       user.ID,
 			SubsidiaryID: subsidiary.ID,
 		}
-		if err := TR.Create(&subsidiaryUser).Error; err != nil {
+		if err := TR.Create(&userSubsidiary).Error; err != nil {
 			TR.Rollback()
 			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 		}
@@ -77,20 +77,20 @@ func GetSubsidiariesUserByUserID(c echo.Context) error {
 	// End Transaction
 	TR.Commit()
 
-	// Query SubsidiaryUsers
-	subsidiaryUsers := make([]subsidiaryUserResponse, 0)
+	// Query UserSubsidiarys
+	userSubsidiarys := make([]userSubsidiaryResponse, 0)
 	if err := DB.Table("subsidiary_users").
 		Select("subsidiary_users.id, subsidiary_users.user_id, subsidiary_users.subsidiary_id, subsidiary_users.license, subsidiaries.name").
 		Joins("INNER JOIN subsidiaries ON subsidiaries.id = subsidiary_users.subsidiary_id").
 		Where("subsidiary_users.user_id = ?", user.ID).
-		Scan(&subsidiaryUsers).Error; err != nil {
+		Scan(&userSubsidiarys).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Response data
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    subsidiaryUsers,
+		Data:    userSubsidiarys,
 	})
 }
 
@@ -105,18 +105,18 @@ func GetSubsidiariesUserByUserIDLicense(c echo.Context) error {
 	defer DB.Close()
 
 	// ss
-	subsidiaryUsers := make([]subsidiaryUserResponse, 0)
+	userSubsidiarys := make([]userSubsidiaryResponse, 0)
 	if err := DB.Table("subsidiary_users").
 		Select("subsidiary_users.id, subsidiary_users.user_id, subsidiary_users.subsidiary_id, subsidiary_users.license, subsidiaries.name").
 		Joins("INNER JOIN subsidiaries ON subsidiaries.id = subsidiary_users.subsidiary_id").
 		Where("subsidiary_users.user_id = ? AND license = TRUE", currentUser.ID).
-		Scan(&subsidiaryUsers).Error; err != nil {
+		Scan(&userSubsidiarys).Error; err != nil {
 		return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
 	}
 
 	// Response data
 	return c.JSON(http.StatusCreated, utilities.Response{
 		Success: true,
-		Data:    subsidiaryUsers,
+		Data:    userSubsidiarys,
 	})
 }

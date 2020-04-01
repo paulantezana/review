@@ -1,10 +1,11 @@
 package migration
 
 import (
-	"crypto/sha256"
-	"fmt"
-	"github.com/paulantezana/review/provider"
-	"github.com/paulantezana/review/models"
+    "crypto/sha256"
+    "fmt"
+    "github.com/paulantezana/review/models"
+    "github.com/paulantezana/review/provider"
+    "time"
 )
 
 // migration function
@@ -13,17 +14,24 @@ func Migrate() {
 	defer db.Close()
 
 	db.Debug().AutoMigrate(
-		// Global setting institute
-		&models.Setting{},
+		&models.App{},
+		&models.AppModule{},
+		&models.AppModuleFunction{},
+		&models.AppUser{},
+
+		// Institutions
+		&models.Institution{},
+		&models.InstitutionModule{},
 
 		// Authorization
-		&models.Role{},
 		&models.User{},
-		&models.SubsidiaryUser{},
-		&models.ProgramUser{},
-		&models.AppModules{},
-		&models.UserScopeProgram{},
-		&models.UserScopeSubsidiary{},
+		&models.UserSubsidiary{},
+		&models.UserProgram{},
+		&models.UserRole{},
+		&models.UserRoleModule{},
+		&models.UserRoleFunction{},
+		&models.UserSession{},
+		&models.UserAuthorizationType{},
 
 		// Institute
 		&models.Subsidiary{},
@@ -79,36 +87,35 @@ func Migrate() {
 		&models.MonitoringFilterDetail{},
 
 		// Libraries
-		&models.Category{},
-		&models.Book{},
-		&models.Reading{},
-		&models.Comment{},
-		&models.Like{},
-		&models.Vote{},
+		&models.Post{},
+		&models.PostType{},
+		&models.PostFile{},
+		&models.PostCategory{},
+		&models.PostReading{},
+		&models.PostComment{},
+		&models.PostLike{},
+		&models.PostVote{},
 
 		// Messenger model
-		&models.Group{},
-		&models.Message{},
-		&models.MessageRecipient{},
-		&models.ReminderFrequency{},
-		&models.Session{},
-		&models.UserGroup{},
-		&models.GroupMessage{},
-		&models.GroupMessageRecipient{},
+		&models.MssGroup{},
+		&models.MssMessage{},
+		&models.MssMessageRecipient{},
+		&models.MssReminderFrequency{},
+		&models.MssUserGroup{},
+		&models.MssGroupMessage{},
+		&models.MssGroupMessageRecipient{},
 	)
+	// Institutional
+
 	// General =================================================================
-	db.Model(&models.User{}).AddForeignKey("role_id", "roles(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.User{}).AddForeignKey("user_role_id", "user_roles(id)", "RESTRICT", "RESTRICT")
 
 	// Authorization ===========================================================
-	db.Model(&models.SubsidiaryUser{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
-	db.Model(&models.SubsidiaryUser{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "CASCADE", "CASCADE")
-	db.Model(&models.ProgramUser{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
-	db.Model(&models.ProgramUser{}).AddForeignKey("program_id", "programs(id)", "CASCADE", "CASCADE")
-	db.Model(&models.ProgramUser{}).AddForeignKey("subsidiary_user_id", "subsidiary_users(id)", "CASCADE", "CASCADE")
-	db.Model(&models.UserScopeSubsidiary{}).AddForeignKey("app_module_id", "app_modules(id)", "CASCADE", "CASCADE")
-	db.Model(&models.UserScopeSubsidiary{}).AddForeignKey("subsidiary_user_id", "subsidiary_users(id)", "CASCADE", "CASCADE")
-	db.Model(&models.UserScopeProgram{}).AddForeignKey("app_module_id", "app_modules(id)", "CASCADE", "CASCADE")
-	db.Model(&models.UserScopeProgram{}).AddForeignKey("program_user_id", "program_users(id)", "CASCADE", "CASCADE")
+	db.Model(&models.UserSubsidiary{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	db.Model(&models.UserSubsidiary{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "CASCADE", "CASCADE")
+	db.Model(&models.UserProgram{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	db.Model(&models.UserProgram{}).AddForeignKey("program_id", "programs(id)", "CASCADE", "CASCADE")
+	db.Model(&models.UserProgram{}).AddForeignKey("user_subsidiary_id", "user_subsidiaries(id)", "CASCADE", "CASCADE")
 
 	// Institutional ===========================================================
 	db.Model(&models.Program{}).AddForeignKey("subsidiary_id", "subsidiaries(id)", "RESTRICT", "RESTRICT")
@@ -181,38 +188,40 @@ func Migrate() {
 	db.Model(&models.QuizAnswerDetail{}).AddForeignKey("quiz_answer_id", "quiz_answers(id)", "RESTRICT", "RESTRICT")
 
 	// Libraries ===========================================================
-	db.Model(&models.Book{}).AddForeignKey("category_id", "categories(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.Reading{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
-	db.Model(&models.Reading{}).AddForeignKey("book_id", "books(id)", "CASCADE", "CASCADE")
-	db.Model(&models.Comment{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
-	db.Model(&models.Comment{}).AddForeignKey("book_id", "books(id)", "CASCADE", "CASCADE")
-	db.Model(&models.Like{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
-	db.Model(&models.Like{}).AddForeignKey("book_id", "books(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Post{}).AddForeignKey("post_category_id", "post_categories(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Post{}).AddForeignKey("post_type_id", "post_types(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.Post{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.PostReading{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	db.Model(&models.PostReading{}).AddForeignKey("post_id", "posts(id)", "CASCADE", "CASCADE")
+	db.Model(&models.PostComment{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	db.Model(&models.PostComment{}).AddForeignKey("post_id", "posts(id)", "CASCADE", "CASCADE")
+	db.Model(&models.PostLike{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	db.Model(&models.PostLike{}).AddForeignKey("post_id", "posts(id)", "CASCADE", "CASCADE")
 
 	// Messenger =================================s==========================
-	db.Model(&models.MessageRecipient{}).AddForeignKey("recipient_id", "users(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.MessageRecipient{}).AddForeignKey("message_id", "messages(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.GroupMessageRecipient{}).AddForeignKey("message_id", "group_messages(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.UserGroup{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.UserGroup{}).AddForeignKey("group_id", "groups(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.Message{}).AddForeignKey("creator_id", "users(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.GroupMessage{}).AddForeignKey("creator_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.MssMessageRecipient{}).AddForeignKey("recipient_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.MssMessageRecipient{}).AddForeignKey("mss_message_id", "mss_messages(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.MssGroupMessageRecipient{}).AddForeignKey("mss_group_message_id", "mss_group_messages(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.MssUserGroup{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.MssUserGroup{}).AddForeignKey("mss_group_id", "mss_groups(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.MssMessage{}).AddForeignKey("creator_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.MssGroupMessage{}).AddForeignKey("creator_id", "users(id)", "RESTRICT", "RESTRICT")
 	//db.Model(&models.Message{}).AddForeignKey("reminder_frequency_id", "reminder_frequencies(id)", "RESTRICT", "RESTRICT")
 
 	// -------------------------------------------------------------
 	// INSERT FIST DATA --------------------------------------------
 	// -------------------------------------------------------------
-	role := models.Role{}
+	role := models.UserRole{}
 	db.First(&role)
 
 	// Validate
 	if role.ID == 0 {
-		role1 := models.Role{Name: "Director@"}     // Global Level
-		role2 := models.Role{Name: "Administrador"} // Filial Level
-		role3 := models.Role{Name: "Coordinador"}   // Program level
-		role4 := models.Role{Name: "Profesor"}      // Teacher
-		role5 := models.Role{Name: "Estudiante"}    // Student
-		role6 := models.Role{Name: "Invitado"}      // Invited level
+		role1 := models.UserRole{Name: "Director@", IsMain: true, State: true}     // Global Level
+		role2 := models.UserRole{Name: "Administrador", IsMain: true, State: true} // Filial Level
+		role3 := models.UserRole{Name: "Coordinador", IsMain: true, State: true}   // Program level
+		role4 := models.UserRole{Name: "Profesor", IsMain: true, State: true}      // Teacher
+		role5 := models.UserRole{Name: "Estudiante", IsMain: true, State: true}    // Student
+		role6 := models.UserRole{Name: "Invitado", IsMain: true, State: true}      // Invited level
 		db.Create(&role1).Create(&role2).Create(&role3)
 		db.Create(&role4).Create(&role5).Create(&role6)
 	}
@@ -236,46 +245,30 @@ func Migrate() {
 		db.Create(&status6).Create(&status7).Create(&status8).Create(&status9).Create(&status10)
 	}
 
-	// -------------------------------------------------------------
-	// Insert user -------------------------------------------------
-	usr := models.User{}
-	db.First(&usr)
+    // -------------------------------------------------------------
+    // Insert State Post Types ---------------------------------------
+    postType := models.PostType{}
+    db.First(&postType)
+    if postType.ID == 0 {
+        postType1 := models.PostType{Name: "Libro"}
+        db.Create(&postType1)
+    }
 
-	// Validate
-	if usr.ID == 0 {
-		// hash password
-		cc := sha256.Sum256([]byte("admin"))
-		pwd := fmt.Sprintf("%x", cc)
-
-		// create model
-		user := models.User{
-			UserName: "admin",
-			Password: pwd,
-			Email:    "yoel.antezana@gmail.com",
-			RoleID:   1,
-			Freeze:   true,
-		}
-		db.Create(&user)
-	}
-
-	// =====================================================
-	// First Setting
-	prm := models.Setting{}
-	db.First(&prm)
-
-	// Validate
-	if prm.ID == 0 {
-		co := models.Setting{
-			Prefix:          "INSTITUTO DE EDUCACIÓN SUPERIOR TECNOLÓGICO PÚBLICO",
-			PrefixShortName: "I.E.S.T.P.",
-			Institute:       "ABCD",
-			NationalEmblem:  "static/nationalEmblem.jpg",
-			Logo:            "static/logo.jpg",
-			Ministry:        "static/ministry.jpg",
-		}
-		// Insert in database
-		db.Create(&co)
-	}
+    // -------------------------------------------------------------
+    // Insert State Post Types ---------------------------------------
+    appUser := models.AppUser{}
+    db.First(&appUser)
+    if appUser.ID == 0 {
+        cc := sha256.Sum256([]byte("admin"))
+        pwd := fmt.Sprintf("%x", cc)
+        user := models.AppUser{
+            UserName: "admin",
+            Password: pwd,
+            State:true,
+            Avatar: "static/apps/logo.png",
+        }
+        db.Create(&user)
+    }
 
 	// ====================================================
 	// -- Insert Type Quiestions
@@ -290,9 +283,20 @@ func Migrate() {
 		tq4 := models.TypeQuestion{Name: "Varias respuestas"} // 4 = Checkbox input
 
 		// Insert in Database
-		db.Create(&tq1)
-		db.Create(&tq2)
-		db.Create(&tq3)
-		db.Create(&tq4)
+		db.Create(&tq1).Create(&tq2).Create(&tq3).Create(&tq4)
 	}
+
+    // ====================================================
+    // -- Insert App
+    appData := models.App{}
+    db.First(&appData)
+
+    if appData.ID == 0 {
+        appData1 := models.App{
+            Name: "Respuesta breve",
+            Version: "0.0.1",
+            LastUpdate: time.Now(),
+        }
+        db.Create(&appData1)
+    }
 }

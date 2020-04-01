@@ -3,8 +3,8 @@ package admissioncontroller
 import (
 	"fmt"
 	"github.com/labstack/echo"
-	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/models"
+	"github.com/paulantezana/review/provider"
 	"github.com/paulantezana/review/utilities"
 	"net/http"
 )
@@ -98,11 +98,11 @@ func UpdateAdmissionSetting(c echo.Context) error {
 		})
 	}
 
-    if !admSetting.PreEnabled {
-        if err := db.Model(admSetting).UpdateColumn("pre_enabled", false).Error; err != nil {
-            return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
-        }
-    }
+	if !admSetting.PreEnabled {
+		if err := db.Model(admSetting).UpdateColumn("pre_enabled", false).Error; err != nil {
+			return c.JSON(http.StatusOK, utilities.Response{Message: fmt.Sprintf("%s", err)})
+		}
+	}
 
 	// Return response
 	return c.JSON(http.StatusCreated, utilities.Response{
